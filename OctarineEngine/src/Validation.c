@@ -1,28 +1,65 @@
+#include <SDL2/SDL.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <VK2D/VK2D.h>
 #include "oct/Validation.h"
 #include "oct/Constants.h"
 
 // Constants
 #define BUFFER_SIZE 1024
 static char gErrorBuffer[BUFFER_SIZE]; // Buffer for error string
-static Oct_Bool gIsFatal = false;      // Fatal status
 static Oct_Status gStatus;             // General status
+static SDL_mutex *gLogMutex;           // Mutex for logging
+static SDL_mutex *gStatusMutex;        // Mutex for status
 
-OCT_EXPORT void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, ...) {
-    // TODO: This
+void _oct_ValidationInit() {
+    gLogMutex = SDL_CreateMutex();
+    gStatusMutex = SDL_CreateMutex();
 }
 
-OCT_EXPORT Oct_Bool oct_IsFatal() {
-    return false; // TODO: This
+void _oct_ValidationEnd() {
+    SDL_DestroyMutex(gLogMutex);
+    SDL_DestroyMutex(gStatusMutex);
+}
+
+OCT_EXPORT void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, ...) {
+    SDL_LockMutex(gStatusMutex);
+    va_list l;
+    va_start(l, fmt);
+    vsnprintf(gErrorBuffer, BUFFER_SIZE - 1, fmt, l);
+    va_end(l);
+    if (fatal) {
+        FILE *f = fopen("octarinedump.log", "a");
+        fprintf(f, "\nCRASH REPORT\n===========\n%s", vk2dHostInformation());
+        va_start(l, fmt);
+        vfprintf(f, fmt, l);
+        fprintf(f, "\n");
+        va_end(l);
+        fclose(f);
+        abort();
+    }
+    gStatus |= status;
+    SDL_UnlockMutex(gStatusMutex);
 }
 
 OCT_EXPORT Oct_Status oct_GetStatus() {
-    return OCT_STATUS_SUCCESS; // TODO: This
+    Oct_Status s;
+    SDL_LockMutex(gStatusMutex);
+    s = gStatus;
+    SDL_UnlockMutex(gStatusMutex);
+    return s;
 }
 
 OCT_EXPORT const char *oct_GetError() {
-    return ""; // TODO: This
+    return gErrorBuffer; // todo - this is unsafe lmao
 }
 
 OCT_EXPORT void oct_Log(const char *fmt, ...) {
-    // TODO: This
+    SDL_LockMutex(gLogMutex);
+    va_list l;
+    va_start(l, fmt);
+    vprintf(fmt, l);
+    fflush(stdout);
+    va_end(l);
+    SDL_UnlockMutex(gLogMutex);
 }

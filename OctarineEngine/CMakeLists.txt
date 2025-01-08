@@ -19,11 +19,14 @@ if (${CMAKE_C_COMPILER_ID} STREQUAL "GNU" AND WIN32)
     set(SDL2_LIBRARIES mingw32 SDL2main SDL2)
 endif()
 
+# Build VMA
+add_subdirectory(Vulkan2D/VulkanMemoryAllocator)
+
 # Include directories
 include_directories(include/ Vulkan2D/ ${SDL2_INCLUDE_DIR} ${Vulkan_INCLUDE_DIRS})
 
 # Build dll for engine
-add_library(${PROJECT_NAME} ${VMA_FILES} ${OCT_C_FILES} ${C_FILES} ${H_FILES})
+add_library(${PROJECT_NAME} ${OCT_C_FILES} ${C_FILES} ${H_FILES})
 
 # Linking
-target_link_libraries(${PROJECT_NAME} m ${SDL2_LIBRARIES} ${Vulkan_LIBRARIES} mimalloc-static)
+target_link_libraries(${PROJECT_NAME} PRIVATE m ${SDL2_LIBRARIES} ${Vulkan_LIBRARIES} GPUOpen::VulkanMemoryAllocator mimalloc-static )

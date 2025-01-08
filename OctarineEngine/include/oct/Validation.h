@@ -6,14 +6,18 @@
 extern "C" {
 #endif
 
+/// \brief Initializes validation
+void _oct_ValidationInit();
+
+/// \brief Cleans up validation
+void _oct_ValidationEnd();
+
 /// \brief Raises an error in engine
 /// \param status Status to raise
-/// \param fatal Whether or not its fatal
+/// \param fatal Whether or not its fatal (fatal means `abort()`)
 /// \param fmt Format for the printf-like effect
+/// If the crash is fatal, machine info and the error will be output to `octarinedump.log`.
 OCT_EXPORT void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, ...);
-
-/// \brief Returns true if there is a fatal error (ie stop what you're doing)
-OCT_EXPORT Oct_Bool oct_IsFatal();
 
 /// \brief Returns the current engine status and clears it as well
 OCT_EXPORT Oct_Status oct_GetStatus();
