@@ -8,7 +8,7 @@ extern "C" {
 
 /// \brief Initializes the engine
 /// \param initInfo Info needed to initialize
-OCT_EXPORT Oct_Status oct_Init(Oct_InitInfo *initInfo);
+OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo);
 
 #ifdef __cplusplus
 };

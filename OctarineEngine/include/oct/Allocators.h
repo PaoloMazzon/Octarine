@@ -42,7 +42,8 @@ void oct_HeapAllocatorFree(Oct_HeapAllocator allocator, void *memory);
 /// \brief Creates a new arena allocator, a fast allocator that may only be destroyed all at once
 /// \param size Size of the arena
 /// \return Returns the new arena allocator, or null if it fails
-/// \warning You may only create allocations on the thread this was created in
+/// \warning Arena allocations may be made from any thread but it is not thread safe
+/// to do so from multiple different threads concurrently.
 Oct_ArenaAllocator oct_CreateArenaAllocator(int32_t size);
 
 /// \brief Destroys an arena allocator and everything in it

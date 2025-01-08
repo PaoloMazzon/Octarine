@@ -1,7 +1,8 @@
 # Basic project info
 cmake_minimum_required(VERSION 3.17)
-project(Octarine C)
+project(Octarine)
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # Compile the engine to link later
 add_subdirectory(OctarineEngine)

@@ -5,7 +5,7 @@
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 
-OCT_EXPORT Oct_Status oct_Init(Oct_InitInfo *initInfo) {
+OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     Oct_Context ctx = mi_malloc(sizeof(struct Oct_Context_t));
     _oct_ValidationInit();
 

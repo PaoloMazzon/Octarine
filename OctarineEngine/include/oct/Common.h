@@ -15,7 +15,12 @@ extern "C" {
 #define OCT_USER_STRUCT(type) typedef struct type##_t type;
 
 ///< For public definitions
-#define OCT_EXPORT
+/*#ifdef OctarineEngine_EXPORTS
+#define OCTARINE_API __declspec(dllexport)
+#else
+#define OCTARINE_API __declspec(dllimport)
+#endif*/
+#define OCTARINE_API
 
 ///< In-house null
 #define null (void*)0

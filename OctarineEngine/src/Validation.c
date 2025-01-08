@@ -22,7 +22,7 @@ void _oct_ValidationEnd() {
     SDL_DestroyMutex(gStatusMutex);
 }
 
-OCT_EXPORT void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, ...) {
+OCTARINE_API void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, ...) {
     SDL_LockMutex(gStatusMutex);
     va_list l;
     va_start(l, fmt);
@@ -42,7 +42,7 @@ OCT_EXPORT void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, ..
     SDL_UnlockMutex(gStatusMutex);
 }
 
-OCT_EXPORT Oct_Status oct_GetStatus() {
+OCTARINE_API Oct_Status oct_GetStatus() {
     Oct_Status s;
     SDL_LockMutex(gStatusMutex);
     s = gStatus;
@@ -50,11 +50,11 @@ OCT_EXPORT Oct_Status oct_GetStatus() {
     return s;
 }
 
-OCT_EXPORT const char *oct_GetError() {
+OCTARINE_API const char *oct_GetError() {
     return gErrorBuffer; // todo - this is unsafe lmao
 }
 
-OCT_EXPORT void oct_Log(const char *fmt, ...) {
+OCTARINE_API void oct_Log(const char *fmt, ...) {
     SDL_LockMutex(gLogMutex);
     va_list l;
     va_start(l, fmt);
