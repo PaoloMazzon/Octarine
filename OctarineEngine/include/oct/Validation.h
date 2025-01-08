@@ -1,16 +1,11 @@
 /// \brief Functions to error check and validate
 #pragma once
 #include "oct/Common.h"
+#include "oct/Constants.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/// \brief Initializes validation
-void _oct_ValidationInit();
-
-/// \brief Cleans up validation
-void _oct_ValidationEnd();
 
 /// \brief Raises an error in engine
 /// \param status Status to raise

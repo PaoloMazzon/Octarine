@@ -1,6 +1,7 @@
 /// \brief Structs that are not visible to the engine user
 #pragma once
 #include <mimalloc.h>
+#include <SDL2/SDL.h>
 #include "oct/Common.h"
 
 #ifdef __cplusplus
@@ -9,7 +10,10 @@ extern "C" {
 
 /// \brief General engine context
 struct Oct_Context_t {
-    int padding;
+    SDL_Window *window;      ///< Game window
+    Oct_InitInfo *initInfo;  ///< Parameters the engine started with
+    Oct_Bool quit;           ///< True to quit the game
+    SDL_Thread *logicThread; ///< Logic thread
 };
 
 /// \brief General purpose allocator

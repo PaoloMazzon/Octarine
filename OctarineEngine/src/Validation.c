@@ -12,12 +12,12 @@ static Oct_Status gStatus;             // General status
 static SDL_mutex *gLogMutex;           // Mutex for logging
 static SDL_mutex *gStatusMutex;        // Mutex for status
 
-void _oct_ValidationInit() {
+void _oct_ValidationInit(Oct_Context ctx) {
     gLogMutex = SDL_CreateMutex();
     gStatusMutex = SDL_CreateMutex();
 }
 
-void _oct_ValidationEnd() {
+void _oct_ValidationEnd(Oct_Context ctx) {
     SDL_DestroyMutex(gLogMutex);
     SDL_DestroyMutex(gStatusMutex);
 }
@@ -30,7 +30,7 @@ OCTARINE_API void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, 
     va_end(l);
     if (fatal) {
         FILE *f = fopen("octarinedump.log", "a");
-        fprintf(f, "\nCRASH REPORT\n===========\n%s", vk2dHostInformation());
+        fprintf(f, "\nCRASH REPORT\n===========\n%s\nError %" PRIu64 ": ", vk2dHostInformation(), gStatus);
         va_start(l, fmt);
         vfprintf(f, fmt, l);
         fprintf(f, "\n");
