@@ -8,6 +8,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -Wno-misleading-indentation"
 # Packages required
 find_package(Vulkan)
 find_package(SDL2 REQUIRED)
+find_package(mimalloc 2.1 REQUIRED)
 
 # Find relavant source files
 file(GLOB OCT_C_FILES src/*.c)
@@ -25,4 +26,4 @@ include_directories(include/ Vulkan2D/ ${SDL2_INCLUDE_DIR} ${Vulkan_INCLUDE_DIRS
 add_library(${PROJECT_NAME} ${VMA_FILES} ${OCT_C_FILES} ${C_FILES} ${H_FILES})
 
 # Linking
-target_link_libraries(${PROJECT_NAME} PRIVATE m ${SDL2_LIBRARIES} ${Vulkan_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} m ${SDL2_LIBRARIES} ${Vulkan_LIBRARIES} mimalloc-static)

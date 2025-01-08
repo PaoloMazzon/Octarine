@@ -1,6 +1,6 @@
 /// \brief
 #pragma once
-#include <oct/Core.h>
+#include <oct/Octarine.h>
 
 #ifdef __cplusplus
 extern "C" {

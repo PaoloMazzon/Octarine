@@ -20,7 +20,19 @@ extern "C" {
 ///< In-house null
 #define null (void*)0
 
+#ifndef false
+#define false (Oct_Bool)0
+#endif
+#ifndef true
+#define true (Oct_Bool)1
+#endif
+
+////////////////////// Types //////////////////////
+typedef uint64_t Oct_Status;
+typedef uint32_t Oct_Bool;
+
 ////////////////////// Enums //////////////////////
+/// \brief Structure types
 typedef enum {
     OCT_STRUCTURE_TYPE_NONE = 0,
     OCT_STRUCTURE_TYPE_INIT_INFO = 1,
@@ -28,6 +40,8 @@ typedef enum {
 
 ////////////////////// Hidden structs //////////////////////
 OCT_OPAQUE_POINTER(Oct_Context)
+OCT_OPAQUE_POINTER(Oct_ArenaAllocator)
+OCT_OPAQUE_POINTER(Oct_HeapAllocator)
 
 ////////////////////// Function parameters //////////////////////
 
