@@ -19,9 +19,9 @@ struct Oct_HeapAllocator_t {
 
 /// \brief Arena allocator
 struct Oct_ArenaAllocator_t {
-    void *buffer;  ///< Internal memory buffer
-    int32_t size;  ///< Size of this arena
-    int32_t point; ///< Where the last allocation ended in the arena
+    uint8_t *buffer; ///< Internal memory buffer
+    int32_t size;    ///< Size of this arena
+    int32_t point;   ///< Where the last allocation ended in the arena
 };
 
 #ifdef __cplusplus
