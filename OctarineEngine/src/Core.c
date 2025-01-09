@@ -10,6 +10,9 @@ static inline void _oct_SetupInitInfo(Oct_Context ctx, Oct_InitInfo *initInfo) {
     if (initInfo->ringBufferSize == 0) {
         initInfo->ringBufferSize = 1000;
     }
+    if (initInfo->logicHz == 0) {
+        initInfo->logicHz = 30;
+    }
     ctx->initInfo = initInfo;
 }
 

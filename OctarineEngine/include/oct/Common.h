@@ -8,14 +8,20 @@ extern "C" {
 
 ////////////////////// Defines //////////////////////
 
-// For opaque pointer types
+///< For opaque pointer types
 #define OCT_OPAQUE_POINTER(type) typedef struct type##_t *type;
 
-// For user-modifiable and user-visible structures
+///< For user-modifiable and user-visible structures
 #define OCT_USER_STRUCT(type) typedef struct type##_t type;
 
-// Grabs the structure type of a structure with an sType field (ie, `OCT_STRUCTURE_TYPE(&my_Oct_InitInfo)` -> `OCT_STRUCTURE_TYPE_INIT_INFO`)
+///< Grabs the structure type of a structure with an sType field (ie, `OCT_STRUCTURE_TYPE(&my_Oct_InitInfo)` -> `OCT_STRUCTURE_TYPE_INIT_INFO`)
 #define OCT_STRUCTURE_TYPE(structure) (*((Oct_StructureType*)structure))
+
+///< Turns an SDL_atomic_t into a float
+#define OCT_INT_TO_FLOAT(i) (*((float*)&i))
+
+///< Turns a float into an int
+#define OCT_FLOAT_TO_INT(f) (*((int*)&f))
 
 ///< For public definitions
 /*#ifdef OctarineEngine_EXPORTS
@@ -105,6 +111,7 @@ struct Oct_InitInfo_t {
     int windowWidth;                             ///< Window width
     int windowHeight;                            ///< Window height
     int32_t ringBufferSize;                      ///< Size of the draw command ring buffer, if 0 this will be 1000
+    int logicHz;                                 ///< Refresh rate of the logic thread, 0 will set this to 30
     void *(*startup)(Oct_Context ctx);           ///< Function pointer to the startup function
     void *(*update)(Oct_Context ctx, void *ptr); ///< Function pointer to the update function
     void(*shutdown)(Oct_Context ctx, void *ptr); ///< Function pointer to the shutdown function
