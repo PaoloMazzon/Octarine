@@ -48,7 +48,8 @@ typedef enum {
     OCT_STRUCTURE_TYPE_DRAW_COMMAND = 2,
     OCT_STRUCTURE_TYPE_WINDOW_COMMAND = 3,
     OCT_STRUCTURE_TYPE_LOAD_COMMAND = 4,
-    OCT_STRUCTURE_TYPE_COMMAND = 5,
+    OCT_STRUCTURE_TYPE_META_COMMAND = 5,
+    OCT_STRUCTURE_TYPE_COMMAND = 6,
 } Oct_StructureType;
 
 /// \brief Types of draw commands
@@ -103,6 +104,7 @@ struct Oct_InitInfo_t {
     const char *windowTitle;                     ///< Title of the window
     int windowWidth;                             ///< Window width
     int windowHeight;                            ///< Window height
+    int32_t ringBufferSize;                      ///< Size of the draw command ring buffer, if 0 this will be 1000
     void *(*startup)(Oct_Context ctx);           ///< Function pointer to the startup function
     void *(*update)(Oct_Context ctx, void *ptr); ///< Function pointer to the update function
     void(*shutdown)(Oct_Context ctx, void *ptr); ///< Function pointer to the shutdown function

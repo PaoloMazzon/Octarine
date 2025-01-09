@@ -12,7 +12,7 @@ extern "C" {
 struct Oct_Context_t {
     SDL_Window *window;      ///< Game window
     Oct_InitInfo *initInfo;  ///< Parameters the engine started with
-    Oct_Bool quit;           ///< True to quit the game
+    SDL_atomic_t quit;       ///< True to quit the game
     SDL_Thread *logicThread; ///< Logic thread
 
     struct {

@@ -2,6 +2,7 @@
 #include "Game.h"
 
 int main() {
+    // Information Octarine needs to start the game
     Oct_InitInfo initInfo = {
             .sType = OCT_STRUCTURE_TYPE_INIT_INFO,
             .startup = startup,
@@ -13,6 +14,8 @@ int main() {
             .windowWidth = 640,
             .windowHeight = 480,
     };
+
+    // Launches the game with the above parameters
     oct_Init(&initInfo);
     return 0;
 }

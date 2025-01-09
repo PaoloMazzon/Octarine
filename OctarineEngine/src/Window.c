@@ -24,7 +24,7 @@ void _oct_WindowUpdate(Oct_Context ctx) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT)
-            ctx->quit = true;
+            SDL_AtomicSet(&ctx->quit, 1);
     }
 
     // TODO: Input polling
