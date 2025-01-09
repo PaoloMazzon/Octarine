@@ -12,6 +12,6 @@ void oct_Bootstrap(Oct_Context ctx) {
     ctx->logicThread = SDL_CreateThread(oct_UserThread, "Logic Thread", ctx);
 }
 
-void oct_UnstrapBoots(Oct_Context ctx) {
+void _oct_UnstrapBoots(Oct_Context ctx) {
     SDL_WaitThread(ctx->logicThread, null);
 }

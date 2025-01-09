@@ -14,6 +14,12 @@ struct Oct_Context_t {
     Oct_InitInfo *initInfo;  ///< Parameters the engine started with
     Oct_Bool quit;           ///< True to quit the game
     SDL_Thread *logicThread; ///< Logic thread
+
+    struct {
+        Oct_Command *commands; ///< Internal buffer
+        SDL_atomic_t head;     ///< The reading end of the buffer
+        SDL_atomic_t tail;     ///< The writing end of the buffer
+    } RingBuffer;              ///< Ring buffer for commands
 };
 
 /// \brief General purpose allocator

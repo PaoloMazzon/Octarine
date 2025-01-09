@@ -17,8 +17,8 @@ void _oct_WindowUpdate(Oct_Context ctx);
 void _oct_WindowEnd(Oct_Context ctx);
 
 void _oct_CommandBufferInit(Oct_Context ctx);
-void _oct_CommandBufferBeginFrame(Oct_Context ctx);
-void _oct_CommandBufferEndFrame(Oct_Context ctx);
+void _oct_CommandBufferBeginFrame(Oct_Context ctx); // This is for the logical thread
+void _oct_CommandBufferEndFrame(Oct_Context ctx); // This is for the logical thread
 void _oct_CommandBufferEnd(Oct_Context ctx);
 
 #ifdef __cplusplus

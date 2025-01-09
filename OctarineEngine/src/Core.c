@@ -13,6 +13,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     _oct_ValidationInit(ctx);
     _oct_WindowInit(ctx);
     _oct_DrawingInit(ctx);
+    _oct_CommandBufferInit(ctx);
 
     // Bootstrap thread
     oct_Bootstrap(ctx);
@@ -28,7 +29,8 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     }
 
     // Cleanup
-    oct_UnstrapBoots(ctx);
+    _oct_CommandBufferEnd(ctx);
+    _oct_UnstrapBoots(ctx);
     _oct_DrawingEnd(ctx);
     _oct_WindowEnd(ctx);
     _oct_ValidationEnd(ctx);

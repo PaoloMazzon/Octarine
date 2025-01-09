@@ -10,7 +10,7 @@ extern "C" {
 void oct_Bootstrap(Oct_Context ctx);
 
 // Quits the thread
-void oct_UnstrapBoots(Oct_Context ctx);
+void _oct_UnstrapBoots(Oct_Context ctx);
 
 #ifdef __cplusplus
 };
