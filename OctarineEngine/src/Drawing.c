@@ -30,7 +30,7 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
     vk2dRendererEndFrame();
 }
 
-void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_DrawCommand *cmd) {
+void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     // TODO: This
 }
 

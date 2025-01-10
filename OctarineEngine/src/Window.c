@@ -34,6 +34,6 @@ void _oct_WindowUpdateEnd(Oct_Context ctx) {
     // TODO: This
 }
 
-void _oct_WindowProcessCommand(Oct_Context ctx, Oct_WindowCommand *cmd) {
+void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     // TODO: This
 }

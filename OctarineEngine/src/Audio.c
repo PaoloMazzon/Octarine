@@ -12,7 +12,7 @@ void _oct_AudioUpdateEnd(Oct_Context ctx) {
     // TODO: This
 }
 
-void _oct_AudioProcessCommand(Oct_Context ctx, Oct_AudioCommand *cmd) {
+void _oct_AudioProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     // TODO: This
 }
 

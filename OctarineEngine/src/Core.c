@@ -44,7 +44,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
         _oct_DrawingUpdateBegin(ctx);
 
         // Process command buffer
-        // TODO: Process commands
+        _oct_CommandBufferDispatch(ctx);
 
         // Finish up subsystems for the frame
         _oct_WindowUpdateEnd(ctx);

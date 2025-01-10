@@ -14,8 +14,8 @@ void _oct_ValidationEnd(Oct_Context ctx);
 void _oct_CommandBufferInit(Oct_Context ctx);
 void _oct_CommandBufferBeginFrame(Oct_Context ctx); // This is for the logical thread
 void _oct_CommandBufferEndFrame(Oct_Context ctx); // This is for the logical thread
-bool _oct_CommandBufferPop(Oct_Context ctx, Oct_Command *out); // Pops the top command out, if there is none available it returns false
 void _oct_CommandBufferEnd(Oct_Context ctx);
+void _oct_CommandBufferDispatch(Oct_Context ctx); // Handles all currently available commands in the buffer
 
 // Drawing subsystem is responsible for all rendering, its basically a wrapper over VK2D. Drawing commands are
 // different because they are not immediately processed, they are stored in a triple buffer by the drawing subsystem
@@ -25,21 +25,21 @@ void _oct_CommandBufferEnd(Oct_Context ctx);
 void _oct_DrawingInit(Oct_Context ctx);
 void _oct_DrawingUpdateBegin(Oct_Context ctx);
 void _oct_DrawingUpdateEnd(Oct_Context ctx);
-void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_DrawCommand *cmd);
+void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_Command *cmd);
 void _oct_DrawingEnd(Oct_Context ctx);
 
 // Window subsystem manages window events like resizing and input
 void _oct_WindowInit(Oct_Context ctx);
 void _oct_WindowUpdateBegin(Oct_Context ctx);
 void _oct_WindowUpdateEnd(Oct_Context ctx);
-void _oct_WindowProcessCommand(Oct_Context ctx, Oct_WindowCommand *cmd);
+void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd);
 void _oct_WindowEnd(Oct_Context ctx);
 
 // Audio handles audio as you might guess
 void _oct_AudioInit(Oct_Context ctx);
 void _oct_AudioUpdateBegin(Oct_Context ctx);
 void _oct_AudioUpdateEnd(Oct_Context ctx);
-void _oct_AudioProcessCommand(Oct_Context ctx, Oct_AudioCommand *cmd);
+void _oct_AudioProcessCommand(Oct_Context ctx, Oct_Command *cmd);
 void _oct_AudioEnd(Oct_Context ctx);
 
 #ifdef __cplusplus

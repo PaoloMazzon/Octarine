@@ -3,6 +3,7 @@
 #include "oct/CommandBuffer.h"
 #include "oct/Opaque.h"
 #include "oct/Constants.h"
+#include "oct/Subsystems.h"
 
 // Wraps an index, returns index + 1 unless index == len - 1 in which case it returns 0
 static inline int32_t nextIndex(int32_t index, int32_t len) {
@@ -92,4 +93,26 @@ OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load) {
             .command.loadCommand = *load
     };
     pushCommand(ctx, &cmd);
+}
+
+void _oct_CommandBufferDispatch(Oct_Context ctx) {
+    Oct_Command cmd = {0};
+    while (_oct_CommandBufferPop(ctx, &cmd)) {
+        // Find out the kind of command this is
+        const Oct_StructureType sType = OCT_STRUCTURE_TYPE(&cmd.command);
+
+        // Dispatch to the proper subsystem
+        if (sType == OCT_STRUCTURE_TYPE_META_COMMAND) {
+            // Meta commands are dispatched everywhere
+            _oct_AudioProcessCommand(ctx, &cmd);
+            _oct_DrawingProcessCommand(ctx, &cmd);
+            _oct_WindowProcessCommand(ctx, &cmd);
+        } else if (sType == OCT_STRUCTURE_TYPE_DRAW_COMMAND) {
+            _oct_DrawingProcessCommand(ctx, &cmd);
+        } else if (sType == OCT_STRUCTURE_TYPE_WINDOW_COMMAND) {
+            _oct_WindowProcessCommand(ctx, &cmd);
+        } else if (sType == OCT_STRUCTURE_TYPE_AUDIO_COMMAND) {
+            _oct_AudioProcessCommand(ctx, &cmd);
+        }
+    }
 }
