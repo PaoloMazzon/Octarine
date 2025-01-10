@@ -3,6 +3,38 @@
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 
+// Commands are tied to the frame they came from for interpolation and triple buffering
+typedef struct FrameCommandBuffer_t {
+    Oct_DrawCommand *commands; ///< Internal command list
+    int size;                  ///< Size of the internal buffer
+    int count;                 ///< Number of commands
+} FrameCommandBuffer;
+
+// Wraps an index (0 = 1, 1 = 2, 2 = 0)
+#define NEXT_INDEX(i) (i == 2 ? 0 : i + 1)
+#define PREVIOUS_INDEX(i) (i == 0 ? 2 : i - 1)
+#define PREVIOUS_DRAW_FRAME (gCurrentFrame == 2 ? 0 : gCurrentFrame + 1)
+#define CURRENT_DRAW_FRAME (gCurrentFrame == 0 ? 2 : gCurrentFrame - 1)
+
+// Globals
+static FrameCommandBuffer gFrameBuffers[3]; // Triple buffer
+static int gCurrentFrame; // Current frame is the one not being interpolated
+
+///////////////////// Internal functions /////////////////////
+// Adds a command to the current frame buffer, expanding if necessary
+void addCommand(Oct_DrawCommand *cmd) {
+    // Need more buffer space
+    if (gFrameBuffers[gCurrentFrame].size == gFrameBuffers[gCurrentFrame].count) {
+        gFrameBuffers[gCurrentFrame].size *= 2;
+        gFrameBuffers[gCurrentFrame].commands = mi_realloc(gFrameBuffers[gCurrentFrame].commands, gFrameBuffers[gCurrentFrame].size * sizeof(struct Oct_DrawCommand_t));
+        if (!gFrameBuffers[gCurrentFrame].commands) {
+            oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to expand frame buffer.");
+        }
+    }
+    memcpy(&gFrameBuffers[gCurrentFrame].commands[gFrameBuffers[gCurrentFrame].count++], cmd, sizeof(struct Oct_DrawCommand_t));
+}
+
+///////////////////// Subsystem /////////////////////
 void _oct_DrawingInit(Oct_Context ctx) {
     VK2DRendererConfig config = {
             .msaa = VK2D_MSAA_32X,
@@ -16,9 +48,20 @@ void _oct_DrawingInit(Oct_Context ctx) {
             .enableDebug = false
     };
     vk2dRendererInit(ctx->window, config, &options);
+
+    // Allocate frame buffers
+    for (int i = 0; i < 3; i++) {
+        gFrameBuffers[i].size = ctx->initInfo->ringBufferSize;
+        gFrameBuffers[i].commands = mi_malloc(gFrameBuffers[i].size * sizeof(struct Oct_DrawCommand_t));
+    }
 }
 
 void _oct_DrawingEnd(Oct_Context ctx) {
+    // Free frame buffers
+    for (int i = 0; i < 3; i++) {
+        mi_free(gFrameBuffers[i].commands);
+    }
+
     vk2dRendererQuit();
 }
 
@@ -26,11 +69,73 @@ void _oct_DrawingUpdateBegin(Oct_Context ctx) {
     vk2dRendererStartFrame(VK2D_BLACK);
 }
 
+void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
+    if (OCT_STRUCTURE_TYPE(&cmd->command) == OCT_STRUCTURE_TYPE_META_COMMAND) {
+        if (cmd->command.metaCommand.type == OCT_META_COMMAND_TYPE_END_FRAME) {
+            gCurrentFrame = NEXT_INDEX(gCurrentFrame);
+            gFrameBuffers[gCurrentFrame].count = 0;
+        }
+    } else {
+        addCommand(&cmd->command.drawCommand);
+    }
+}
+
+static inline float lerp(float x, float min, float max) {
+    return (x * (max - min)) + min;
+}
+
 void _oct_DrawingUpdateEnd(Oct_Context ctx) {
+    int atomic = SDL_AtomicGet(&ctx->interpolatedTime);
+    float interpolatedTime = OCT_INT_TO_FLOAT(atomic);
+
+    // Interpolate/draw current frame's commands
+    for (int i = 0; i < gFrameBuffers[CURRENT_DRAW_FRAME].count; i++) {
+        Oct_DrawCommand *cmd = &gFrameBuffers[CURRENT_DRAW_FRAME].commands[i];
+        vk2dRendererSetColourMod((float*)&cmd->colour);
+
+        // If its interpolated, find the corresponding command
+        Oct_DrawCommand *prevCmd = null;
+        if (cmd->interpolate) {
+            for (int j = 0; prevCmd == null && j < gFrameBuffers[PREVIOUS_DRAW_FRAME].count; j++)
+                if (gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j].id == cmd->id && cmd->type == gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j].type)
+                    prevCmd = &gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j];
+        }
+
+        if (cmd->type == OCT_DRAW_COMMAND_TYPE_RECTANGLE) {
+            // Process interpolation
+            Oct_Vec2 position;
+            if (prevCmd) {
+                position[0] = lerp(interpolatedTime, prevCmd->DrawInfo.Rectangle.rectangle.position[0], cmd->DrawInfo.Rectangle.rectangle.position[0]);
+                position[1] = lerp(interpolatedTime, prevCmd->DrawInfo.Rectangle.rectangle.position[1], cmd->DrawInfo.Rectangle.rectangle.position[1]);
+            } else {
+                position[0] = cmd->DrawInfo.Rectangle.rectangle.position[0];
+                position[1] = cmd->DrawInfo.Rectangle.rectangle.position[1];
+            }
+
+            if (cmd->DrawInfo.Rectangle.filled) {
+                vk2dRendererDrawRectangle(
+                        position[0],
+                        position[1],
+                        cmd->DrawInfo.Rectangle.rectangle.size[0],
+                        cmd->DrawInfo.Rectangle.rectangle.size[1],
+                        cmd->DrawInfo.Rectangle.rotation,
+                        cmd->DrawInfo.Rectangle.origin[0],
+                        cmd->DrawInfo.Rectangle.origin[1]
+                );
+            } else {
+                vk2dRendererDrawRectangleOutline(
+                        position[0],
+                        position[1],
+                        cmd->DrawInfo.Rectangle.rectangle.size[0],
+                        cmd->DrawInfo.Rectangle.rectangle.size[1],
+                        cmd->DrawInfo.Rectangle.rotation,
+                        cmd->DrawInfo.Rectangle.origin[0],
+                        cmd->DrawInfo.Rectangle.origin[1],
+                        cmd->DrawInfo.Rectangle.lineSize
+                );
+            } // TODO: Implement other command types
+        }
+    }
+
     vk2dRendererEndFrame();
 }
-
-void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
-    // TODO: This
-}
-

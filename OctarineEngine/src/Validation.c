@@ -59,6 +59,7 @@ OCTARINE_API void oct_Log(const char *fmt, ...) {
     va_list l;
     va_start(l, fmt);
     vprintf(fmt, l);
+    printf("\n");
     fflush(stdout);
     va_end(l);
     SDL_UnlockMutex(gLogMutex);

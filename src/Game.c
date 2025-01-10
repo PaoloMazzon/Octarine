@@ -7,6 +7,20 @@ void *startup(Oct_Context ctx) {
 
 // Called each logical frame, whatever you return is passed to either the next update or shutdown
 void *update(Oct_Context ctx, void *ptr) {
+    Oct_DrawCommand cmd = {
+            .type = OCT_DRAW_COMMAND_TYPE_RECTANGLE,
+            .interpolate = true,
+            .id = 1,
+            .colour = {1, 1, 1, 1},
+            .DrawInfo.Rectangle = {
+                    .rectangle = {
+                            .size = {20, 20},
+                            .position = {oct_Time(ctx) * 120, 100}
+                    },
+                    .filled = true
+            }
+    };
+    oct_Draw(ctx, &cmd);
     return null;
 }
 

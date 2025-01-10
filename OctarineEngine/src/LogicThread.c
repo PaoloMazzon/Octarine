@@ -8,6 +8,7 @@
 int oct_UserThread(void *ptr) {
     Oct_Context ctx = ptr;
 
+    ctx->gameStartTime = SDL_GetPerformanceCounter();
     void *userData = ctx->initInfo->startup(ctx);
 
     // Timekeeping
@@ -21,7 +22,7 @@ int oct_UserThread(void *ptr) {
         // Process user frame
         _oct_CommandBufferBeginFrame(ctx);
         userData = ctx->initInfo->update(ctx, userData);
-        _oct_CommandBufferEndFrame(ctx);
+        _oct_CommandBufferEndFrame(ctx); // TODO - This may need to be moved to after the wait
 
         // Wait until clock thread says we may begin a new frame
         while (SDL_AtomicGet(&ctx->frameStart) == 0) {
@@ -80,4 +81,8 @@ void oct_Bootstrap(Oct_Context ctx) {
 void _oct_UnstrapBoots(Oct_Context ctx) {
     SDL_WaitThread(ctx->logicThread, null);
     SDL_WaitThread(ctx->clockThread, null);
+}
+
+OCTARINE_API double oct_Time(Oct_Context ctx) {
+    return (double)((double)SDL_GetPerformanceCounter() - ctx->gameStartTime) / (double)SDL_GetPerformanceFrequency();
 }

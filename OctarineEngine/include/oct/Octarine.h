@@ -4,3 +4,8 @@
 #include "oct/Core.h"
 #include "oct/Constants.h"
 #include "oct/Validation.h"
+#include "oct/Drawing.h"
+#include "oct/Window.h"
+#include "oct/Audio.h"
+#include "oct/Allocators.h"
+#include "oct/CommandBuffer.h"
