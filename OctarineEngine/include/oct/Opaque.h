@@ -17,6 +17,7 @@ struct Oct_Context_t {
     SDL_atomic_t quit;             ///< True to quit the game
     SDL_atomic_t frameStart;       ///< Atomic for clock thread to tell logic thread when it can begin the frame
     SDL_atomic_t renderHz;         ///< Render refresh rate, 0 means unlocked
+    SDL_atomic_t renderHzActual;   ///< True render refresh rate
     SDL_atomic_t logicHzActual;    ///< Actual refresh rate of the logic thread, use OCT_INT_TO_FLOAT to get the value
     SDL_atomic_t interpolatedTime; ///< Estimated time it should be in the logic frame cycle, for interpolation, normalized 0-1 (the frame just started would be 0, the frame is just about done is close to 1)
 

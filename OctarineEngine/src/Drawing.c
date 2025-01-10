@@ -22,10 +22,15 @@ void _oct_DrawingEnd(Oct_Context ctx) {
     vk2dRendererQuit();
 }
 
-void _oct_DrawingUpdate(Oct_Context ctx) {
+void _oct_DrawingUpdateBegin(Oct_Context ctx) {
     vk2dRendererStartFrame(VK2D_BLACK);
+}
 
-    // TODO: Parse future draw queue
-
+void _oct_DrawingUpdateEnd(Oct_Context ctx) {
     vk2dRendererEndFrame();
 }
+
+void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_DrawCommand *cmd) {
+    // TODO: This
+}
+

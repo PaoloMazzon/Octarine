@@ -2,6 +2,7 @@
 #include <VK2D/VK2D.h>
 #include "oct/LogicThread.h"
 #include "oct/Validation.h"
+#include "oct/Subsystems.h"
 #include "oct/Opaque.h"
 
 int oct_UserThread(void *ptr) {
@@ -18,9 +19,11 @@ int oct_UserThread(void *ptr) {
     // User-end game loop
     while (SDL_AtomicGet(&ctx->quit) == 0) {
         // Process user frame
+        _oct_CommandBufferBeginFrame(ctx);
         userData = ctx->initInfo->update(ctx, userData);
+        _oct_CommandBufferEndFrame(ctx);
 
-        // Wait until clock thread we may begin a new frame
+        // Wait until clock thread says we may begin a new frame
         while (SDL_AtomicGet(&ctx->frameStart) == 0) {
             volatile int i;
         }

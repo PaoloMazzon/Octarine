@@ -18,27 +18,61 @@ static inline void _oct_SetupInitInfo(Oct_Context ctx, Oct_InitInfo *initInfo) {
 
 OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     // Initialization
-    Oct_Context ctx = mi_malloc(sizeof(struct Oct_Context_t));
+    Oct_Context ctx = mi_zalloc(sizeof(struct Oct_Context_t));
     _oct_SetupInitInfo(ctx, initInfo);
     _oct_ValidationInit(ctx);
     _oct_WindowInit(ctx);
     _oct_DrawingInit(ctx);
+    _oct_AudioInit(ctx);
     _oct_CommandBufferInit(ctx);
 
     // Bootstrap thread
     oct_Bootstrap(ctx);
 
+    // Timekeeping
+    float frameCount = 0;
+    uint64_t refreshRateStartTime = SDL_GetPerformanceCounter();
+
     // Main game loop
     while (SDL_AtomicGet(&ctx->quit) == 0) {
-        _oct_WindowUpdate(ctx);
-        _oct_DrawingUpdate(ctx);
+        // Timekeeping
+        const uint64_t startTime = SDL_GetPerformanceCounter();
 
-        // TODO: Sleep if the user requests a target framerate
+        // Start subsystems
+        _oct_WindowUpdateBegin(ctx);
+        _oct_AudioUpdateBegin(ctx);
+        _oct_DrawingUpdateBegin(ctx);
+
+        // Process command buffer
+        // TODO: Process commands
+
+        // Finish up subsystems for the frame
+        _oct_WindowUpdateEnd(ctx);
+        _oct_AudioUpdateEnd(ctx);
+        _oct_DrawingUpdateEnd(ctx);
+
+        // Timekeeping
+        const int target = SDL_AtomicGet(&ctx->renderHz);
+        const uint64_t currentTime = SDL_GetPerformanceCounter();
+        if (target > 0) {
+            const double between = (double)(currentTime - startTime) / SDL_GetPerformanceFrequency();
+            vk2dSleep((1.0 / target) - between);
+        }
+
+        // Recalculate refresh rate every second
+        frameCount++;
+        if (currentTime - refreshRateStartTime >= SDL_GetPerformanceFrequency()) {
+            const float refreshRate = frameCount / ((float)(currentTime - refreshRateStartTime) / SDL_GetPerformanceFrequency());
+            SDL_AtomicSet(&ctx->renderHzActual, OCT_FLOAT_TO_INT(refreshRate));
+            refreshRateStartTime = SDL_GetPerformanceCounter();
+            frameCount = 0;
+        }
     }
 
     // Cleanup
     _oct_CommandBufferEnd(ctx);
     _oct_UnstrapBoots(ctx);
+    _oct_AudioEnd(ctx);
     _oct_DrawingEnd(ctx);
     _oct_WindowEnd(ctx);
     _oct_ValidationEnd(ctx);

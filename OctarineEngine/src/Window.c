@@ -20,7 +20,7 @@ void _oct_WindowEnd(Oct_Context ctx) {
     SDL_DestroyWindow(ctx->window);
 }
 
-void _oct_WindowUpdate(Oct_Context ctx) {
+void _oct_WindowUpdateBegin(Oct_Context ctx) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT)
@@ -28,4 +28,12 @@ void _oct_WindowUpdate(Oct_Context ctx) {
     }
 
     // TODO: Input polling
+}
+
+void _oct_WindowUpdateEnd(Oct_Context ctx) {
+    // TODO: This
+}
+
+void _oct_WindowProcessCommand(Oct_Context ctx, Oct_WindowCommand *cmd) {
+    // TODO: This
 }

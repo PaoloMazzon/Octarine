@@ -54,8 +54,9 @@ typedef enum {
     OCT_STRUCTURE_TYPE_DRAW_COMMAND = 2,
     OCT_STRUCTURE_TYPE_WINDOW_COMMAND = 3,
     OCT_STRUCTURE_TYPE_LOAD_COMMAND = 4,
-    OCT_STRUCTURE_TYPE_META_COMMAND = 5,
-    OCT_STRUCTURE_TYPE_COMMAND = 6,
+    OCT_STRUCTURE_TYPE_AUDIO_COMMAND = 5,
+    OCT_STRUCTURE_TYPE_META_COMMAND = 6,
+    OCT_STRUCTURE_TYPE_COMMAND = 7,
 } Oct_StructureType;
 
 /// \brief Types of draw commands
@@ -89,6 +90,13 @@ typedef enum {
     OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_EXIT = 3,   ///< Exit fullscreen (does nothing if windowed)
     OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_ENTER = 4,  ///< Enter fullscreen (does nothing if fullscreen)
 } Oct_WindowCommandType;
+
+/// \brief Types of audio commands
+typedef enum {
+    OCT_AUDIO_COMMAND_TYPE_NONE = 0,         ///< None
+    OCT_AUDIO_COMMAND_TYPE_PLAY_SOUND = 1,   ///< Resize the window
+    OCT_AUDIO_COMMAND_TYPE_UPDATE_SOUND = 2, ///< Toggle fullscreen
+} Oct_AudioCommandType;
 
 /// \brief Types of meta commands
 typedef enum {
@@ -128,7 +136,7 @@ struct Oct_DrawCommand_t {
     void *pNext;              ///< For future use
 };
 
-/// \brief Draw command to draw anything from any thread
+/// \brief Window command to draw anything from any thread
 struct Oct_WindowCommand_t {
     Oct_StructureType sType;    ///< Structure type
     Oct_WindowCommandType type; ///< Type of window command this is
@@ -136,12 +144,20 @@ struct Oct_WindowCommand_t {
     void *pNext;                ///< For future use
 };
 
-/// \brief Draw command to draw anything from any thread
+/// \brief Load command to draw anything from any thread
 struct Oct_LoadCommand_t {
     Oct_StructureType sType;  ///< Structure type
     Oct_LoadCommandType type; ///< Type of load command this is
     // TODO: This
     void *pNext;              ///< For future use
+};
+
+/// \brief Audio command to draw anything from any thread
+struct Oct_AudioCommand_t {
+    Oct_StructureType sType;   ///< Structure type
+    Oct_AudioCommandType type; ///< Type of load command this is
+    // TODO: This
+    void *pNext;               ///< For future use
 };
 
 /// \brief Meta commands
@@ -158,6 +174,7 @@ OCT_USER_STRUCT(Oct_Command)
 OCT_USER_STRUCT(Oct_DrawCommand)
 OCT_USER_STRUCT(Oct_WindowCommand)
 OCT_USER_STRUCT(Oct_LoadCommand)
+OCT_USER_STRUCT(Oct_AudioCommand)
 OCT_USER_STRUCT(Oct_MetaCommand)
 
 /// \brief Any type of command the logic thread sends to the render thread
