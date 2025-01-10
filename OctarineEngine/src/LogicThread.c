@@ -48,8 +48,14 @@ int oct_ClockThread(void *ptr) {
 
     // Keep track of time
     while (SDL_AtomicGet(&ctx->quit) == 0) {
-        // Wait 1 frame worth of time TODO - Change this out with a busy loop that changes an estimation variable
-        vk2dSleep(1.0 / ctx->initInfo->logicHz);
+        // Calculate estimated frame time for interpolation
+        const uint64_t start = SDL_GetPerformanceCounter();
+        const uint64_t target = SDL_GetPerformanceCounter() + (SDL_GetPerformanceFrequency() / ctx->initInfo->logicHz);
+        uint64_t current;
+        while ((current = SDL_GetPerformanceCounter()) < target) {
+            float estimated = (float)(current - start) / (float)(SDL_GetPerformanceFrequency() / ctx->initInfo->logicHz);
+            SDL_AtomicSet(&ctx->interpolatedTime, OCT_FLOAT_TO_INT(estimated));
+        }
 
         // Tell the logic thread it may begin
         SDL_AtomicSet(&ctx->frameStart, 1);
