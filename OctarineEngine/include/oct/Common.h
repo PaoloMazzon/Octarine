@@ -23,6 +23,9 @@ extern "C" {
 ///< Turns a float into an int
 #define OCT_FLOAT_TO_INT(f) (*((int*)&f))
 
+///< Max combined number of assets that can exist at once
+#define OCT_MAX_ASSETS 3000
+
 ///< For public definitions
 /*#ifdef OctarineEngine_EXPORTS
 #define OCTARINE_API __declspec(dllexport)
@@ -42,12 +45,17 @@ extern "C" {
 #endif
 
 ////////////////////// Types //////////////////////
-typedef uint64_t Oct_Status; ///< Status code
-typedef uint32_t Oct_Bool;   ///< Internal bool type
-typedef uint64_t Oct_Asset;  ///< Any asset in the engine
-typedef float Oct_Vec4[4];   ///< Array of 4 floats
-typedef float Oct_Vec3[3];   ///< Array of 3 floats
-typedef float Oct_Vec2[2];   ///< Array of 2 floats
+typedef uint64_t Oct_Status;   ///< Status code
+typedef uint32_t Oct_Bool;     ///< Internal bool type
+typedef uint64_t Oct_Asset;    ///< Any asset in the engine
+typedef Oct_Asset Oct_Texture; ///< Any asset in the engine
+typedef Oct_Asset Oct_Audio;   ///< Any asset in the engine
+typedef Oct_Asset Oct_Model;   ///< Any asset in the engine
+typedef Oct_Asset Oct_Sprite;  ///< Any asset in the engine
+typedef Oct_Asset Oct_Font;    ///< Any asset in the engine
+typedef float Oct_Vec4[4];     ///< Array of 4 floats
+typedef float Oct_Vec3[3];     ///< Array of 3 floats
+typedef float Oct_Vec2[2];     ///< Array of 2 floats
 
 ////////////////////// Enums //////////////////////
 /// \brief Structure types
@@ -108,10 +116,16 @@ typedef enum {
     OCT_META_COMMAND_TYPE_END_FRAME = 2,   ///< Toggle fullscreen
 } Oct_MetaCommandType;
 
+/// \brief Types of allocators
+typedef enum {
+    OCT_ALLOCATOR_TYPE_NONE = 0,  ///< None
+    OCT_ALLOCATOR_TYPE_HEAP = 1,  ///< General-purpose heap allocator
+    OCT_ALLOCATOR_TYPE_ARENA = 2, ///< Arena allocator
+} Oct_AllocatorType;
+
 ////////////////////// Hidden structs //////////////////////
 OCT_OPAQUE_POINTER(Oct_Context)
-OCT_OPAQUE_POINTER(Oct_ArenaAllocator)
-OCT_OPAQUE_POINTER(Oct_HeapAllocator)
+OCT_OPAQUE_POINTER(Oct_Allocator)
 
 ////////////////////// Structs //////////////////////
 

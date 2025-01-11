@@ -1,4 +1,5 @@
 #include "Game.h"
+#include <math.h>
 
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup(Oct_Context ctx) {
@@ -15,7 +16,7 @@ void *update(Oct_Context ctx, void *ptr) {
             .DrawInfo.Rectangle = {
                     .rectangle = {
                             .size = {20, 20},
-                            .position = {oct_Time(ctx) * 120, 100}
+                            .position = {310 + (cosf(oct_Time(ctx)) * 200), 230 + (sinf(oct_Time(ctx)) * 200)}
                     },
                     .filled = true
             }

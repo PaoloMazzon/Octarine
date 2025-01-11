@@ -18,4 +18,4 @@ Octarine is a game engine written in C for C/C++.
  + [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h) - Vulkan2D uses under the hood (MIT)
  + [SDL2](https://www.libsdl.org/) - Windowing/input/threads (zlib)
  + [mi-malloc](https://github.com/microsoft/mimalloc) - General allocations (MIT)
- + [flecs](https://github.com/SanderMertens/flecs?tab=readme-ov-file) - ECS
+ + [flecs](https://github.com/SanderMertens/flecs?tab=readme-ov-file) - ECS (MIT)

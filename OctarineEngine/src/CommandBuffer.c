@@ -113,6 +113,8 @@ void _oct_CommandBufferDispatch(Oct_Context ctx) {
             _oct_WindowProcessCommand(ctx, &cmd);
         } else if (sType == OCT_STRUCTURE_TYPE_AUDIO_COMMAND) {
             _oct_AudioProcessCommand(ctx, &cmd);
+        } else if (sType == OCT_STRUCTURE_TYPE_LOAD_COMMAND) {
+            _oct_AssetsProcessCommand(ctx, &cmd);
         }
     }
 }

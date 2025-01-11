@@ -25,6 +25,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     _oct_DrawingInit(ctx);
     _oct_AudioInit(ctx);
     _oct_CommandBufferInit(ctx);
+    _oct_AssetsInit(ctx);
 
     // Bootstrap thread
     oct_Bootstrap(ctx);
@@ -70,6 +71,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     }
 
     // Cleanup
+    _oct_AssetsEnd(ctx);
     _oct_CommandBufferEnd(ctx);
     _oct_UnstrapBoots(ctx);
     _oct_AudioEnd(ctx);
