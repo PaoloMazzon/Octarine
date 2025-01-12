@@ -27,6 +27,12 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     _oct_CommandBufferInit(ctx);
     _oct_AssetsInit(ctx);
 
+    // Debug settings
+    if (ctx->initInfo->debug) {
+        mi_option_enable(mi_option_show_stats);
+        mi_option_enable(mi_option_show_errors);
+    }
+
     // Bootstrap thread
     oct_Bootstrap(ctx);
 

@@ -13,6 +13,7 @@ int main() {
             .windowTitle = "Octarine",
             .windowWidth = 640,
             .windowHeight = 480,
+            .debug = true,
     };
 
     // Launches the game with the above parameters
