@@ -1,26 +1,7 @@
 #include <SDL2/SDL.h>
 #include "oct/Common.h"
-
-/// \brief Types of assets stored in an Oct_Asset
-typedef enum {
-    OCT_ASSET_TYPE_NONE = 0,    ///< None
-    OCT_ASSET_TYPE_TEXTURE = 1, ///< A texture
-    OCT_ASSET_TYPE_MODEL = 2,   ///< Model
-    OCT_ASSET_TYPE_FONT = 3,    ///< Font
-    OCT_ASSET_TYPE_AUDIO = 4,   ///< Audio
-    OCT_ASSET_TYPE_SPRITE = 5,  ///< Sprite
-} Oct_AssetType;
-
-// An asset for the engine
-typedef struct Oct_AssetData_t {
-    Oct_AssetType type; // type of asset
-    Oct_Bool reserved; // to allow the logic thread to find assets that still exist
-    SDL_atomic_t failed; // This will be true if the load on this asset failed
-    SDL_atomic_t loaded; // True when the asset is loaded
-    union {
-        // TODO: These
-    };
-} Oct_AssetData;
+#include "oct/Allocators.h"
+#include "oct/Opaque.h"
 
 // All assets
 static Oct_AssetData gAssets[OCT_MAX_ASSETS];
@@ -31,29 +12,55 @@ static char gErrorMessage[ERROR_BUFFER_SIZE];
 static SDL_mutex *gErrorMessageMutex;
 
 void _oct_AssetsInit(Oct_Context ctx) {
-    // TODO: This
+    gErrorMessageMutex = SDL_CreateMutex();
 }
 
 void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
-    // TODO: This
+    //TODO: This
 }
 
-Oct_Asset *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset) {
-    return null; // TODO: This
+Oct_AssetType _oct_AssetType(Oct_Context ctx, Oct_Asset asset) {
+    return gAssets[asset].type;
+}
+
+Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset) {
+    return &gAssets[asset];
 }
 
 void _oct_AssetsEnd(Oct_Context ctx) {
-    // TODO: This
+    SDL_DestroyMutex(gErrorMessageMutex);
+}
+
+Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx) {
+    for (int i = 0; i < OCT_MAX_ASSETS; i++) {
+        if (!SDL_AtomicGet(&gAssets->reserved)) {
+            SDL_AtomicSet(&gAssets->reserved, 1);
+            return i;
+        }
+    }
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset) {
-    return false; // TODO: This
+    return SDL_AtomicGet(&gAssets[asset].loaded);
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset) {
-    return false; // TODO: This
+    return SDL_AtomicGet(&gAssets[asset].failed);
 }
 
 OCTARINE_API const char *oct_AssetErrorMessage(Oct_Allocator allocator) {
-    return NULL; // TODO: This
+    char *out = null;
+    SDL_LockMutex(gErrorMessageMutex);
+    const int slen = strlen(gErrorMessage);
+    const int len = slen >= ERROR_BUFFER_SIZE ? ERROR_BUFFER_SIZE - 1 : slen;
+
+    // Allocate new string and copy it
+    out = oct_Malloc(allocator, len + 1);
+    if (out) {
+        strncpy(out, gErrorMessage, len);
+        out[len] = 0;
+    }
+
+    SDL_UnlockMutex(gErrorMessageMutex);
+    return out;
 }

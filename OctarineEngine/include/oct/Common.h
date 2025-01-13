@@ -123,6 +123,16 @@ typedef enum {
     OCT_ALLOCATOR_TYPE_ARENA = 2, ///< Arena allocator
 } Oct_AllocatorType;
 
+/// \brief Types of assets stored in an Oct_Asset - mostly internal use
+typedef enum {
+    OCT_ASSET_TYPE_NONE = 0,    ///< None
+    OCT_ASSET_TYPE_TEXTURE = 1, ///< A texture
+    OCT_ASSET_TYPE_MODEL = 2,   ///< Model
+    OCT_ASSET_TYPE_FONT = 3,    ///< Font
+    OCT_ASSET_TYPE_AUDIO = 4,   ///< Audio
+    OCT_ASSET_TYPE_SPRITE = 5,  ///< Sprite
+} Oct_AssetType;
+
 ////////////////////// Hidden structs //////////////////////
 OCT_OPAQUE_POINTER(Oct_Context)
 OCT_OPAQUE_POINTER(Oct_Allocator)
@@ -156,6 +166,7 @@ struct Oct_WindowCommand_t {
 struct Oct_LoadCommand_t {
     Oct_StructureType sType;  ///< Structure type
     Oct_LoadCommandType type; ///< Type of load command this is
+    Oct_Asset asset;          ///< Asset id, internal use (don't worry about this)
     // TODO: This
     void *pNext;              ///< For future use
 };

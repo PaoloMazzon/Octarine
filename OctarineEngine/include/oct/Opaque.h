@@ -29,6 +29,18 @@ struct Oct_Context_t {
     } RingBuffer;              ///< Ring buffer for commands
 };
 
+// An asset for the engine
+struct Oct_AssetData_t {
+    Oct_AssetType type;    // type of asset
+    SDL_atomic_t reserved; // to allow the logic thread to find assets that still exist
+    SDL_atomic_t failed;   // This will be true if the load on this asset failed
+    SDL_atomic_t loaded;   // True when the asset is loaded
+    union {
+        // TODO: These
+    };
+};
+typedef struct Oct_AssetData_t Oct_AssetData;
+
 /// \brief Any type of allocator
 struct Oct_Allocator_t {
     Oct_AllocatorType type;

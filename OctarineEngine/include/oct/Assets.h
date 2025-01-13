@@ -6,6 +6,17 @@
 extern "C" {
 #endif
 
+/// \brief Adds a load command to the command queue and returns the asset
+/// \param load Load command, refer to that Oct_LoadCommand's documentation
+/// \return Returns a new asset ID
+///
+/// This will add a load command to the command queue. The asset is not immediately
+/// loaded and will be loaded whenever the render thread receives the command. This is
+/// guaranteed to be before the next draw command is executed unless the load fails for
+/// any reason. What this means in practice is that this function does not immediately
+/// load the asset but you may treat the asset as thought it were.
+OCTARINE_API Oct_Asset oct_Load(Oct_LoadCommand *load);
+
 /// \brief Returns true if the asset was successfully loaded, false if its not loaded for any reason
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset);
 

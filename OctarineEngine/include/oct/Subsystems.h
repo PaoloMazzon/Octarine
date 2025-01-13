@@ -43,9 +43,13 @@ void _oct_AudioProcessCommand(Oct_Context ctx, Oct_Command *cmd);
 void _oct_AudioEnd(Oct_Context ctx);
 
 // Handles loading/unloading assets
+struct Oct_AssetData_t;
+typedef struct Oct_AssetData_t Oct_AssetData;
 void _oct_AssetsInit(Oct_Context ctx);
 void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd);
-Oct_Asset *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset);
+Oct_AssetType _oct_AssetType(Oct_Context ctx, Oct_Asset asset);
+Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset);
+Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx); // used from logic thread to reserve a space in the asset list
 void _oct_AssetsEnd(Oct_Context ctx);
 
 #ifdef __cplusplus
