@@ -5,6 +5,14 @@
 #include "oct/Validation.h"
 #include "oct/Constants.h"
 
+#define ANSI_COLOUR_RED     "\x1b[31m"
+#define ANSI_COLOUR_GREEN   "\x1b[32m"
+#define ANSI_COLOUR_YELLOW  "\x1b[33m"
+#define ANSI_COLOUR_BLUE    "\x1b[34m"
+#define ANSI_COLOUR_MAGENTA "\x1b[35m"
+#define ANSI_COLOUR_CYAN    "\x1b[36m"
+#define ANSI_COLOUR_RESET   "\x1b[0m"
+
 // Constants
 #define BUFFER_SIZE 1024
 static char gErrorBuffer[BUFFER_SIZE]; // Buffer for error string
@@ -37,6 +45,11 @@ OCTARINE_API void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, 
         va_end(l);
         fclose(f);
         abort();
+    } else {
+        SDL_LockMutex(gLogMutex);
+        printf(ANSI_COLOUR_RED "ERROR: " ANSI_COLOUR_RESET "%s\n", gErrorBuffer);
+        fflush(stdout);
+        SDL_UnlockMutex(gLogMutex);
     }
     gStatus |= status;
     SDL_UnlockMutex(gStatusMutex);
@@ -57,6 +70,7 @@ OCTARINE_API const char *oct_GetError() {
 OCTARINE_API void oct_Log(const char *fmt, ...) {
     SDL_LockMutex(gLogMutex);
     va_list l;
+    printf(ANSI_COLOUR_GREEN "LOG: " ANSI_COLOUR_RESET);
     va_start(l, fmt);
     vprintf(fmt, l);
     printf("\n");
