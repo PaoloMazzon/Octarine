@@ -1,8 +1,17 @@
 #include "Game.h"
 #include <math.h>
 
+Oct_Texture gTexMarble;
+Oct_Allocator gAllocator;
+
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup(Oct_Context ctx) {
+    gAllocator = oct_CreateHeapAllocator();
+    Oct_LoadCommand load = {
+            .type = OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE,
+            .Asset.Texture.filename = "data/marble.jpg"
+    };
+    gTexMarble = oct_Load(ctx, &load);
     return null;
 }
 
@@ -13,19 +22,45 @@ void *update(Oct_Context ctx, void *ptr) {
             .interpolate = true,
             .id = 1,
             .colour = {1, 1, 1, 1},
-            .DrawInfo.Rectangle = {
+            .Rectangle = {
                     .rectangle = {
-                            .size = {20, 20},
-                            .position = {310 + (cosf(oct_Time(ctx)) * 200), 230 + (sinf(oct_Time(ctx)) * 200)}
+                            .position = {320 + (cosf(oct_Time(ctx)) * 200), 240 + (sinf(oct_Time(ctx)) * 200)},
+                            .size = {40, 40},
                     },
-                    .filled = true
+                    .filled = true,
+            }
+    };
+    Oct_DrawCommand textureCmd = {
+            .type = OCT_DRAW_COMMAND_TYPE_TEXTURE,
+            .interpolate = true,
+            .id = 2,
+            .colour = {1, 1, 1, 1},
+            .Texture = {
+                    .texture = gTexMarble,
+                    .position = {320 + (cosf(oct_Time(ctx)) * 200), 240 + (sinf(-oct_Time(ctx)) * 200)},
+                    .viewport = {
+                            .position = {0, 0},
+                            .size = {OCT_WHOLE_TEXTURE, OCT_WHOLE_TEXTURE}
+                    },
+                    .scale = {1, 1},
+                    .origin = {OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE},
+                    .rotation = oct_Time(ctx)
             }
     };
     oct_Draw(ctx, &cmd);
+    oct_Draw(ctx, &textureCmd);
+
+    // Check for errors
+    if (oct_AssetLoadHasFailed()) {
+        const char *s = oct_AssetErrorMessage(gAllocator);
+        oct_Log("%s", s);
+        oct_Free(gAllocator, (void*)s);
+    }
+
     return null;
 }
 
 // Called once when the engine is about to be deinitialized
 void shutdown(Oct_Context ctx, void *ptr) {
-
+    oct_FreeAllocator(gAllocator);
 }

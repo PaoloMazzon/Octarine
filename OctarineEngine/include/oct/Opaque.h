@@ -2,6 +2,7 @@
 #pragma once
 #include <mimalloc.h>
 #include <SDL2/SDL.h>
+#include <VK2D/Structs.h>
 #include "oct/Common.h"
 
 #ifdef __cplusplus
@@ -36,7 +37,7 @@ struct Oct_AssetData_t {
     SDL_atomic_t failed;   // This will be true if the load on this asset failed
     SDL_atomic_t loaded;   // True when the asset is loaded
     union {
-        // TODO: These
+        VK2DTexture texture;
     };
 };
 typedef struct Oct_AssetData_t Oct_AssetData;

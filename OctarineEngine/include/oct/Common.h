@@ -26,6 +26,18 @@ extern "C" {
 ///< Max combined number of assets that can exist at once
 #define OCT_MAX_ASSETS 3000
 
+///< Tells texture rendering to render the whole width/height
+#define OCT_WHOLE_TEXTURE -1
+
+///< Tells origin to be the middle
+#define OCT_ORIGIN_MIDDLE -9999
+
+///< Tells origin to be on the right
+#define OCT_ORIGIN_RIGHT -9998
+
+///< Tells origin to be on the left (or just use 0)
+#define OCT_ORIGIN_LEFT 0
+
 ///< For public definitions
 /*#ifdef OctarineEngine_EXPORTS
 #define OCTARINE_API __declspec(dllexport)
@@ -86,11 +98,15 @@ typedef enum {
 
 /// \brief Types of load commands
 typedef enum {
-    OCT_LOAD_COMMAND_TYPE_NONE = 0,    ///< None
-    OCT_LOAD_COMMAND_TYPE_TEXTURE = 1, ///< Load a texture
-    OCT_LOAD_COMMAND_TYPE_SPRITE = 2,  ///< Load a sprite
-    OCT_LOAD_COMMAND_TYPE_FONT = 3,    ///< Load a font
-    OCT_LOAD_COMMAND_TYPE_MODEL = 4,   ///< Loads a model
+    OCT_LOAD_COMMAND_TYPE_NONE = 0,         ///< None
+    OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE = 1, ///< Load a texture
+    OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,  ///< Load a sprite
+    OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,    ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_LOAD_MODEL = 4,   ///< Loads a model
+    OCT_LOAD_COMMAND_TYPE_FREE_TEXTURE = 5, ///< Load a texture
+    OCT_LOAD_COMMAND_TYPE_FREE_SPRITE = 6,  ///< Load a sprite
+    OCT_LOAD_COMMAND_TYPE_FREE_FONT = 7,    ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_FREE_MODEL = 8,   ///< Loads a model
 } Oct_LoadCommandType;
 
 /// \brief Types of window commands
@@ -166,7 +182,13 @@ struct Oct_WindowCommand_t {
 struct Oct_LoadCommand_t {
     Oct_StructureType sType;  ///< Structure type
     Oct_LoadCommandType type; ///< Type of load command this is
-    Oct_Asset asset;          ///< Asset id, internal use (don't worry about this)
+    Oct_Asset _assetID;       ///< Asset id, internal use (don't worry about this)
+    union {
+        struct {
+            const char *filename;
+            // TODO: Loading from binary
+        } Texture;
+    } Asset;
     // TODO: This
     void *pNext;              ///< For future use
 };
@@ -231,10 +253,18 @@ struct Oct_DrawCommand_t {
             Oct_Rectangle rectangle; ///< Rectangle
             Oct_Bool filled;         ///< Weather or not its filled
             float lineSize;          ///< Size of the lines if its not filled
-            float rotation;          ///< Rotation of the rectangle
+            float rotation;          ///< Rotation in radians
             Oct_Vec2 origin;         ///< Origin of rotation, x/y
         } Rectangle;                 ///< Information to draw a rectangle
-    } DrawInfo;
+        struct {
+            Oct_Texture texture;    ///< Texture to draw
+            Oct_Rectangle viewport; ///< Where in the texture to draw (use OCT_WHOLE_TEXTURE)
+            Oct_Vec2 position;      ///< Where on the game world to draw it
+            Oct_Vec2 scale;         ///< Scale of the texture, {1, 1} being normal
+            Oct_Vec2 origin;        ///< Origin of rotation and offset
+            float rotation;         ///< Rotation in radians
+        } Texture;
+    };
     void *pNext;              ///< For future use
 };
 

@@ -9,3 +9,4 @@
 #include "oct/Audio.h"
 #include "oct/Allocators.h"
 #include "oct/CommandBuffer.h"
+#include "oct/Assets.h"

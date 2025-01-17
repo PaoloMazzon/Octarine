@@ -2,6 +2,7 @@
 #include "oct/Drawing.h"
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
+#include "oct/Subsystems.h"
 
 // Commands are tied to the frame they came from for interpolation and triple buffering
 typedef struct FrameCommandBuffer_t {
@@ -84,6 +85,93 @@ static inline float lerp(float x, float min, float max) {
     return (x * (max - min)) + min;
 }
 
+/////////////////////////////// DRAWING COMMANDS ///////////////////////////////
+#define interpolate(prevCmd, time, min, max) prevCmd ? lerp(time, min, max) : max;
+
+static void _oct_ProcessOrigin(Oct_Vec2 origin, Oct_Vec2 out, float width, float height) {
+    if (origin[0] == OCT_ORIGIN_MIDDLE) {
+        out[0] = width / 2;
+    } else if (origin[0] == OCT_ORIGIN_RIGHT) {
+        origin[0] = width;
+    }
+    if (origin[1] == OCT_ORIGIN_MIDDLE) {
+        out[1] = height / 2;
+    } else if (origin[1] == OCT_ORIGIN_RIGHT) {
+        out[1] = height;
+    }
+}
+
+static void _oct_DrawRectangle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    // Process interpolation
+    Oct_Vec2 position;
+    Oct_Vec2 origin;
+    float rotation;
+    position[0] = interpolate(prevCmd, interpolatedTime, prevCmd->Rectangle.rectangle.position[0], cmd->Rectangle.rectangle.position[0]);
+    position[1] = interpolate(prevCmd, interpolatedTime, prevCmd->Rectangle.rectangle.position[1], cmd->Rectangle.rectangle.position[1]);
+    rotation = interpolate(prevCmd, interpolatedTime, prevCmd->Rectangle.rotation, cmd->Rectangle.rotation);
+
+    _oct_ProcessOrigin(cmd->Rectangle.origin, origin, cmd->Rectangle.rectangle.size[0], cmd->Rectangle.rectangle.size[1]);
+
+    if (cmd->Rectangle.filled) {
+        vk2dRendererDrawRectangle(
+                position[0] - origin[0],
+                position[1] - origin[1],
+                cmd->Rectangle.rectangle.size[0],
+                cmd->Rectangle.rectangle.size[1],
+                rotation,
+                origin[0],
+                origin[1]
+        );
+    } else {
+        vk2dRendererDrawRectangleOutline(
+                position[0] - origin[0],
+                position[1] - origin[1],
+                cmd->Rectangle.rectangle.size[0],
+                cmd->Rectangle.rectangle.size[1],
+                rotation,
+                origin[0],
+                origin[1],
+                cmd->Rectangle.lineSize
+        );
+    }
+}
+
+static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    if (_oct_AssetType(ctx, cmd->Texture.texture) != OCT_ASSET_TYPE_TEXTURE)
+        return;
+    VK2DTexture tex = _oct_AssetGet(ctx, cmd->Texture.texture)->texture;
+
+    // Process interpolation
+    Oct_Vec2 position;
+    Oct_Vec2 scale;
+    Oct_Vec2 origin;
+    float rotation;
+    position[0] = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.position[0], cmd->Texture.position[0]);
+    position[1] = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.position[1], cmd->Texture.position[1]);
+    scale[0] = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.scale[0], cmd->Texture.scale[0]);
+    scale[1] = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.scale[1], cmd->Texture.scale[1]);
+    rotation = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.rotation, cmd->Texture.rotation);
+
+    // Process origin
+    _oct_ProcessOrigin(cmd->Texture.origin, origin, vk2dTextureWidth(tex), vk2dTextureHeight(tex));
+
+        // Draw texture
+    vk2dRendererDrawTexture(
+            tex,
+            position[0] - origin[0],
+            position[1] - origin[1],
+            scale[0],
+            scale[1],
+            rotation,
+            origin[0],
+            origin[1],
+            cmd->Texture.viewport.position[0],
+            cmd->Texture.viewport.position[1],
+            cmd->Texture.viewport.size[0] == OCT_WHOLE_TEXTURE ? vk2dTextureWidth(tex) : cmd->Texture.viewport.size[0],
+            cmd->Texture.viewport.size[1] == OCT_WHOLE_TEXTURE ? vk2dTextureHeight(tex) : cmd->Texture.viewport.size[1]
+    );
+}
+
 void _oct_DrawingUpdateEnd(Oct_Context ctx) {
     int atomic = SDL_AtomicGet(&ctx->interpolatedTime);
     float interpolatedTime = OCT_INT_TO_FLOAT(atomic);
@@ -102,39 +190,10 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
         }
 
         if (cmd->type == OCT_DRAW_COMMAND_TYPE_RECTANGLE) {
-            // Process interpolation
-            Oct_Vec2 position;
-            if (prevCmd) {
-                position[0] = lerp(interpolatedTime, prevCmd->DrawInfo.Rectangle.rectangle.position[0], cmd->DrawInfo.Rectangle.rectangle.position[0]);
-                position[1] = lerp(interpolatedTime, prevCmd->DrawInfo.Rectangle.rectangle.position[1], cmd->DrawInfo.Rectangle.rectangle.position[1]);
-            } else {
-                position[0] = cmd->DrawInfo.Rectangle.rectangle.position[0];
-                position[1] = cmd->DrawInfo.Rectangle.rectangle.position[1];
-            }
-
-            if (cmd->DrawInfo.Rectangle.filled) {
-                vk2dRendererDrawRectangle(
-                        position[0],
-                        position[1],
-                        cmd->DrawInfo.Rectangle.rectangle.size[0],
-                        cmd->DrawInfo.Rectangle.rectangle.size[1],
-                        cmd->DrawInfo.Rectangle.rotation,
-                        cmd->DrawInfo.Rectangle.origin[0],
-                        cmd->DrawInfo.Rectangle.origin[1]
-                );
-            } else {
-                vk2dRendererDrawRectangleOutline(
-                        position[0],
-                        position[1],
-                        cmd->DrawInfo.Rectangle.rectangle.size[0],
-                        cmd->DrawInfo.Rectangle.rectangle.size[1],
-                        cmd->DrawInfo.Rectangle.rotation,
-                        cmd->DrawInfo.Rectangle.origin[0],
-                        cmd->DrawInfo.Rectangle.origin[1],
-                        cmd->DrawInfo.Rectangle.lineSize
-                );
-            } // TODO: Implement other command types
-        }
+            _oct_DrawRectangle(ctx, cmd, prevCmd, interpolatedTime);
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_TEXTURE) {
+            _oct_DrawTexture(ctx, cmd, prevCmd, interpolatedTime);
+        } // TODO: Implement other command types
     }
 
     vk2dRendererEndFrame();
