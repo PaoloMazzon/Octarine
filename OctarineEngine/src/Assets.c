@@ -32,24 +32,30 @@ static void _oct_DestroyAssetMetadata(Oct_Context ctx, Oct_Asset asset) {
     SDL_AtomicSet(&gAssets[asset].reserved, 0);
 }
 
+static void _oct_FailLoad(Oct_Context ctx, Oct_Asset asset) {
+    SDL_AtomicSet(&gAssets[asset].failed, 1);
+    SDL_AtomicSet(&gAssets[asset].reserved, 1);
+    SDL_AtomicSet(&gErrorHasOccurred, 1);
+}
+
 void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
-    Oct_LoadCommand *load = &cmd->command.loadCommand;
+    Oct_LoadCommand *load = &cmd->loadCommand;
     if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE) {
-        VK2DTexture tex = vk2dTextureLoad(load->Asset.Texture.filename);
+        VK2DTexture tex = vk2dTextureLoad(load->Texture.filename);
         if (tex) {
             gAssets[load->_assetID].texture = tex;
             gAssets[load->_assetID].type = OCT_ASSET_TYPE_TEXTURE;
             SDL_AtomicSet(&gAssets[load->_assetID].loaded, 1);
         } else {
-            SDL_AtomicSet(&gAssets[load->_assetID].failed, 1);
-            SDL_AtomicSet(&gAssets[load->_assetID].reserved, 1);
-            SDL_AtomicSet(&gErrorHasOccurred, 1);
-            _oct_LogError("Failed to load texture \"%s\"\n", load->Asset.Texture.filename);
+            _oct_FailLoad(ctx, load->_assetID);
+            _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
         } // TODO: The other types
-    } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE_TEXTURE) {
-        vk2dRendererWait();
-        vk2dTextureFree(gAssets[load->_assetID].texture);
-        _oct_DestroyAssetMetadata(ctx, load->_assetID);
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
+        if (gAssets[load->_assetID].type == OCT_ASSET_TYPE_TEXTURE) {
+            vk2dRendererWait();
+            vk2dTextureFree(gAssets[load->_assetID].texture);
+            _oct_DestroyAssetMetadata(ctx, load->_assetID);
+        } // TODO: The other types
     }
 }
 

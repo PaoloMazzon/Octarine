@@ -36,7 +36,7 @@ void _oct_CommandBufferInit(Oct_Context ctx) {
 void _oct_CommandBufferBeginFrame(Oct_Context ctx) {
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
-            .command.metaCommand = {
+            .metaCommand = {
                     .sType = OCT_STRUCTURE_TYPE_META_COMMAND,
                     .type = OCT_META_COMMAND_TYPE_START_FRAME
             }
@@ -47,7 +47,7 @@ void _oct_CommandBufferBeginFrame(Oct_Context ctx) {
 void _oct_CommandBufferEndFrame(Oct_Context ctx) {
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
-            .command.metaCommand = {
+            .metaCommand = {
                     .sType = OCT_STRUCTURE_TYPE_META_COMMAND,
                     .type = OCT_META_COMMAND_TYPE_END_FRAME
             }
@@ -70,27 +70,44 @@ void _oct_CommandBufferEnd(Oct_Context ctx) {
 
 OCTARINE_API void oct_Draw(Oct_Context ctx, Oct_DrawCommand *draw) {
     draw->sType = OCT_STRUCTURE_TYPE_DRAW_COMMAND;
+    draw->pNext = null;
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
-            .command.drawCommand = *draw
+            .drawCommand = *draw
     };
     pushCommand(ctx, &cmd);
 }
 
 OCTARINE_API void oct_WindowUpdate(Oct_Context ctx, Oct_WindowCommand *windowUpdate) {
     windowUpdate->sType = OCT_STRUCTURE_TYPE_WINDOW_COMMAND;
+    windowUpdate->pNext = null;
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
-            .command.windowCommand = *windowUpdate
+            .windowCommand = *windowUpdate
     };
     pushCommand(ctx, &cmd);
 }
 
 OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load) {
     load->sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND;
+    load->pNext = null;
+    load->_assetID = _oct_AssetReserveSpace(ctx);
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
-            .command.loadCommand = *load
+            .loadCommand = *load
+    };
+    pushCommand(ctx, &cmd);
+    return load->_assetID;
+}
+
+OCTARINE_API void oct_FreeAsset(Oct_Context ctx, Oct_Asset asset) {
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    ._assetID = asset,
+                    .type = OCT_LOAD_COMMAND_TYPE_FREE
+            }
     };
     pushCommand(ctx, &cmd);
 }
@@ -99,7 +116,7 @@ void _oct_CommandBufferDispatch(Oct_Context ctx) {
     Oct_Command cmd = {0};
     while (_oct_CommandBufferPop(ctx, &cmd)) {
         // Find out the kind of command this is
-        const Oct_StructureType sType = OCT_STRUCTURE_TYPE(&cmd.command);
+        const Oct_StructureType sType = OCT_STRUCTURE_TYPE(&cmd.topOfUnion);
 
         // Dispatch to the proper subsystem
         if (sType == OCT_STRUCTURE_TYPE_META_COMMAND) {

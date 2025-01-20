@@ -71,13 +71,13 @@ void _oct_DrawingUpdateBegin(Oct_Context ctx) {
 }
 
 void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
-    if (OCT_STRUCTURE_TYPE(&cmd->command) == OCT_STRUCTURE_TYPE_META_COMMAND) {
-        if (cmd->command.metaCommand.type == OCT_META_COMMAND_TYPE_END_FRAME) {
+    if (OCT_STRUCTURE_TYPE(&cmd->topOfUnion) == OCT_STRUCTURE_TYPE_META_COMMAND) {
+        if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_END_FRAME) {
             gCurrentFrame = NEXT_INDEX(gCurrentFrame);
             gFrameBuffers[gCurrentFrame].count = 0;
         }
     } else {
-        addCommand(&cmd->command.drawCommand);
+        addCommand(&cmd->drawCommand);
     }
 }
 
@@ -86,7 +86,7 @@ static inline float lerp(float x, float min, float max) {
 }
 
 /////////////////////////////// DRAWING COMMANDS ///////////////////////////////
-#define interpolate(prevCmd, time, min, max) prevCmd ? lerp(time, min, max) : max;
+#define interpolate(interpolateFlags, prevCmd, time, min, max) (prevCmd) && (interpolateFlags) ? lerp(time, min, max) : (max);
 
 static void _oct_ProcessOrigin(Oct_Vec2 origin, Oct_Vec2 out, float width, float height) {
     if (origin[0] == OCT_ORIGIN_MIDDLE) {
@@ -106,9 +106,9 @@ static void _oct_DrawRectangle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     Oct_Vec2 position;
     Oct_Vec2 origin;
     float rotation;
-    position[0] = interpolate(prevCmd, interpolatedTime, prevCmd->Rectangle.rectangle.position[0], cmd->Rectangle.rectangle.position[0]);
-    position[1] = interpolate(prevCmd, interpolatedTime, prevCmd->Rectangle.rectangle.position[1], cmd->Rectangle.rectangle.position[1]);
-    rotation = interpolate(prevCmd, interpolatedTime, prevCmd->Rectangle.rotation, cmd->Rectangle.rotation);
+    position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Rectangle.rectangle.position[0], cmd->Rectangle.rectangle.position[0]);
+    position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Rectangle.rectangle.position[1], cmd->Rectangle.rectangle.position[1]);
+    rotation = interpolate(cmd->interpolate & OCT_INTERPOLATE_ROTATION, prevCmd, interpolatedTime, prevCmd->Rectangle.rotation, cmd->Rectangle.rotation);
 
     _oct_ProcessOrigin(cmd->Rectangle.origin, origin, cmd->Rectangle.rectangle.size[0], cmd->Rectangle.rectangle.size[1]);
 
@@ -146,11 +146,11 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
     Oct_Vec2 scale;
     Oct_Vec2 origin;
     float rotation;
-    position[0] = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.position[0], cmd->Texture.position[0]);
-    position[1] = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.position[1], cmd->Texture.position[1]);
-    scale[0] = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.scale[0], cmd->Texture.scale[0]);
-    scale[1] = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.scale[1], cmd->Texture.scale[1]);
-    rotation = interpolate(prevCmd, interpolatedTime, prevCmd->Texture.rotation, cmd->Texture.rotation);
+    position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Texture.position[0], cmd->Texture.position[0]);
+    position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Texture.position[1], cmd->Texture.position[1]);
+    scale[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_X, prevCmd, interpolatedTime, prevCmd->Texture.scale[0], cmd->Texture.scale[0]);
+    scale[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->Texture.scale[1], cmd->Texture.scale[1]);
+    rotation = interpolate(cmd->interpolate & OCT_INTERPOLATE_ROTATION, prevCmd, interpolatedTime, prevCmd->Texture.rotation, cmd->Texture.rotation);
 
     // Process origin
     _oct_ProcessOrigin(cmd->Texture.origin, origin, vk2dTextureWidth(tex), vk2dTextureHeight(tex));

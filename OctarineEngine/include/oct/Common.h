@@ -103,10 +103,7 @@ typedef enum {
     OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,  ///< Load a sprite
     OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,    ///< Load a font
     OCT_LOAD_COMMAND_TYPE_LOAD_MODEL = 4,   ///< Loads a model
-    OCT_LOAD_COMMAND_TYPE_FREE_TEXTURE = 5, ///< Load a texture
-    OCT_LOAD_COMMAND_TYPE_FREE_SPRITE = 6,  ///< Load a sprite
-    OCT_LOAD_COMMAND_TYPE_FREE_FONT = 7,    ///< Load a font
-    OCT_LOAD_COMMAND_TYPE_FREE_MODEL = 8,   ///< Loads a model
+    OCT_LOAD_COMMAND_TYPE_FREE = 5,         ///< Frees an asset
 } Oct_LoadCommandType;
 
 /// \brief Types of window commands
@@ -149,6 +146,16 @@ typedef enum {
     OCT_ASSET_TYPE_SPRITE = 5,  ///< Sprite
 } Oct_AssetType;
 
+/// \brief Things you can interpolate
+typedef enum {
+    OCT_INTERPOLATE_NONE = 0,         ///< Don't interpolate
+    OCT_INTERPOLATE_POSITION = 1<<1,  ///< Interpolate position
+    OCT_INTERPOLATE_ROTATION = 1<<2,  ///< Interpolate rotation
+    OCT_INTERPOLATE_SCALE_X = 1<<3,   ///< Interpolate horizontal scale
+    OCT_INTERPOLATE_SCALE_Y = 1<<4,   ///< Interpolate vertical scale
+    OCT_INTERPOLATE_ALL = 0xFFFFFFFF, ///< Interpolate all of the above (where available)
+} Oct_InterpolationType;
+
 ////////////////////// Hidden structs //////////////////////
 OCT_OPAQUE_POINTER(Oct_Context)
 OCT_OPAQUE_POINTER(Oct_Allocator)
@@ -170,7 +177,7 @@ struct Oct_InitInfo_t {
     void *pNext;                                 ///< For future use
 };
 
-/// \brief Window command to draw anything from any thread
+/// \brief Window command to queue window events
 struct Oct_WindowCommand_t {
     Oct_StructureType sType;    ///< Structure type
     Oct_WindowCommandType type; ///< Type of window command this is
@@ -178,19 +185,19 @@ struct Oct_WindowCommand_t {
     void *pNext;                ///< For future use
 };
 
-/// \brief Load command to draw anything from any thread
+/// \brief Load command to load or free anything (just use oct_FreeAsset, don't use this manually for freeing)
 struct Oct_LoadCommand_t {
     Oct_StructureType sType;  ///< Structure type
     Oct_LoadCommandType type; ///< Type of load command this is
-    Oct_Asset _assetID;       ///< Asset id, internal use (don't worry about this)
+    Oct_Asset _assetID;       ///< Internal use
     union {
         struct {
-            const char *filename;
+            const char *filename; ///< Filename of the texture to load (png, jpg, bmp)
             // TODO: Loading from binary
-        } Texture;
-    } Asset;
+        } Texture;                ///< Information needed to load a texture
+    };
     // TODO: This
-    void *pNext;              ///< For future use
+    void *pNext; ///< For future use
 };
 
 /// \brief Audio command to draw anything from any thread
@@ -201,7 +208,7 @@ struct Oct_AudioCommand_t {
     void *pNext;               ///< For future use
 };
 
-/// \brief Meta commands
+/// \brief Meta commands, probably only internal use
 struct Oct_MetaCommand_t {
     Oct_StructureType sType;  ///< Structure type
     Oct_MetaCommandType type; ///< Type of meta command this is
@@ -241,13 +248,13 @@ OCT_USER_STRUCT(Oct_Rectangle)
 OCT_USER_STRUCT(Oct_Circle)
 OCT_USER_STRUCT(Oct_Colour)
 
-/// \brief Draw command to draw anything from any thread
+/// \brief Draw command to draw anything
 struct Oct_DrawCommand_t {
-    Oct_StructureType sType;  ///< Structure type
-    Oct_DrawCommandType type; ///< Type of draw command this is
-    Oct_Colour colour;        ///< Colour modifier
-    Oct_Bool interpolate;     ///< Set to true to interpolate with the previous of this command
-    uint64_t id;              ///< ID of this command to match it with a previous command for interpolation
+    Oct_StructureType sType;           ///< Structure type
+    Oct_DrawCommandType type;          ///< Type of draw command this is
+    Oct_Colour colour;                 ///< Colour modifier
+    Oct_InterpolationType interpolate; ///< See Oct_InterpolationType, bitwise OR them together
+    uint64_t id;                       ///< ID of this command to match it with a previous command for interpolation
     union {
         struct {
             Oct_Rectangle rectangle; ///< Rectangle
@@ -265,18 +272,19 @@ struct Oct_DrawCommand_t {
             float rotation;         ///< Rotation in radians
         } Texture;
     };
-    void *pNext;              ///< For future use
+    void *pNext; ///< For future use
 };
 
-/// \brief Any type of command the logic thread sends to the render thread
+/// \brief Any type of command the logic thread sends to the render thread - mostly internal use
 struct Oct_Command_t {
     Oct_StructureType sType;             ///< Structure type
     union {
+        int topOfUnion;                  ///< For OCT_STRUCTURE_TYPE
         Oct_DrawCommand drawCommand;     ///< Draw command
         Oct_WindowCommand windowCommand; ///< Window command
         Oct_LoadCommand loadCommand;     ///< Load command
         Oct_MetaCommand metaCommand;     ///< Meta command
-    } command;                           ///< The internal command
+    };
     void *pNext;                         ///< For future use
 };
 

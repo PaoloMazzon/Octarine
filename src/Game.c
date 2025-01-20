@@ -9,7 +9,7 @@ void *startup(Oct_Context ctx) {
     gAllocator = oct_CreateHeapAllocator();
     Oct_LoadCommand load = {
             .type = OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE,
-            .Asset.Texture.filename = "data/marble.jpg"
+            .Texture.filename = "data/marble.jpg"
     };
     gTexMarble = oct_Load(ctx, &load);
     return null;
@@ -19,7 +19,7 @@ void *startup(Oct_Context ctx) {
 void *update(Oct_Context ctx, void *ptr) {
     Oct_DrawCommand cmd = {
             .type = OCT_DRAW_COMMAND_TYPE_RECTANGLE,
-            .interpolate = true,
+            .interpolate = OCT_INTERPOLATE_ALL,
             .id = 1,
             .colour = {1, 1, 1, 1},
             .Rectangle = {
@@ -32,7 +32,7 @@ void *update(Oct_Context ctx, void *ptr) {
     };
     Oct_DrawCommand textureCmd = {
             .type = OCT_DRAW_COMMAND_TYPE_TEXTURE,
-            .interpolate = true,
+            .interpolate = OCT_INTERPOLATE_ALL,
             .id = 2,
             .colour = {1, 1, 1, 1},
             .Texture = {
