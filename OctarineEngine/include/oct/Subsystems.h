@@ -33,6 +33,7 @@ void _oct_WindowInit(Oct_Context ctx);
 void _oct_WindowUpdateBegin(Oct_Context ctx);
 void _oct_WindowUpdateEnd(Oct_Context ctx);
 void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd);
+bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event); // Used from the logic thread to pull key events, returns false if there are no more events (event is not valid in this case)
 void _oct_WindowEnd(Oct_Context ctx);
 
 // Audio handles audio as you might guess

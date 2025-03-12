@@ -44,7 +44,7 @@ typedef struct Oct_AssetData_t Oct_AssetData;
 
 /// \brief Any type of allocator
 struct Oct_Allocator_t {
-    Oct_AllocatorType type;
+    Oct_AllocatorType type; ///< Type of allocator this is
     union {
         struct {
             uint8_t *buffer; ///< Internal memory buffer
@@ -54,6 +54,35 @@ struct Oct_Allocator_t {
         mi_heap_t *heapAllocator; ///< Internal mimalloc heap
     };
 };
+
+/// \brief Types of window eventsw
+typedef enum {
+    OCT_WINDOW_EVENT_TYPE_NONE = 0,           ///< None
+    OCT_WINDOW_EVENT_TYPE_KEYBOARD = 1,       ///< Keyboard
+    OCT_WINDOW_EVENT_TYPE_GAMEPAD_AXIS = 2,   ///< Gamepad axis
+    OCT_WINDOW_EVENT_TYPE_GAMEPAD_BUTTON = 3, ///< Gamepad button
+    OCT_WINDOW_EVENT_TYPE_GAMEPAD = 4,        ///< Gamepad being connected/disconnected
+    OCT_WINDOW_EVENT_TYPE_MOUSE_MOTION = 5,   ///< Mouse motion
+    OCT_WINDOW_EVENT_TYPE_MOUSE_BUTTON = 6,   ///< Mouse buttons
+    OCT_WINDOW_EVENT_TYPE_MOUSE_WHEEL = 7,    ///< Mouse wheel
+} Oct_WindowEventType;
+
+/// \brief A window event (typically input) that will get put in a ringbuffer to communicate from render thread -> logic thread
+struct Oct_WindowEvent_t {
+    Oct_WindowEventType type; ///< Type of event this is
+
+    union {
+        SDL_KeyboardEvent keyboardEvent;              ///< Keyboard event
+        SDL_ControllerAxisEvent gamepadAxisEvent;     ///< Gamepad events
+        SDL_ControllerButtonEvent gamepadButtonEvent; ///< Gamepad events
+        SDL_ControllerDeviceEvent gamepadDeviceEvent; ///< Gamepad events
+        SDL_MouseMotionEvent mouseMotionEvent;        ///< Mouse motion event
+        SDL_MouseWheelEvent mouseWheelEvent;          ///< Mouse wheel event
+        SDL_MouseButtonEvent mouseButtonEvent;        ///< Mouse button event
+    };
+};
+
+typedef struct Oct_WindowEvent_t Oct_WindowEvent;
 
 #ifdef __cplusplus
 };

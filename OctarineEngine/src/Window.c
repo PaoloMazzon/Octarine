@@ -2,6 +2,21 @@
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 
+// Wraps an index, returns index + 1 unless index == len - 1 in which case it returns 0
+static inline int32_t nextIndex(int32_t index, int32_t len) {
+    return index == len - 1 ? 0 : index + 1;
+}
+
+// Globals for event ringbuffer
+SDL_atomic_t gRingHead; // Reading index
+SDL_atomic_t gRingTail; // Writing index
+Oct_WindowEvent *gRingBuffer; // Event ring buffer
+
+// Pushes an event to the event ringbuffer, might be blocking if the logic thread is falling behind
+static void _oct_WindowPush(Oct_Context ctx, Oct_WindowEvent *event) {
+    // TODO: This
+}
+
 void _oct_WindowInit(Oct_Context ctx) {
     ctx->window = SDL_CreateWindow(
             ctx->initInfo->windowTitle,
@@ -14,9 +29,14 @@ void _oct_WindowInit(Oct_Context ctx) {
     if (!ctx->window) {
         oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to create window. SDL Error \"%s\"", SDL_GetError());
     }
+
+    gRingBuffer = mi_malloc(sizeof(struct Oct_WindowEvent_t) * OCT_RING_BUFFER_SIZE);
+    if (!gRingBuffer)
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate events ring buffer.");
 }
 
 void _oct_WindowEnd(Oct_Context ctx) {
+    mi_free(gRingBuffer);
     SDL_DestroyWindow(ctx->window);
 }
 
@@ -36,4 +56,8 @@ void _oct_WindowUpdateEnd(Oct_Context ctx) {
 
 void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     // TODO: This
+}
+
+bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event) {
+    return false; // TODO: This
 }

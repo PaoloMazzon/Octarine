@@ -17,7 +17,7 @@ extern Oct_Status OCT_STATUS_FILE_DOES_NOT_EXIST; ///< A file does not exist
 extern Oct_Status OCT_STATUS_BAD_PARAMETER;       ///< A parameter given was not allowed
 
 // Memory
-extern int32_t OCT_RING_BUFFER_SIZE; ///< Size of the command ring buffer
+extern int32_t OCT_RING_BUFFER_SIZE; ///< Size of the command/event ring buffer
 
 #ifdef __cplusplus
 };

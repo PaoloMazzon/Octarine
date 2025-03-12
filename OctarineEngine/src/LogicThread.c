@@ -2,8 +2,8 @@
 #include <VK2D/VK2D.h>
 #include "oct/LogicThread.h"
 #include "oct/Validation.h"
-#include "oct/Subsystems.h"
 #include "oct/Opaque.h"
+#include "oct/Subsystems.h"
 
 int oct_UserThread(void *ptr) {
     Oct_Context ctx = ptr;
