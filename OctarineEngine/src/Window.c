@@ -13,8 +13,15 @@ SDL_atomic_t gRingTail; // Writing index
 Oct_WindowEvent *gRingBuffer; // Event ring buffer
 
 // Pushes an event to the event ringbuffer, might be blocking if the logic thread is falling behind
-static void _oct_WindowPush(Oct_Context ctx, Oct_WindowEvent *event) {
-    // TODO: This
+static void _oct_WindowPush(Oct_WindowEvent *event) {
+    int tail = SDL_AtomicGet(&gRingTail);
+    while (nextIndex(tail, OCT_RING_BUFFER_SIZE) == SDL_AtomicGet(&gRingHead)) {
+        volatile int i;
+    }
+
+    // Insert new element
+    memcpy(&gRingBuffer[tail], event, sizeof(struct Oct_WindowEvent_t));
+    SDL_AtomicSet(&gRingTail, nextIndex(tail, OCT_RING_BUFFER_SIZE));
 }
 
 void _oct_WindowInit(Oct_Context ctx) {
@@ -43,8 +50,23 @@ void _oct_WindowEnd(Oct_Context ctx) {
 void _oct_WindowUpdateBegin(Oct_Context ctx) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_QUIT)
+        if (e.type == SDL_QUIT) {
             SDL_AtomicSet(&ctx->quit, 1);
+        } else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
+            // TODO: This
+        } else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
+            // TODO: This
+        } else if (e.type == SDL_MOUSEWHEEL) {
+            // TODO: This
+        } else if (e.type == SDL_MOUSEMOTION) {
+            // TODO: This
+        } else if (e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP) {
+            // TODO: This
+        } else if (e.type == SDL_CONTROLLERDEVICEADDED || e.type == SDL_CONTROLLERDEVICEREMOVED) {
+            // TODO: This
+        } else if (e.type == SDL_CONTROLLERAXISMOTION) {
+            // TODO: This
+        }
     }
 
     // TODO: Input polling
@@ -59,5 +81,14 @@ void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
 }
 
 bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event) {
-    return false; // TODO: This
+    int head = SDL_AtomicGet(&gRingHead);
+
+    // There are no new events in the ring buffer
+    if (head == SDL_AtomicGet(&gRingTail))
+        return false;
+
+    // Pull out element from the ring buffer
+    memcpy(event, &gRingBuffer[head], sizeof(struct Oct_WindowEvent_t));
+    SDL_AtomicSet(&gRingHead, nextIndex(head, OCT_RING_BUFFER_SIZE));
+    return true;
 }
