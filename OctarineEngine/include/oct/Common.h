@@ -1,6 +1,7 @@
 /// \brief Core engine functionality
 #pragma once
 #include <stdint.h>
+#include "oct/SDLConstants.h"
 
 #ifdef __cplusplus
 extern "C" {

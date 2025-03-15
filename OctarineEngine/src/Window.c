@@ -53,19 +53,47 @@ void _oct_WindowUpdateBegin(Oct_Context ctx) {
         if (e.type == SDL_QUIT) {
             SDL_AtomicSet(&ctx->quit, 1);
         } else if (e.type == SDL_KEYDOWN || e.type == SDL_KEYUP) {
-            // TODO: This
+            Oct_WindowEvent event = {
+                    .type = OCT_WINDOW_EVENT_TYPE_KEYBOARD,
+                    .keyboardEvent = e.key
+            };
+            _oct_WindowPush(&event);
         } else if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP) {
-            // TODO: This
+            Oct_WindowEvent event = {
+                    .type = OCT_WINDOW_EVENT_TYPE_MOUSE_BUTTON,
+                    .mouseButtonEvent = e.button
+            };
+            _oct_WindowPush(&event);
         } else if (e.type == SDL_MOUSEWHEEL) {
-            // TODO: This
+            Oct_WindowEvent event = {
+                    .type = OCT_WINDOW_EVENT_TYPE_MOUSE_WHEEL,
+                    .mouseWheelEvent = e.wheel
+            };
+            _oct_WindowPush(&event);
         } else if (e.type == SDL_MOUSEMOTION) {
-            // TODO: This
+            Oct_WindowEvent event = {
+                    .type = OCT_WINDOW_EVENT_TYPE_MOUSE_MOTION,
+                    .mouseMotionEvent = e.motion
+            };
+            _oct_WindowPush(&event);
         } else if (e.type == SDL_CONTROLLERBUTTONDOWN || e.type == SDL_CONTROLLERBUTTONUP) {
-            // TODO: This
+            Oct_WindowEvent event = {
+                    .type = OCT_WINDOW_EVENT_TYPE_GAMEPAD_BUTTON,
+                    .gamepadButtonEvent = e.cbutton
+            };
+            _oct_WindowPush(&event);
         } else if (e.type == SDL_CONTROLLERDEVICEADDED || e.type == SDL_CONTROLLERDEVICEREMOVED) {
-            // TODO: This
+            Oct_WindowEvent event = {
+                    .type = OCT_WINDOW_EVENT_TYPE_GAMEPAD,
+                    .gamepadDeviceEvent = e.cdevice
+            };
+            _oct_WindowPush(&event);
         } else if (e.type == SDL_CONTROLLERAXISMOTION) {
-            // TODO: This
+            Oct_WindowEvent event = {
+                    .type = OCT_WINDOW_EVENT_TYPE_GAMEPAD_AXIS,
+                    .gamepadAxisEvent = e.caxis
+            };
+            _oct_WindowPush(&event);
         }
     }
 

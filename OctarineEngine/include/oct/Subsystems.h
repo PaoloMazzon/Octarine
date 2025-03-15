@@ -53,6 +53,11 @@ Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset);
 Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx); // used from logic thread to reserve a space in the asset list
 void _oct_AssetsEnd(Oct_Context ctx);
 
+// Handles input processing on the logical thread
+void _oct_InputInit(Oct_Context ctx);
+void _oct_InputUpdate(Oct_Context ctx);
+void _oct_InputEnd(Oct_Context ctx);
+
 #ifdef __cplusplus
 };
 #endif
