@@ -37,7 +37,7 @@ void *update(Oct_Context ctx, void *ptr) {
             .colour = {1, 1, 1, 1},
             .Texture = {
                     .texture = gTexMarble,
-                    .position = {320 + (cosf(oct_Time(ctx)) * 200), 240 + (sinf(-oct_Time(ctx)) * 200)},
+                    .position = {oct_MouseX(), oct_MouseY()},
                     .viewport = {
                             .position = {0, 0},
                             .size = {OCT_WHOLE_TEXTURE, OCT_WHOLE_TEXTURE}

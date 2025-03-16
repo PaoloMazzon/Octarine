@@ -1,5 +1,6 @@
 /// \brief Various internal subsystem functions (so subsystem functions aren't visible to the user)
 #pragma once
+#include "oct/Common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,11 +30,13 @@ void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_Command *cmd);
 void _oct_DrawingEnd(Oct_Context ctx);
 
 // Window subsystem manages window events like resizing and input
+struct Oct_WindowEvent_t;
+typedef struct Oct_WindowEvent_t Oct_WindowEvent;
 void _oct_WindowInit(Oct_Context ctx);
 void _oct_WindowUpdateBegin(Oct_Context ctx);
 void _oct_WindowUpdateEnd(Oct_Context ctx);
 void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd);
-bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event); // Used from the logic thread to pull key events, returns false if there are no more events (event is not valid in this case)
+Oct_Bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event); // Used from the logic thread to pull key events, returns false if there are no more events (event is not valid in this case)
 void _oct_WindowEnd(Oct_Context ctx);
 
 // Audio handles audio as you might guess

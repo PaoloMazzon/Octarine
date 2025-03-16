@@ -8,6 +8,7 @@
 int oct_UserThread(void *ptr) {
     Oct_Context ctx = ptr;
 
+    _oct_InputInit(ctx);
     ctx->gameStartTime = SDL_GetPerformanceCounter();
     void *userData = ctx->initInfo->startup(ctx);
 
@@ -19,6 +20,9 @@ int oct_UserThread(void *ptr) {
 
     // User-end game loop
     while (SDL_AtomicGet(&ctx->quit) == 0) {
+        // Process input
+        _oct_InputUpdate(ctx);
+
         // Process user frame
         _oct_CommandBufferBeginFrame(ctx);
         userData = ctx->initInfo->update(ctx, userData);
@@ -43,6 +47,7 @@ int oct_UserThread(void *ptr) {
     }
 
     ctx->initInfo->shutdown(ctx, userData);
+    _oct_InputEnd(ctx);
 
     return 0;
 }

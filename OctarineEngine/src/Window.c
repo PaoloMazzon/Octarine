@@ -108,7 +108,7 @@ void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     // TODO: This
 }
 
-bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event) {
+Oct_Bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event) {
     int head = SDL_AtomicGet(&gRingHead);
 
     // There are no new events in the ring buffer

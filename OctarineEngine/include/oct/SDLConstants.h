@@ -394,7 +394,7 @@ typedef enum
     /* @} *//* Mobile keys */
 
     /* Add any other keys here. */
-    OCT_KEY_COUNT = 512;
+    OCT_KEY_COUNT = 512
 } Oct_Key;
 
 /// \brief Gamepad buttons

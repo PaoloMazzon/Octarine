@@ -10,3 +10,4 @@
 #include "oct/Allocators.h"
 #include "oct/CommandBuffer.h"
 #include "oct/Assets.h"
+#include "oct/InputHandler.h"
