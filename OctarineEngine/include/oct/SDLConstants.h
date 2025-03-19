@@ -428,9 +428,9 @@ typedef enum
 /// \brief Mouse buttons
 typedef enum {
     OCT_MOUSE_BUTTON_INVALID = -1,
-    OCT_MOUSE_BUTTON_LEFT = 0,
-    OCT_MOUSE_BUTTON_RIGHT = 1,
-    OCT_MOUSE_BUTTON_MIDDLE = 2,
+    OCT_MOUSE_BUTTON_LEFT = (1 << ((1) - 1)),
+    OCT_MOUSE_BUTTON_RIGHT = (1 << ((2) - 1)),
+    OCT_MOUSE_BUTTON_MIDDLE = (1 << ((3) - 1)),
     OCT_MOUSE_BUTTON_MAX = 8
 } Oct_MouseButton;
 

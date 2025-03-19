@@ -30,6 +30,18 @@ OCTARINE_API float oct_MouseX();
 /// \brief Returns the current mouse Y position relative to the window
 OCTARINE_API float oct_MouseY();
 
+/// \brief Sets the gamepad axis deadzone (if an axis registers below this, 0 will be returned)
+OCTARINE_API void oct_GamepadSetAxisDeadzone(float deadzone);
+
+/// \brief Gets the gamepad axis deadzone (if an axis registers below this, 0 will be returned)
+OCTARINE_API float oct_GamepadGetAxisDeadzone();
+
+/// \brief Sets the gamepad trigger deadzone (if an axis registers below this, 0 will be returned)
+OCTARINE_API void oct_GamepadSetTriggerDeadzone(float deadzone);
+
+/// \brief Gets the gamepad trigger deadzone (if an axis registers below this, 0 will be returned)
+OCTARINE_API float oct_GamepadGetTriggerDeadzone();
+
 /// \brief Returns true if a gamepad button is currently held down (returns false if the gamepad isn't connected)
 OCTARINE_API Oct_Bool oct_GamepadButtonDown(int index, Oct_GamepadButton key);
 
@@ -50,6 +62,12 @@ OCTARINE_API float oct_GamepadRightAxisX(int index);
 
 /// \brief Returns the gamepad's right axis Y as a normalized value from -1 to 1 (returns 0 if the gamepad isn't connected)
 OCTARINE_API float oct_GamepadRightAxisY(int index);
+
+/// \brief Returns the gamepad's right trigger as a normalized value from 0 to 1
+OCTARINE_API float oct_GamepadRightTrigger(int index);
+
+/// \brief Returns the gamepad's left trigger as a normalized value from 0 to 1
+OCTARINE_API float oct_GamepadLeftTrigger(int index);
 
 /// \brief Returns true if a gamepad index is connected
 OCTARINE_API Oct_Bool oct_GamepadConnected(int index);

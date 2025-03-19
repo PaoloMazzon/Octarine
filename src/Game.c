@@ -30,6 +30,7 @@ void *update(Oct_Context ctx, void *ptr) {
                     .filled = true,
             }
     };
+
     Oct_DrawCommand textureCmd = {
             .type = OCT_DRAW_COMMAND_TYPE_TEXTURE,
             .interpolate = OCT_INTERPOLATE_ALL,

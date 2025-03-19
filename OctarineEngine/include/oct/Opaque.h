@@ -61,7 +61,7 @@ typedef enum {
     OCT_WINDOW_EVENT_TYPE_KEYBOARD = 1,       ///< Keyboard
     OCT_WINDOW_EVENT_TYPE_GAMEPAD_AXIS = 2,   ///< Gamepad axis
     OCT_WINDOW_EVENT_TYPE_GAMEPAD_BUTTON = 3, ///< Gamepad button
-    OCT_WINDOW_EVENT_TYPE_GAMEPAD = 4,        ///< Gamepad being connected/disconnected
+    OCT_WINDOW_EVENT_TYPE_GAMEPAD_EVENT = 4,  ///< Gamepad being connected/disconnected
     OCT_WINDOW_EVENT_TYPE_MOUSE_MOTION = 5,   ///< Mouse motion
     OCT_WINDOW_EVENT_TYPE_MOUSE_BUTTON = 6,   ///< Mouse buttons
     OCT_WINDOW_EVENT_TYPE_MOUSE_WHEEL = 7,    ///< Mouse wheel

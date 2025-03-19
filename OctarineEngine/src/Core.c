@@ -19,6 +19,7 @@ static inline void _oct_SetupInitInfo(Oct_Context ctx, Oct_InitInfo *initInfo) {
 OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     // Initialization
     Oct_Context ctx = mi_zalloc(sizeof(struct Oct_Context_t));
+    SDL_Init(SDL_INIT_EVERYTHING);
     _oct_SetupInitInfo(ctx, initInfo);
     _oct_ValidationInit(ctx);
     _oct_WindowInit(ctx);
