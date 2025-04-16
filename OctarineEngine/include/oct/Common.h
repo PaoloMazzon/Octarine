@@ -99,12 +99,13 @@ typedef enum {
 
 /// \brief Types of load commands
 typedef enum {
-    OCT_LOAD_COMMAND_TYPE_NONE = 0,         ///< None
-    OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE = 1, ///< Load a texture
-    OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,  ///< Load a sprite
-    OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,    ///< Load a font
-    OCT_LOAD_COMMAND_TYPE_LOAD_MODEL = 4,   ///< Loads a model
-    OCT_LOAD_COMMAND_TYPE_FREE = 5,         ///< Frees an asset
+    OCT_LOAD_COMMAND_TYPE_NONE = 0,           ///< None
+    OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE = 1,   ///< Load a texture
+    OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,    ///< Load a sprite
+    OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,      ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_LOAD_MODEL = 4,     ///< Loads a model
+    OCT_LOAD_COMMAND_TYPE_FREE = 5,           ///< Frees an asset
+    OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 6, ///< Creates a surface
 } Oct_LoadCommandType;
 
 /// \brief Types of window commands
@@ -154,6 +155,7 @@ typedef enum {
     OCT_INTERPOLATE_ROTATION = 1<<2,  ///< Interpolate rotation
     OCT_INTERPOLATE_SCALE_X = 1<<3,   ///< Interpolate horizontal scale
     OCT_INTERPOLATE_SCALE_Y = 1<<4,   ///< Interpolate vertical scale
+    OCT_INTERPOLATE_RADIUS = 1<<4,    ///< Interpolate circle radius
     OCT_INTERPOLATE_ALL = 0xFFFFFFFF, ///< Interpolate all of the above (where available)
 } Oct_InterpolationType;
 
@@ -196,6 +198,9 @@ struct Oct_LoadCommand_t {
             const char *filename; ///< Filename of the texture to load (png, jpg, bmp)
             // TODO: Loading from binary
         } Texture;                ///< Information needed to load a texture
+        struct {
+            Oct_Vec2 dimensions; ///< Dimensions of the new surface
+        } Surface;               ///< Information needed to create a surface
     };
     // TODO: This
     void *pNext; ///< For future use
@@ -264,6 +269,11 @@ struct Oct_DrawCommand_t {
             float rotation;          ///< Rotation in radians
             Oct_Vec2 origin;         ///< Origin of rotation, x/y
         } Rectangle;                 ///< Information to draw a rectangle
+        struct {
+            Oct_Circle circle; ///< Rectangle
+            Oct_Bool filled;   ///< Weather or not its filled
+            float lineSize;    ///< Size of the lines if its not filled
+        } Circle;              ///< Information to draw a circle
         struct {
             Oct_Texture texture;    ///< Texture to draw
             Oct_Rectangle viewport; ///< Where in the texture to draw (use OCT_WHOLE_TEXTURE)

@@ -50,6 +50,16 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
         } // TODO: The other types
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE) {
+        VK2DTexture tex = vk2dTextureCreate(load->Surface.dimensions[0], load->Surface.dimensions[1]);
+        if (tex) {
+            gAssets[load->_assetID].texture = tex;
+            gAssets[load->_assetID].type = OCT_ASSET_TYPE_TEXTURE;
+            SDL_AtomicSet(&gAssets[load->_assetID].loaded, 1);
+        } else {
+            _oct_FailLoad(ctx, load->_assetID);
+            _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
+        } // TODO: The other types
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
         if (gAssets[load->_assetID].type == OCT_ASSET_TYPE_TEXTURE) {
             vk2dRendererWait();

@@ -1,0 +1,3 @@
+[submodule "OctarineEngine/flecs"]
+	path = OctarineEngine/flecs
+	url = https://github.com/SanderMertens/flecs

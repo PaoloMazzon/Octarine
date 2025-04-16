@@ -10,6 +10,9 @@ find_package(Vulkan)
 find_package(SDL2 REQUIRED)
 find_package(mimalloc 2.1 REQUIRED)
 
+# Compile flecs
+add_subdirectory(flecs)
+
 # Find relavant source files
 file(GLOB OCT_C_FILES src/*.c)
 file(GLOB C_FILES Vulkan2D/VK2D/*.c)
@@ -26,4 +29,4 @@ include_directories(Vulkan2D/ Vulkan2D/VulkanMemoryAllocator/include include/ ${
 add_library(${PROJECT_NAME} STATIC ${VMA_FILES} ${OCT_C_FILES} ${C_FILES} ${H_FILES})
 
 # Linking
-target_link_libraries(${PROJECT_NAME} PRIVATE m ${SDL2_LIBRARIES} ${Vulkan_LIBRARIES} mimalloc-static)
+target_link_libraries(${PROJECT_NAME} PRIVATE m ${SDL2_LIBRARIES} ${Vulkan_LIBRARIES} mimalloc-static flecs)

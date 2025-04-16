@@ -48,6 +48,7 @@ void *update(Oct_Context ctx, void *ptr) {
                     .rotation = oct_Time(ctx)
             }
     };
+
     oct_Draw(ctx, &cmd);
     oct_Draw(ctx, &textureCmd);
 

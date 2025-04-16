@@ -136,6 +136,30 @@ static void _oct_DrawRectangle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     }
 }
 
+static void _oct_DrawCircle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    // Process interpolation
+    Oct_Vec2 position;
+    float radius;
+    position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Circle.circle.position[0], cmd->Circle.circle.position[0]);
+    position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Circle.circle.position[1], cmd->Circle.circle.position[1]);
+    radius = interpolate(cmd->interpolate & OCT_INTERPOLATE_ROTATION, prevCmd, interpolatedTime, prevCmd->Circle.circle.radius, cmd->Circle.circle.radius);
+
+    if (cmd->Circle.filled) {
+        vk2dRendererDrawCircle(
+                position[0],
+                position[1],
+                radius
+        );
+    } else {
+        vk2dRendererDrawCircleOutline(
+                position[0],
+                position[1],
+                radius,
+                cmd->Circle.lineSize
+        );
+    }
+}
+
 static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     if (_oct_AssetType(ctx, cmd->Texture.texture) != OCT_ASSET_TYPE_TEXTURE)
         return;
@@ -193,6 +217,8 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
             _oct_DrawRectangle(ctx, cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_TEXTURE) {
             _oct_DrawTexture(ctx, cmd, prevCmd, interpolatedTime);
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CIRCLE) {
+            _oct_DrawCircle(ctx, cmd, prevCmd, interpolatedTime);
         } // TODO: Implement other command types
     }
 
