@@ -19,7 +19,7 @@ static inline void _oct_SetupInitInfo(Oct_Context ctx, Oct_InitInfo *initInfo) {
 OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     // Initialization
     Oct_Context ctx = mi_zalloc(sizeof(struct Oct_Context_t));
-    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_Init(SDL_INIT_EVENTS | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO);
     _oct_SetupInitInfo(ctx, initInfo);
     _oct_ValidationInit(ctx);
     _oct_WindowInit(ctx);
@@ -42,7 +42,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     uint64_t refreshRateStartTime = SDL_GetPerformanceCounter();
 
     // Main game loop
-    while (SDL_AtomicGet(&ctx->quit) == 0) {
+    while (SDL_GetAtomicInt(&ctx->quit) == 0) {
         // Timekeeping
         const uint64_t startTime = SDL_GetPerformanceCounter();
 
@@ -60,7 +60,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
         _oct_DrawingUpdateEnd(ctx);
 
         // Timekeeping
-        const int target = SDL_AtomicGet(&ctx->renderHz);
+        const int target = SDL_GetAtomicInt(&ctx->renderHz);
         const uint64_t currentTime = SDL_GetPerformanceCounter();
         if (target > 0) {
             const double between = (double)(currentTime - startTime) / SDL_GetPerformanceFrequency();
@@ -71,7 +71,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
         frameCount++;
         if (currentTime - refreshRateStartTime >= SDL_GetPerformanceFrequency()) {
             const float refreshRate = frameCount / ((float)(currentTime - refreshRateStartTime) / SDL_GetPerformanceFrequency());
-            SDL_AtomicSet(&ctx->renderHzActual, OCT_FLOAT_TO_INT(refreshRate));
+            SDL_SetAtomicInt(&ctx->renderHzActual, OCT_FLOAT_TO_INT(refreshRate));
             refreshRateStartTime = SDL_GetPerformanceCounter();
             frameCount = 0;
         }

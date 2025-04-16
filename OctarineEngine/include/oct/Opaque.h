@@ -1,7 +1,7 @@
 /// \brief Structs that are not visible to the engine user
 #pragma once
 #include <mimalloc.h>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <VK2D/Structs.h>
 #include "oct/Common.h"
 
@@ -11,31 +11,31 @@ extern "C" {
 
 /// \brief General engine context
 struct Oct_Context_t {
-    SDL_Window *window;            ///< Game window
-    Oct_InitInfo *initInfo;        ///< Parameters the engine started with
-    SDL_Thread *logicThread;       ///< Logic thread
-    SDL_Thread *clockThread;       ///< Clock thread
-    SDL_atomic_t quit;             ///< True to quit the game
-    SDL_atomic_t frameStart;       ///< Atomic for clock thread to tell logic thread when it can begin the frame
-    SDL_atomic_t renderHz;         ///< Render refresh rate, 0 means unlocked
-    SDL_atomic_t renderHzActual;   ///< True render refresh rate
-    SDL_atomic_t logicHzActual;    ///< Actual refresh rate of the logic thread, use OCT_INT_TO_FLOAT to get the value
-    SDL_atomic_t interpolatedTime; ///< Estimated time it should be in the logic frame cycle, for interpolation, normalized 0-1 (the frame just started would be 0, the frame is just about done is close to 1)
-    uint64_t gameStartTime;        ///< Time the logic thread started for the user to query time
+    SDL_Window *window;             ///< Game window
+    Oct_InitInfo *initInfo;         ///< Parameters the engine started with
+    SDL_Thread *logicThread;        ///< Logic thread
+    SDL_Thread *clockThread;        ///< Clock thread
+    SDL_AtomicInt quit;             ///< True to quit the game
+    SDL_AtomicInt frameStart;       ///< Atomic for clock thread to tell logic thread when it can begin the frame
+    SDL_AtomicInt renderHz;         ///< Render refresh rate, 0 means unlocked
+    SDL_AtomicInt renderHzActual;   ///< True render refresh rate
+    SDL_AtomicInt logicHzActual;    ///< Actual refresh rate of the logic thread, use OCT_INT_TO_FLOAT to get the value
+    SDL_AtomicInt interpolatedTime; ///< Estimated time it should be in the logic frame cycle, for interpolation, normalized 0-1 (the frame just started would be 0, the frame is just about done is close to 1)
+    uint64_t gameStartTime;         ///< Time the logic thread started for the user to query time
 
     struct {
-        Oct_Command *commands; ///< Internal buffer
-        SDL_atomic_t head;     ///< The reading end of the buffer
-        SDL_atomic_t tail;     ///< The writing end of the buffer
-    } RingBuffer;              ///< Ring buffer for commands
+        Oct_Command *commands;  ///< Internal buffer
+        SDL_AtomicInt head;     ///< The reading end of the buffer
+        SDL_AtomicInt tail;     ///< The writing end of the buffer
+    } RingBuffer;               ///< Ring buffer for commands
 };
 
 // An asset for the engine
 struct Oct_AssetData_t {
-    Oct_AssetType type;    // type of asset
-    SDL_atomic_t reserved; // to allow the logic thread to find assets that still exist
-    SDL_atomic_t failed;   // This will be true if the load on this asset failed
-    SDL_atomic_t loaded;   // True when the asset is loaded
+    Oct_AssetType type;     // type of asset
+    SDL_AtomicInt reserved; // to allow the logic thread to find assets that still exist
+    SDL_AtomicInt failed;   // This will be true if the load on this asset failed
+    SDL_AtomicInt loaded;   // True when the asset is loaded
     union {
         VK2DTexture texture;
     };
@@ -72,13 +72,13 @@ struct Oct_WindowEvent_t {
     Oct_WindowEventType type; ///< Type of event this is
 
     union {
-        SDL_KeyboardEvent keyboardEvent;              ///< Keyboard event
-        SDL_ControllerAxisEvent gamepadAxisEvent;     ///< Gamepad events
-        SDL_ControllerButtonEvent gamepadButtonEvent; ///< Gamepad events
-        SDL_ControllerDeviceEvent gamepadDeviceEvent; ///< Gamepad events
-        SDL_MouseMotionEvent mouseMotionEvent;        ///< Mouse motion event
-        SDL_MouseWheelEvent mouseWheelEvent;          ///< Mouse wheel event
-        SDL_MouseButtonEvent mouseButtonEvent;        ///< Mouse button event
+        SDL_KeyboardEvent keyboardEvent;           ///< Keyboard event
+        SDL_GamepadAxisEvent gamepadAxisEvent;     ///< Gamepad events
+        SDL_GamepadButtonEvent gamepadButtonEvent; ///< Gamepad events
+        SDL_GamepadDeviceEvent gamepadDeviceEvent; ///< Gamepad events
+        SDL_MouseMotionEvent mouseMotionEvent;     ///< Mouse motion event
+        SDL_MouseWheelEvent mouseWheelEvent;       ///< Mouse wheel event
+        SDL_MouseButtonEvent mouseButtonEvent;     ///< Mouse button event
     };
 };
 

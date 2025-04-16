@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <VK2D/VK2D.h>
@@ -17,8 +17,8 @@
 #define BUFFER_SIZE 1024
 static char gErrorBuffer[BUFFER_SIZE]; // Buffer for error string
 static Oct_Status gStatus;             // General status
-static SDL_mutex *gLogMutex;           // Mutex for logging
-static SDL_mutex *gStatusMutex;        // Mutex for status
+static SDL_Mutex *gLogMutex;           // Mutex for logging
+static SDL_Mutex *gStatusMutex;        // Mutex for status
 
 void _oct_ValidationInit(Oct_Context ctx) {
     gLogMutex = SDL_CreateMutex();

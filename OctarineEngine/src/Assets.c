@@ -1,6 +1,8 @@
 #include <stdarg.h>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <VK2D/VK2D.h>
+#include <stdio.h>
+
 #include "oct/Common.h"
 #include "oct/Allocators.h"
 #include "oct/Opaque.h"
@@ -11,8 +13,8 @@ static Oct_AssetData gAssets[OCT_MAX_ASSETS];
 // Error message in case an asset load fails
 #define ERROR_BUFFER_SIZE 1024
 static char gErrorMessage[ERROR_BUFFER_SIZE];
-static SDL_mutex *gErrorMessageMutex;
-static SDL_atomic_t gErrorHasOccurred;
+static SDL_Mutex *gErrorMessageMutex;
+static SDL_AtomicInt gErrorHasOccurred;
 
 void _oct_AssetsInit(Oct_Context ctx) {
     gErrorMessageMutex = SDL_CreateMutex();
@@ -28,14 +30,14 @@ static void _oct_LogError(const char *fmt, ...) {
 
 // Destroys metadata for an asset when its being freed
 static void _oct_DestroyAssetMetadata(Oct_Context ctx, Oct_Asset asset) {
-    SDL_AtomicSet(&gAssets[asset].loaded, 0);
-    SDL_AtomicSet(&gAssets[asset].reserved, 0);
+    SDL_SetAtomicInt(&gAssets[asset].loaded, 0);
+    SDL_SetAtomicInt(&gAssets[asset].reserved, 0);
 }
 
 static void _oct_FailLoad(Oct_Context ctx, Oct_Asset asset) {
-    SDL_AtomicSet(&gAssets[asset].failed, 1);
-    SDL_AtomicSet(&gAssets[asset].reserved, 1);
-    SDL_AtomicSet(&gErrorHasOccurred, 1);
+    SDL_SetAtomicInt(&gAssets[asset].failed, 1);
+    SDL_SetAtomicInt(&gAssets[asset].reserved, 1);
+    SDL_SetAtomicInt(&gErrorHasOccurred, 1);
 }
 
 void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
@@ -45,7 +47,7 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
         if (tex) {
             gAssets[load->_assetID].texture = tex;
             gAssets[load->_assetID].type = OCT_ASSET_TYPE_TEXTURE;
-            SDL_AtomicSet(&gAssets[load->_assetID].loaded, 1);
+            SDL_SetAtomicInt(&gAssets[load->_assetID].loaded, 1);
         } else {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
@@ -55,7 +57,7 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
         if (tex) {
             gAssets[load->_assetID].texture = tex;
             gAssets[load->_assetID].type = OCT_ASSET_TYPE_TEXTURE;
-            SDL_AtomicSet(&gAssets[load->_assetID].loaded, 1);
+            SDL_SetAtomicInt(&gAssets[load->_assetID].loaded, 1);
         } else {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
@@ -70,7 +72,7 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
 }
 
 Oct_AssetType _oct_AssetType(Oct_Context ctx, Oct_Asset asset) {
-    return SDL_AtomicGet(&gAssets[asset].loaded) ? gAssets[asset].type : OCT_ASSET_TYPE_NONE;
+    return SDL_GetAtomicInt(&gAssets[asset].loaded) ? gAssets[asset].type : OCT_ASSET_TYPE_NONE;
 }
 
 Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset) {
@@ -80,7 +82,7 @@ Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset) {
 void _oct_AssetsEnd(Oct_Context ctx) {
     // Delete all the assets still loaded
     for (int i = 0; i < OCT_MAX_ASSETS; i++) {
-        if (SDL_AtomicGet(&gAssets[i].loaded)) {
+        if (SDL_GetAtomicInt(&gAssets[i].loaded)) {
             Oct_AssetData *data = &gAssets[i];
             if (data->type == OCT_ASSET_TYPE_TEXTURE) {
                 vk2dRendererWait();
@@ -95,22 +97,22 @@ void _oct_AssetsEnd(Oct_Context ctx) {
 
 Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx) {
     for (int i = 0; i < OCT_MAX_ASSETS; i++) {
-        if (!SDL_AtomicGet(&gAssets->reserved)) {
-            SDL_AtomicSet(&gAssets->reserved, 1);
+        if (!SDL_GetAtomicInt(&gAssets->reserved)) {
+            SDL_SetAtomicInt(&gAssets->reserved, 1);
             return i;
         }
     }
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset) {
-    return SDL_AtomicGet(&gAssets[asset].loaded);
+    return SDL_GetAtomicInt(&gAssets[asset].loaded);
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset) {
-    bool failed = SDL_AtomicGet(&gAssets[asset].failed);
+    bool failed = SDL_GetAtomicInt(&gAssets[asset].failed);
     if (failed) {
-        SDL_AtomicSet(&gAssets[asset].failed, 0);
-        SDL_AtomicSet(&gAssets[asset].reserved, 0);
+        SDL_SetAtomicInt(&gAssets[asset].failed, 0);
+        SDL_SetAtomicInt(&gAssets[asset].reserved, 0);
     }
     return failed;
 }
@@ -126,7 +128,7 @@ OCTARINE_API const char *oct_AssetErrorMessage(Oct_Allocator allocator) {
     if (out) {
         strncpy(out, gErrorMessage, len);
         out[len] = 0;
-        SDL_AtomicSet(&gErrorHasOccurred, 0);
+        SDL_SetAtomicInt(&gErrorHasOccurred, 0);
         gErrorMessage[0] = 0;
     }
 
@@ -144,7 +146,7 @@ OCTARINE_API const char *oct_AssetGetErrorMessage(int *size, char *buffer) {
         buffer[len] = 0;
 
         gErrorMessage[0] = 0;
-        SDL_AtomicSet(&gErrorHasOccurred, 0);
+        SDL_SetAtomicInt(&gErrorHasOccurred, 0);
         SDL_UnlockMutex(gErrorMessageMutex);
     } else if (size) {
         SDL_LockMutex(gErrorMessageMutex);
@@ -156,5 +158,5 @@ OCTARINE_API const char *oct_AssetGetErrorMessage(int *size, char *buffer) {
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoadHasFailed() {
-    return SDL_AtomicGet(&gErrorHasOccurred);
+    return SDL_GetAtomicInt(&gErrorHasOccurred);
 }

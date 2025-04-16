@@ -86,7 +86,7 @@ static inline float lerp(float x, float min, float max) {
 }
 
 /////////////////////////////// DRAWING COMMANDS ///////////////////////////////
-#define interpolate(interpolateFlags, prevCmd, time, min, max) (prevCmd) && (interpolateFlags) ? lerp(time, min, max) : (max);
+#define interpolate(interpolateFlags, prevCmd, time, min, max) (prevCmd) && (interpolateFlags) ? lerp(time, min, max) : (max)
 
 static void _oct_ProcessOrigin(Oct_Vec2 origin, Oct_Vec2 out, float width, float height) {
     if (origin[0] == OCT_ORIGIN_MIDDLE) {
@@ -197,7 +197,7 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
 }
 
 void _oct_DrawingUpdateEnd(Oct_Context ctx) {
-    int atomic = SDL_AtomicGet(&ctx->interpolatedTime);
+    int atomic = SDL_GetAtomicInt(&ctx->interpolatedTime);
     float interpolatedTime = OCT_INT_TO_FLOAT(atomic);
 
     // Interpolate/draw current frame's commands

@@ -13,21 +13,21 @@ static inline int32_t nextIndex(int32_t index, int32_t len) {
 // Places a command into the ring buffer at tail, stalling if its full
 static inline void pushCommand(Oct_Context ctx, Oct_Command *command) {
     // Busy loop if the buffer is full
-    int tail = SDL_AtomicGet(&ctx->RingBuffer.tail);
-    while (nextIndex(tail, ctx->initInfo->ringBufferSize) == SDL_AtomicGet(&ctx->RingBuffer.head)) {
+    int tail = SDL_GetAtomicInt(&ctx->RingBuffer.tail);
+    while (nextIndex(tail, ctx->initInfo->ringBufferSize) == SDL_GetAtomicInt(&ctx->RingBuffer.head)) {
         volatile int i;
     }
 
     // Insert new element
     memcpy(&ctx->RingBuffer.commands[tail], command, sizeof(struct Oct_Command_t));
-    SDL_AtomicSet(&ctx->RingBuffer.tail, nextIndex(tail, ctx->initInfo->ringBufferSize));
+    SDL_SetAtomicInt(&ctx->RingBuffer.tail, nextIndex(tail, ctx->initInfo->ringBufferSize));
 }
 
 void _oct_CommandBufferInit(Oct_Context ctx) {
     ctx->RingBuffer.commands = mi_malloc(sizeof(struct Oct_Command_t) * OCT_RING_BUFFER_SIZE);
     if (ctx->RingBuffer.commands) {
-        SDL_AtomicSet(&ctx->RingBuffer.head, 0);
-        SDL_AtomicSet(&ctx->RingBuffer.tail, 0);
+        SDL_SetAtomicInt(&ctx->RingBuffer.head, 0);
+        SDL_SetAtomicInt(&ctx->RingBuffer.tail, 0);
     } else {
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate ringbuffer.");
     }
@@ -56,9 +56,9 @@ void _oct_CommandBufferEndFrame(Oct_Context ctx) {
 }
 
 bool _oct_CommandBufferPop(Oct_Context ctx, Oct_Command *out) {
-    if (SDL_AtomicGet(&ctx->RingBuffer.head) != SDL_AtomicGet(&ctx->RingBuffer.tail)) {
-        memcpy(out, &ctx->RingBuffer.commands[SDL_AtomicGet(&ctx->RingBuffer.head)], sizeof(struct Oct_Command_t));
-        SDL_AtomicSet(&ctx->RingBuffer.head, nextIndex(SDL_AtomicGet(&ctx->RingBuffer.head), ctx->initInfo->ringBufferSize));
+    if (SDL_GetAtomicInt(&ctx->RingBuffer.head) != SDL_GetAtomicInt(&ctx->RingBuffer.tail)) {
+        memcpy(out, &ctx->RingBuffer.commands[SDL_GetAtomicInt(&ctx->RingBuffer.head)], sizeof(struct Oct_Command_t));
+        SDL_SetAtomicInt(&ctx->RingBuffer.head, nextIndex(SDL_GetAtomicInt(&ctx->RingBuffer.head), ctx->initInfo->ringBufferSize));
         return true;
     }
     return false;

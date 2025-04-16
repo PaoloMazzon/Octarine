@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include "oct/InputHandler.h"
 #include "oct/Subsystems.h"
 #include "oct/Opaque.h"
@@ -7,8 +7,8 @@
 const SDL_JoystickID INVALID_GAMEPAD = -1;
 
 // Globals
-Oct_Bool gKeysCurrent[SDL_NUM_SCANCODES];
-Oct_Bool gKeysPrevious[SDL_NUM_SCANCODES];
+Oct_Bool gKeysCurrent[SDL_SCANCODE_COUNT];
+Oct_Bool gKeysPrevious[SDL_SCANCODE_COUNT];
 Oct_Bool gGamepadButtonsCurrent[GAMEPAD_COUNT][OCT_GAMEPAD_BUTTON_MAX];
 Oct_Bool gGamepadButtonsPrevious[GAMEPAD_COUNT][OCT_GAMEPAD_BUTTON_MAX];
 Oct_Bool gMouseButtonsCurrent[OCT_MOUSE_BUTTON_MAX];
@@ -51,7 +51,7 @@ void _oct_InputInit(Oct_Context ctx) {
 
 void _oct_InputUpdate(Oct_Context ctx) {
     // Copy previous buffers
-    memcpy(gKeysPrevious, gKeysCurrent, SDL_NUM_SCANCODES * sizeof(Oct_Bool));
+    memcpy(gKeysPrevious, gKeysCurrent, SDL_SCANCODE_COUNT * sizeof(Oct_Bool));
     memcpy(gMouseButtonsPrevious, gMouseButtonsCurrent, OCT_MOUSE_BUTTON_MAX * sizeof(Oct_Bool));
     for (int i = 0; i < GAMEPAD_COUNT; i++)
         memcpy(gGamepadButtonsPrevious[i], gGamepadButtonsCurrent[i], OCT_GAMEPAD_BUTTON_MAX * sizeof(Oct_Bool));
@@ -61,10 +61,10 @@ void _oct_InputUpdate(Oct_Context ctx) {
     while (_oct_WindowPopEvent(ctx, &event)) {
         // Keyboard event
         if (event.type == OCT_WINDOW_EVENT_TYPE_KEYBOARD) {
-            if (event.keyboardEvent.type == SDL_KEYDOWN) {
-                gKeysCurrent[event.keyboardEvent.keysym.scancode] = true;
-            } else if (event.keyboardEvent.type == SDL_KEYUP) {
-                gKeysCurrent[event.keyboardEvent.keysym.scancode] = false;
+            if (event.keyboardEvent.type == SDL_EVENT_KEY_DOWN) {
+                gKeysCurrent[event.keyboardEvent.scancode] = true;
+            } else if (event.keyboardEvent.type == SDL_EVENT_KEY_UP) {
+                gKeysCurrent[event.keyboardEvent.scancode] = false;
             }
         // Mouse movement
         } else if (event.type == OCT_WINDOW_EVENT_TYPE_MOUSE_MOTION) {
@@ -72,44 +72,44 @@ void _oct_InputUpdate(Oct_Context ctx) {
             gMouseY = (float)event.mouseMotionEvent.y;
         // Mouse button
         } else if (event.type == OCT_WINDOW_EVENT_TYPE_MOUSE_BUTTON) {
-            if (event.mouseButtonEvent.type == SDL_MOUSEBUTTONUP) {
+            if (event.mouseButtonEvent.type == SDL_EVENT_MOUSE_BUTTON_UP) {
                 gMouseButtonsCurrent[event.mouseButtonEvent.button] = false;
-            } else if (event.mouseButtonEvent.type == SDL_MOUSEBUTTONDOWN) {
+            } else if (event.mouseButtonEvent.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
                 gMouseButtonsCurrent[event.mouseButtonEvent.button] = true;
             }
         // Gamepad buttons
         } else if (event.type == OCT_WINDOW_EVENT_TYPE_GAMEPAD_BUTTON) {
             if (_oct_JoystickIDToArrayIndex(event.gamepadButtonEvent.which) == INVALID_GAMEPAD) continue;
-            if (event.gamepadButtonEvent.type == SDL_CONTROLLERBUTTONUP) {
+            if (event.gamepadButtonEvent.type == SDL_EVENT_GAMEPAD_BUTTON_UP) {
                 gGamepadButtonsCurrent[_oct_JoystickIDToArrayIndex(event.gamepadButtonEvent.which)][event.gamepadButtonEvent.button] = false;
-            } else if (event.gamepadButtonEvent.type == SDL_CONTROLLERBUTTONDOWN) {
+            } else if (event.gamepadButtonEvent.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
                 gGamepadButtonsCurrent[_oct_JoystickIDToArrayIndex(event.gamepadButtonEvent.which)][event.gamepadButtonEvent.button] = true;
             }
         // Gamepad axis -- TODO: Triggers are fucked
         } else if (event.type == OCT_WINDOW_EVENT_TYPE_GAMEPAD_AXIS) {
             if (_oct_JoystickIDToArrayIndex(event.gamepadAxisEvent.which) == INVALID_GAMEPAD) continue;
-            if (event.gamepadAxisEvent.axis == SDL_CONTROLLER_AXIS_LEFTX)
+            if (event.gamepadAxisEvent.axis == SDL_GAMEPAD_AXIS_LEFTX)
                 gLeftAxisX[_oct_JoystickIDToArrayIndex(event.gamepadAxisEvent.which)] = (float)event.gamepadAxisEvent.value / (float)SDL_MAX_SINT16;
-            else if (event.gamepadAxisEvent.axis == SDL_CONTROLLER_AXIS_LEFTY)
+            else if (event.gamepadAxisEvent.axis == SDL_GAMEPAD_AXIS_LEFTY)
                 gLeftAxisY[_oct_JoystickIDToArrayIndex(event.gamepadAxisEvent.which)] = (float)event.gamepadAxisEvent.value / (float)SDL_MAX_SINT16;
-            else if (event.gamepadAxisEvent.axis == SDL_CONTROLLER_AXIS_RIGHTX)
+            else if (event.gamepadAxisEvent.axis == SDL_GAMEPAD_AXIS_RIGHTX)
                 gRightAxisX[_oct_JoystickIDToArrayIndex(event.gamepadAxisEvent.which)] = (float)event.gamepadAxisEvent.value / (float)SDL_MAX_SINT16;
-            else if (event.gamepadAxisEvent.axis == SDL_CONTROLLER_AXIS_RIGHTY)
+            else if (event.gamepadAxisEvent.axis == SDL_GAMEPAD_AXIS_RIGHTY)
                 gRightAxisY[_oct_JoystickIDToArrayIndex(event.gamepadAxisEvent.which)] = (float)event.gamepadAxisEvent.value / (float)SDL_MAX_SINT16;
-            else if (event.gamepadAxisEvent.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+            else if (event.gamepadAxisEvent.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER)
                 gLeftTrigger[_oct_JoystickIDToArrayIndex(event.gamepadAxisEvent.which)] = (float)event.gamepadAxisEvent.value / (float)SDL_MAX_SINT16;
-            else if (event.gamepadAxisEvent.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
+            else if (event.gamepadAxisEvent.axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)
                 gRightTrigger[_oct_JoystickIDToArrayIndex(event.gamepadAxisEvent.which)] = (float)event.gamepadAxisEvent.value / (float)SDL_MAX_SINT16;
         // Add/remove gamepads
         } else if (event.type == OCT_WINDOW_EVENT_TYPE_GAMEPAD_EVENT) {
-            if (event.gamepadDeviceEvent.type == SDL_CONTROLLERDEVICEADDED) {
+            if (event.gamepadDeviceEvent.type == SDL_EVENT_GAMEPAD_ADDED) {
                 for (int i = 0; i < GAMEPAD_COUNT; i++) {
                     if (gGamepadJoyIDMappings[i] == INVALID_GAMEPAD) {
                         gGamepadJoyIDMappings[i] = event.gamepadDeviceEvent.which;
                         break;
                     }
                 }
-            } else if (event.gamepadDeviceEvent.type == SDL_CONTROLLERDEVICEREMOVED) {
+            } else if (event.gamepadDeviceEvent.type == SDL_EVENT_GAMEPAD_REMOVED) {
                 for (int i = 0; i < GAMEPAD_COUNT; i++) {
                     if (gGamepadJoyIDMappings[i] == event.gamepadDeviceEvent.which) {
                         gGamepadJoyIDMappings[i] = INVALID_GAMEPAD;
