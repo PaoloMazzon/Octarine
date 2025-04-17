@@ -12,3 +12,8 @@ Oct_Status OCT_STATUS_OUT_OF_MEMORY       = 1<<8;
 
 // Memory-related
 int32_t OCT_RING_BUFFER_SIZE = 1000;
+int32_t OCT_STANDARD_PAGE_SIZE = 1024 * 50; // 50kb
+int32_t OCT_PAGE_SCALE_FACTOR = 3;
+
+// Various
+Oct_Asset OCT_TARGET_SWAPCHAIN = -1;

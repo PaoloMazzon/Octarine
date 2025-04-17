@@ -52,6 +52,10 @@ struct Oct_Allocator_t {
             int32_t point;   ///< Where the last allocation ended in the arena
         } arenaAllocator;
         mi_heap_t *heapAllocator; ///< Internal mimalloc heap
+        struct {
+            Oct_Allocator *pages; ///< Arenas (pages)
+            int32_t count;        ///< Number of arenas
+        }virtualPageAllocator;
     };
 };
 

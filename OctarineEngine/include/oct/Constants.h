@@ -17,7 +17,12 @@ extern Oct_Status OCT_STATUS_FILE_DOES_NOT_EXIST; ///< A file does not exist
 extern Oct_Status OCT_STATUS_BAD_PARAMETER;       ///< A parameter given was not allowed
 
 // Memory
-extern int32_t OCT_RING_BUFFER_SIZE; ///< Size of the command/event ring buffer
+extern int32_t OCT_RING_BUFFER_SIZE;   ///< Size of the command/event ring buffer
+extern int32_t OCT_STANDARD_PAGE_SIZE; ///< Size of a page in a virtual page allocator
+extern int32_t OCT_PAGE_SCALE_FACTOR;  ///< How much bigger a page should be to accommodate large memory
+
+// Various
+extern Oct_Asset OCT_TARGET_SWAPCHAIN; ///< Target the swapchain (window)
 
 #ifdef __cplusplus
 };

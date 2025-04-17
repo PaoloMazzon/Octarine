@@ -196,6 +196,14 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
     );
 }
 
+static void _oct_SwitchTarget(Oct_Context ctx, Oct_DrawCommand *cmd) {
+    if (cmd->Target.texture != OCT_TARGET_SWAPCHAIN && _oct_AssetType(ctx, cmd->Target.texture) != OCT_ASSET_TYPE_TEXTURE)
+        return;
+    VK2DTexture tex = cmd->Target.texture != -1 ? _oct_AssetGet(ctx, cmd->Target.texture)->texture : null;
+
+    vk2dRendererSetTarget(tex);
+}
+
 void _oct_DrawingUpdateEnd(Oct_Context ctx) {
     int atomic = SDL_GetAtomicInt(&ctx->interpolatedTime);
     float interpolatedTime = OCT_INT_TO_FLOAT(atomic);
@@ -219,6 +227,8 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
             _oct_DrawTexture(ctx, cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CIRCLE) {
             _oct_DrawCircle(ctx, cmd, prevCmd, interpolatedTime);
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_TARGET) {
+            _oct_SwitchTarget(ctx, cmd);
         } // TODO: Implement other command types
     }
 

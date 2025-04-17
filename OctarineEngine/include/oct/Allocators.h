@@ -18,10 +18,28 @@ OCTARINE_API Oct_Allocator oct_CreateHeapAllocator();
 /// to do so from multiple different threads concurrently.
 OCTARINE_API Oct_Allocator oct_CreateArenaAllocator(int32_t size);
 
+/// \brief Creates a "virtual page" allocator that is good at being reset often but still allows arbitrary allocations
+/// \return Returns a new virtual page allocator, or NULL if it fails
+/// \warning Arena allocations may be made from any thread but it is not thread safe
+/// to do so from multiple different threads concurrently.
+///
+/// This is an allocator that allows for arbitrary allocations but still allows you to empty it out very quickly like
+/// an arena. This is for memory you don't know the size of and won't be around very long.
+OCTARINE_API Oct_Allocator oct_CreateVirtualPageAllocator();
+
 /// \brief Returns the type of allocator this is
 /// \param allocator Allocator to check
 /// \return Returns one of the OCT_ALLOCATOR_TYPE_* enums
 OCTARINE_API Oct_AllocatorType oct_GetAllocatorType(Oct_Allocator allocator);
+
+/// \brief Cleans out all memory in an allocator
+/// \param allocator Allocator to reset
+/// \warning This invalidates all memory pointing to allocations made from the allocator
+/// \warning Performing this on a heap allocator may be slow, but on virtual page or arenas it is very fast.
+///
+/// This does not destroy the memory in an arena or virtual page allocator, it just resets their internal pointer
+/// to zero meaning this is very fast. For heap allocators it will simply destroy and recreate it.
+OCTARINE_API void oct_ResetAllocator(Oct_Allocator allocator);
 
 /// \brief Destroys a heap allocator and everything in it
 /// \param allocator Allocator to destroy
