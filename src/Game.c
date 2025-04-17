@@ -3,6 +3,7 @@
 
 Oct_Texture gTexMarble;
 Oct_Allocator gAllocator;
+Oct_Camera gCamera;
 
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup(Oct_Context ctx) {
@@ -12,6 +13,10 @@ void *startup(Oct_Context ctx) {
             .Texture.filename = "data/marble.jpg"
     };
     gTexMarble = oct_Load(ctx, &load);
+
+    // Make a test camera
+    gCamera = oct_Load(ctx, &(Oct_LoadCommand){.type = OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA});
+
     return null;
 }
 

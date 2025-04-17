@@ -66,6 +66,7 @@ typedef Oct_Asset Oct_Audio;   ///< Any asset in the engine
 typedef Oct_Asset Oct_Model;   ///< Any asset in the engine
 typedef Oct_Asset Oct_Sprite;  ///< Any asset in the engine
 typedef Oct_Asset Oct_Font;    ///< Any asset in the engine
+typedef Oct_Asset Oct_Camera;  ///< Any asset in the engine
 typedef float Oct_Vec4[4];     ///< Array of 4 floats
 typedef float Oct_Vec3[3];     ///< Array of 3 floats
 typedef float Oct_Vec2[2];     ///< Array of 2 floats
@@ -105,8 +106,9 @@ typedef enum {
     OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,    ///< Load a sprite
     OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,      ///< Load a font
     OCT_LOAD_COMMAND_TYPE_LOAD_MODEL = 4,     ///< Loads a model
-    OCT_LOAD_COMMAND_TYPE_FREE = 5,           ///< Frees an asset
-    OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 6, ///< Creates a surface
+    OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA = 5,  ///< Loads a model
+    OCT_LOAD_COMMAND_TYPE_FREE = 6,           ///< Frees an asset
+    OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 7, ///< Creates a surface
 } Oct_LoadCommandType;
 
 /// \brief Types of window commands
@@ -148,6 +150,7 @@ typedef enum {
     OCT_ASSET_TYPE_FONT = 3,    ///< Font
     OCT_ASSET_TYPE_AUDIO = 4,   ///< Audio
     OCT_ASSET_TYPE_SPRITE = 5,  ///< Sprite
+    OCT_ASSET_TYPE_CAMERA = 6,  ///< Camera
 } Oct_AssetType;
 
 /// \brief Things you can interpolate
@@ -157,9 +160,18 @@ typedef enum {
     OCT_INTERPOLATE_ROTATION = 1<<2,  ///< Interpolate rotation
     OCT_INTERPOLATE_SCALE_X = 1<<3,   ///< Interpolate horizontal scale
     OCT_INTERPOLATE_SCALE_Y = 1<<4,   ///< Interpolate vertical scale
-    OCT_INTERPOLATE_RADIUS = 1<<4,    ///< Interpolate circle radius
+    OCT_INTERPOLATE_WIDTH = 1<<5,     ///< Interpolate width
+    OCT_INTERPOLATE_HEIGHT = 1<<6,    ///< Interpolate height
+    OCT_INTERPOLATE_RADIUS = 1<<7,    ///< Interpolate circle radius
     OCT_INTERPOLATE_ALL = 0xFFFFFFFF, ///< Interpolate all of the above (where available)
 } Oct_InterpolationType;
+
+/// \brief Different ways a camera update can play out, can be bitwise or'd
+typedef enum {
+    OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA = 1<<1, ///< Update the associated camera with the associated camera update
+    OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA = 1<<2,   ///< Lock rendering to exclusively this camera
+    OCT_CAMERA_UPDATE_TYPE_UNLOCK_CAMERA = 1<<3, ///< Unlock rendering (render to every camera)
+} Oct_CameraUpdateType;
 
 ////////////////////// Hidden structs //////////////////////
 OCT_OPAQUE_POINTER(Oct_Context)
@@ -191,6 +203,7 @@ struct Oct_WindowCommand_t {
 };
 
 /// \brief Load command to load or free anything (just use oct_FreeAsset, don't use this manually for freeing)
+/// \note Cameras don't require anything, just pass a load command with the type OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA
 struct Oct_LoadCommand_t {
     Oct_StructureType sType;  ///< Structure type
     Oct_LoadCommandType type; ///< Type of load command this is
@@ -223,6 +236,15 @@ struct Oct_MetaCommand_t {
     void *pNext;              ///< For future use
 };
 
+/// \brief A camera update
+struct Oct_CameraUpdate_t {
+    Oct_Vec2 position;       ///< Position in the game world of the camera
+    Oct_Vec2 size;           ///< Virtual size of the camera
+    float rotation;          ///< Camera's rotation (in radians)
+    Oct_Vec2 screenPosition; ///< Position in the window of the camera
+    Oct_Vec2 screenSize;     ///< Size of the camera in the window
+};
+
 /// \brief Rectangle
 struct Oct_Rectangle_t {
     Oct_Vec2 position; ///< X/Y position
@@ -252,6 +274,7 @@ OCT_USER_STRUCT(Oct_WindowCommand)
 OCT_USER_STRUCT(Oct_LoadCommand)
 OCT_USER_STRUCT(Oct_AudioCommand)
 OCT_USER_STRUCT(Oct_MetaCommand)
+OCT_USER_STRUCT(Oct_CameraUpdate)
 OCT_USER_STRUCT(Oct_Rectangle)
 OCT_USER_STRUCT(Oct_Circle)
 OCT_USER_STRUCT(Oct_Colour)
@@ -287,6 +310,11 @@ struct Oct_DrawCommand_t {
         struct {
             Oct_Asset texture; ///< Texture that the render target will switch to (or OCT_TARGET_SWAPCHAIN)
         } Target;              ///< For changing render targets
+        struct {
+            Oct_CameraUpdate cameraUpdate;   ///< New camera information
+            Oct_CameraUpdateType updateType; ///< Type of update
+            Oct_Camera camera;               ///< Which camera to update
+        } Camera;                            ///< A camera update
     };
     void *pNext; ///< For future use
 };

@@ -136,6 +136,53 @@ static void _oct_DrawRectangle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     }
 }
 
+static void _oct_UpdateCamera(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    // Update the camera if the user wishes to
+    if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA) {
+        if (_oct_AssetType(ctx, cmd->Camera.camera) != OCT_ASSET_TYPE_CAMERA)
+            return; // TODO: Error on incorrect asset type
+        VK2DCameraIndex cam = _oct_AssetGet(ctx, cmd->Camera.camera)->camera;
+
+        Oct_Vec2 position;
+        Oct_Vec2 size;
+        float rotation;
+        position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime,
+                                  prevCmd->Camera.cameraUpdate.position[0], cmd->Camera.cameraUpdate.position[0]);
+        position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime,
+                                  prevCmd->Camera.cameraUpdate.position[1], cmd->Camera.cameraUpdate.position[1]);
+        size[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_WIDTH, prevCmd, interpolatedTime,
+                              prevCmd->Camera.cameraUpdate.size[0], cmd->Camera.cameraUpdate.size[0]);
+        size[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_HEIGHT, prevCmd, interpolatedTime,
+                              prevCmd->Camera.cameraUpdate.size[1], cmd->Camera.cameraUpdate.size[1]);
+        rotation = interpolate(cmd->interpolate & OCT_INTERPOLATE_ROTATION, prevCmd, interpolatedTime,
+                               prevCmd->Camera.cameraUpdate.rotation, cmd->Camera.cameraUpdate.rotation);
+        VK2DCameraSpec spec = {
+                .type = VK2D_CAMERA_TYPE_DEFAULT,
+                .x = position[0],
+                .y = position[1],
+                .w = size[0],
+                .h = size[1],
+                .xOnScreen = cmd->Camera.cameraUpdate.screenPosition[0],
+                .yOnScreen = cmd->Camera.cameraUpdate.screenPosition[1],
+                .wOnScreen = cmd->Camera.cameraUpdate.screenSize[0],
+                .hOnScreen = cmd->Camera.cameraUpdate.screenSize[1],
+                .rot = rotation,
+                .zoom = 1
+        };
+        vk2dCameraUpdate(cam, spec);
+    }
+
+    // Lock/Unlock the camera
+    if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA) {
+        if (_oct_AssetType(ctx, cmd->Camera.camera) != OCT_ASSET_TYPE_CAMERA)
+            return; // TODO: Error on incorrect asset type
+        VK2DCameraIndex cam = _oct_AssetGet(ctx, cmd->Camera.camera)->camera;
+        vk2dRendererLockCameras(cam);
+    } else if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_UNLOCK_CAMERA) {
+        vk2dRendererUnlockCameras();
+    }
+}
+
 static void _oct_DrawCircle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     // Process interpolation
     Oct_Vec2 position;
@@ -162,7 +209,7 @@ static void _oct_DrawCircle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
 
 static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     if (_oct_AssetType(ctx, cmd->Texture.texture) != OCT_ASSET_TYPE_TEXTURE)
-        return;
+        return; // TODO: Error on incorrect asset type
     VK2DTexture tex = _oct_AssetGet(ctx, cmd->Texture.texture)->texture;
 
     // Process interpolation
@@ -229,6 +276,8 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
             _oct_DrawCircle(ctx, cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_TARGET) {
             _oct_SwitchTarget(ctx, cmd);
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CAMERA) {
+            _oct_UpdateCamera(ctx, cmd, prevCmd, interpolatedTime);
         } // TODO: Implement other command types
     }
 

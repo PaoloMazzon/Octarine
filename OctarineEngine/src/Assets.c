@@ -51,7 +51,7 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
         } else {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
-        } // TODO: The other types
+        }
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE) {
         VK2DTexture tex = vk2dTextureCreate(load->Surface.dimensions[0], load->Surface.dimensions[1]);
         if (tex) {
@@ -61,13 +61,26 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
         } else {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
-        } // TODO: The other types
+        }
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA) {
+        VK2DCameraIndex camIndex = vk2dCameraCreate(vk2dCameraGetSpec(VK2D_DEFAULT_CAMERA));
+        if (camIndex != VK2D_INVALID_CAMERA) {
+            gAssets[load->_assetID].camera = camIndex;
+            gAssets[load->_assetID].type = OCT_ASSET_TYPE_CAMERA;
+            SDL_SetAtomicInt(&gAssets[load->_assetID].loaded, 1);
+        } else {
+            _oct_FailLoad(ctx, load->_assetID);
+            _oct_LogError("Failed to create camera\n");
+        }
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
         if (gAssets[load->_assetID].type == OCT_ASSET_TYPE_TEXTURE) {
             vk2dRendererWait();
             vk2dTextureFree(gAssets[load->_assetID].texture);
             _oct_DestroyAssetMetadata(ctx, load->_assetID);
-        } // TODO: The other types
+        } else if (gAssets[load->_assetID].type == OCT_ASSET_TYPE_CAMERA) {
+            vk2dCameraSetState(gAssets[load->_assetID].camera, VK2D_CAMERA_STATE_DELETED);
+            _oct_DestroyAssetMetadata(ctx, load->_assetID);
+        }
     }
 }
 

@@ -38,6 +38,7 @@ struct Oct_AssetData_t {
     SDL_AtomicInt loaded;   // True when the asset is loaded
     union {
         VK2DTexture texture;
+        VK2DCameraIndex camera;
     };
 };
 typedef struct Oct_AssetData_t Oct_AssetData;
