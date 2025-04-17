@@ -4,6 +4,12 @@
 #include "oct/Opaque.h"
 #include "oct/Constants.h"
 #include "oct/Subsystems.h"
+#include "oct/Allocators.h"
+
+// Quadruple buffer command buffer allocators so the logic thread is never writing to a buffer the render thread
+// is reading from
+Oct_Allocator gCommandBufferAllocators[4];
+int gCommandBufferAllocatorCurrent;
 
 // Wraps an index, returns index + 1 unless index == len - 1 in which case it returns 0
 static inline int32_t nextIndex(int32_t index, int32_t len) {
@@ -23,7 +29,20 @@ static inline void pushCommand(Oct_Context ctx, Oct_Command *command) {
     SDL_SetAtomicInt(&ctx->RingBuffer.tail, nextIndex(tail, ctx->initInfo->ringBufferSize));
 }
 
+// Allocates some memory into the command buffer allocator for the current frame, returns new memory location
+static void *_oct_CopyIntoFrameMemory(Oct_Context ctx, void *data, int32_t size) {
+    void *mem = oct_Malloc(gCommandBufferAllocators[gCommandBufferAllocatorCurrent], size);
+    if (mem) {
+        memcpy(mem, data, size);
+        return mem;
+    } else {
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to copy memory into frame memory, size %i bytes", size);
+    }
+    return null;
+}
+
 void _oct_CommandBufferInit(Oct_Context ctx) {
+    // Init ring buffer
     ctx->RingBuffer.commands = mi_malloc(sizeof(struct Oct_Command_t) * OCT_RING_BUFFER_SIZE);
     if (ctx->RingBuffer.commands) {
         SDL_SetAtomicInt(&ctx->RingBuffer.head, 0);
@@ -31,9 +50,21 @@ void _oct_CommandBufferInit(Oct_Context ctx) {
     } else {
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate ringbuffer.");
     }
+
+    // Init memory quad buffer
+    for (int i = 0; i < 4; i++) {
+        gCommandBufferAllocators[i] = oct_CreateVirtualPageAllocator();
+        if (gCommandBufferAllocators[i] == null)
+            oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to create command buffer allocator.");
+    }
 }
 
 void _oct_CommandBufferBeginFrame(Oct_Context ctx) {
+    // Cycle command buffer allocator
+    gCommandBufferAllocatorCurrent = (gCommandBufferAllocatorCurrent + 1) % 4;
+    oct_ResetAllocator(gCommandBufferAllocators[gCommandBufferAllocatorCurrent]);
+
+    // Tell render thread that new frame is starting
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
             .metaCommand = {
@@ -45,6 +76,7 @@ void _oct_CommandBufferBeginFrame(Oct_Context ctx) {
 }
 
 void _oct_CommandBufferEndFrame(Oct_Context ctx) {
+    // Tell render thread that current frame is done
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
             .metaCommand = {
@@ -66,6 +98,8 @@ bool _oct_CommandBufferPop(Oct_Context ctx, Oct_Command *out) {
 
 void _oct_CommandBufferEnd(Oct_Context ctx) {
     mi_free(ctx->RingBuffer.commands);
+    for (int i = 0; i < 4; i++)
+        oct_FreeAllocator(gCommandBufferAllocators[i]);
 }
 
 OCTARINE_API void oct_Draw(Oct_Context ctx, Oct_DrawCommand *draw) {

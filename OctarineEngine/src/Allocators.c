@@ -64,9 +64,8 @@ OCTARINE_API void oct_ResetAllocator(Oct_Allocator allocator) {
             allocator->arenaAllocator.point = 0;
         } else if (allocator->type == OCT_ALLOCATOR_TYPE_VIRTUAL_PAGE) {
             for (int i = 0; i < allocator->virtualPageAllocator.count; i++)
-                allocator->virtualPageAllocator.pages[i]->arenaAllocator.point = 0;
+                oct_ResetAllocator(allocator->virtualPageAllocator.pages[i]);
         }
-        mi_free(allocator);
     }
 }
 
