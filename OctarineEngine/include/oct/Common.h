@@ -168,9 +168,11 @@ typedef enum {
 
 /// \brief Different ways a camera update can play out, can be bitwise or'd
 typedef enum {
-    OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA = 1<<1, ///< Update the associated camera with the associated camera update
-    OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA = 1<<2,   ///< Lock rendering to exclusively this camera
-    OCT_CAMERA_UPDATE_TYPE_UNLOCK_CAMERA = 1<<3, ///< Unlock rendering (render to every camera)
+    OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA = 1<<1,   ///< Update the associated camera with the associated camera update
+    OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA = 1<<2,     ///< Lock rendering to exclusively this camera
+    OCT_CAMERA_UPDATE_TYPE_UNLOCK_CAMERA = 1<<3,   ///< Unlock rendering (render to every camera)
+    OCT_CAMERA_UPDATE_TYPE_ENABLE_TEX_CAM = 1<<4,  ///< Enables the use of cameras on texture targets
+    OCT_CAMERA_UPDATE_TYPE_DISABLE_TEX_CAM = 1<<5, ///< Disables the use of cameras on texture targets
 } Oct_CameraUpdateType;
 
 ////////////////////// Hidden structs //////////////////////

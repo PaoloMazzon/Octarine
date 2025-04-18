@@ -17,6 +17,22 @@ void *startup(Oct_Context ctx) {
     // Make a test camera
     gCamera = oct_Load(ctx, &(Oct_LoadCommand){.type = OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA});
 
+    // Update camera
+    Oct_DrawCommand cameraUpdate = {
+            .type = OCT_DRAW_COMMAND_TYPE_CAMERA,
+            .Camera = {
+                    .camera = gCamera,
+                    .updateType = OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA | OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA,
+                    .cameraUpdate = {
+                            .position = {0, 0},
+                            .size = {320, 240},
+                            .screenPosition = {0, 0},
+                            .screenSize = {640, 480}
+                    }
+            }
+    };
+    oct_Draw(ctx, &cameraUpdate);
+
     return null;
 }
 

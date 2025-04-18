@@ -181,6 +181,12 @@ static void _oct_UpdateCamera(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCom
     } else if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_UNLOCK_CAMERA) {
         vk2dRendererUnlockCameras();
     }
+
+    if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_ENABLE_TEX_CAM) {
+        vk2dRendererSetTextureCamera(true);
+    } else if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_DISABLE_TEX_CAM) {
+        vk2dRendererSetTextureCamera(false);
+    }
 }
 
 static void _oct_DrawCircle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
