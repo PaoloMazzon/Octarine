@@ -200,8 +200,12 @@ struct Oct_InitInfo_t {
 struct Oct_WindowCommand_t {
     Oct_StructureType sType;    ///< Structure type
     Oct_WindowCommandType type; ///< Type of window command this is
-    // TODO: This
-    void *pNext;                ///< For future use
+    union {
+        struct {
+            Oct_Vec2 size; ///< Size of the window in pixels
+        } Resize;          ///< Info needed for a resize
+    };
+    void *pNext; ///< For future use
 };
 
 /// \brief Load command to load or free anything (just use oct_FreeAsset, don't use this manually for freeing)

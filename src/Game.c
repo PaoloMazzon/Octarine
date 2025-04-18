@@ -3,7 +3,6 @@
 
 Oct_Texture gTexMarble;
 Oct_Allocator gAllocator;
-Oct_Camera gCamera;
 
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup(Oct_Context ctx) {
@@ -13,25 +12,6 @@ void *startup(Oct_Context ctx) {
             .Texture.filename = "data/marble.jpg"
     };
     gTexMarble = oct_Load(ctx, &load);
-
-    // Make a test camera
-    gCamera = oct_Load(ctx, &(Oct_LoadCommand){.type = OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA});
-
-    // Update camera
-    Oct_DrawCommand cameraUpdate = {
-            .type = OCT_DRAW_COMMAND_TYPE_CAMERA,
-            .Camera = {
-                    .camera = gCamera,
-                    .updateType = OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA | OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA,
-                    .cameraUpdate = {
-                            .position = {0, 0},
-                            .size = {320, 240},
-                            .screenPosition = {0, 0},
-                            .screenSize = {640, 480}
-                    }
-            }
-    };
-    oct_Draw(ctx, &cameraUpdate);
 
     return null;
 }
@@ -78,6 +58,11 @@ void *update(Oct_Context ctx, void *ptr) {
         const char *s = oct_AssetErrorMessage(gAllocator);
         oct_Log("%s", s);
         oct_Free(gAllocator, (void*)s);
+    }
+
+    // Allow toggling fullscreen
+    if (oct_KeyPressed(OCT_KEY_F11)) {
+        oct_ToggleFullscreen(ctx);
     }
 
     return null;

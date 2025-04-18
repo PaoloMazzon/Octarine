@@ -1,6 +1,7 @@
 #include "oct/Window.h"
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
+#include "oct/CommandBuffer.h"
 
 #define GAMEPAD_LIMIT 100
 
@@ -14,6 +15,11 @@ SDL_AtomicInt gRingHead; // Reading index
 SDL_AtomicInt gRingTail; // Writing index
 Oct_WindowEvent *gRingBuffer; // Event ring buffer
 SDL_Gamepad *gControllers[GAMEPAD_LIMIT];
+
+// Globals for communicating window things
+SDL_AtomicInt gWindowWidth; // Current window width
+SDL_AtomicInt gWindowHeight; // Current window height
+SDL_AtomicInt gWindowFullscreen; // Whether or not the window is currently fullscreen
 
 // Pushes an event to the event ringbuffer, might be blocking if the logic thread is falling behind
 static void _oct_WindowPush(Oct_WindowEvent *event) {
@@ -125,6 +131,13 @@ void _oct_WindowUpdateBegin(Oct_Context ctx) {
             _oct_WindowPush(&event);
         }
     }
+
+    // Update window variables
+    int w, h;
+    SDL_GetWindowSize(ctx->window, &w, &h);
+    SDL_SetAtomicInt(&gWindowWidth, w);
+    SDL_SetAtomicInt(&gWindowHeight, h);
+    SDL_SetAtomicInt(&gWindowFullscreen, (SDL_GetWindowFlags(ctx->window) & SDL_WINDOW_FULLSCREEN) != 0);
 }
 
 void _oct_WindowUpdateEnd(Oct_Context ctx) {
@@ -132,7 +145,20 @@ void _oct_WindowUpdateEnd(Oct_Context ctx) {
 }
 
 void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
-    // TODO: This
+    if (OCT_STRUCTURE_TYPE(&cmd->topOfUnion) == OCT_STRUCTURE_TYPE_META_COMMAND) {
+        // Meta commands are currently of no interest to the windowing subsystem
+    } else {
+        if (cmd->windowCommand.type == OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_ENTER) {
+            SDL_SetWindowFullscreen(ctx->window, true);
+        } else if (cmd->windowCommand.type == OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_EXIT) {
+            SDL_SetWindowFullscreen(ctx->window, false);
+        } else if (cmd->windowCommand.type == OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_TOGGLE) {
+            Oct_Bool fs = SDL_GetWindowFlags(ctx->window) & SDL_WINDOW_FULLSCREEN;
+            SDL_SetWindowFullscreen(ctx->window, !fs);
+        } else if (cmd->windowCommand.type == OCT_WINDOW_COMMAND_TYPE_RESIZE) {
+            SDL_SetWindowSize(ctx->window, cmd->windowCommand.Resize.size[0], cmd->windowCommand.Resize.size[1]);
+        }
+    }
 }
 
 Oct_Bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event) {
@@ -146,4 +172,38 @@ Oct_Bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event) {
     memcpy(event, &gRingBuffer[head], sizeof(struct Oct_WindowEvent_t));
     SDL_SetAtomicInt(&gRingHead, nextIndex(head, OCT_RING_BUFFER_SIZE));
     return true;
+}
+
+OCTARINE_API float oct_WindowWidth(Oct_Context ctx) {
+    return (float)SDL_GetAtomicInt(&gWindowWidth);
+}
+
+OCTARINE_API float oct_WindowHeight(Oct_Context ctx) {
+    return (float)SDL_GetAtomicInt(&gWindowHeight);
+}
+
+OCTARINE_API Oct_Bool oct_WindowIsFullscreen(Oct_Context ctx) {
+    return (Oct_Bool)SDL_GetAtomicInt(&gWindowFullscreen);
+}
+
+OCTARINE_API void oct_SetFullscreen(Oct_Context ctx, Oct_Bool fullscreen) {
+    Oct_WindowCommand c = {
+            .type = fullscreen ? OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_ENTER : OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_EXIT,
+    };
+    oct_WindowUpdate(ctx, &c);
+}
+
+OCTARINE_API void oct_ToggleFullscreen(Oct_Context ctx) {
+    Oct_WindowCommand c = {
+            .type = OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_TOGGLE,
+    };
+    oct_WindowUpdate(ctx, &c);
+}
+
+OCTARINE_API void oct_ResizeWindow(Oct_Context ctx, float width, float height) {
+    Oct_WindowCommand c = {
+            .type = OCT_WINDOW_COMMAND_TYPE_RESIZE,
+            .Resize.size = {width, height}
+    };
+    oct_WindowUpdate(ctx, &c);
 }
