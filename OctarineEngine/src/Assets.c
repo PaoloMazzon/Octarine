@@ -10,6 +10,9 @@
 // All assets
 static Oct_AssetData gAssets[OCT_MAX_ASSETS];
 
+// Returns the actual index in the asset array given an asset id
+#define ASSET_INDEX(asset) (asset & INT32_MAX)
+
 // Error message in case an asset load fails
 #define ERROR_BUFFER_SIZE 1024
 static char gErrorMessage[ERROR_BUFFER_SIZE];
@@ -45,9 +48,9 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE) {
         VK2DTexture tex = vk2dTextureLoad(load->Texture.filename);
         if (tex) {
-            gAssets[load->_assetID].texture = tex;
-            gAssets[load->_assetID].type = OCT_ASSET_TYPE_TEXTURE;
-            SDL_SetAtomicInt(&gAssets[load->_assetID].loaded, 1);
+            gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
+            gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
+            SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
         } else {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
@@ -55,9 +58,9 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE) {
         VK2DTexture tex = vk2dTextureCreate(load->Surface.dimensions[0], load->Surface.dimensions[1]);
         if (tex) {
-            gAssets[load->_assetID].texture = tex;
-            gAssets[load->_assetID].type = OCT_ASSET_TYPE_TEXTURE;
-            SDL_SetAtomicInt(&gAssets[load->_assetID].loaded, 1);
+            gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
+            gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
+            SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
         } else {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
@@ -65,31 +68,31 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA) {
         VK2DCameraIndex camIndex = vk2dCameraCreate(vk2dCameraGetSpec(VK2D_DEFAULT_CAMERA));
         if (camIndex != VK2D_INVALID_CAMERA) {
-            gAssets[load->_assetID].camera = camIndex;
-            gAssets[load->_assetID].type = OCT_ASSET_TYPE_CAMERA;
-            SDL_SetAtomicInt(&gAssets[load->_assetID].loaded, 1);
+            gAssets[ASSET_INDEX(load->_assetID)].camera = camIndex;
+            gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_CAMERA;
+            SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
         } else {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to create camera\n");
         }
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
-        if (gAssets[load->_assetID].type == OCT_ASSET_TYPE_TEXTURE) {
+        if (gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_TEXTURE) {
             vk2dRendererWait();
-            vk2dTextureFree(gAssets[load->_assetID].texture);
+            vk2dTextureFree(gAssets[ASSET_INDEX(load->_assetID)].texture);
             _oct_DestroyAssetMetadata(ctx, load->_assetID);
-        } else if (gAssets[load->_assetID].type == OCT_ASSET_TYPE_CAMERA) {
-            vk2dCameraSetState(gAssets[load->_assetID].camera, VK2D_CAMERA_STATE_DELETED);
+        } else if (gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_CAMERA) {
+            vk2dCameraSetState(gAssets[ASSET_INDEX(load->_assetID)].camera, VK2D_CAMERA_STATE_DELETED);
             _oct_DestroyAssetMetadata(ctx, load->_assetID);
         }
     }
 }
 
 Oct_AssetType _oct_AssetType(Oct_Context ctx, Oct_Asset asset) {
-    return SDL_GetAtomicInt(&gAssets[asset].loaded) ? gAssets[asset].type : OCT_ASSET_TYPE_NONE;
+    return SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded) ? gAssets[ASSET_INDEX(asset)].type : OCT_ASSET_TYPE_NONE;
 }
 
 Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset) {
-    return &gAssets[asset];
+    return &gAssets[ASSET_INDEX(asset)];
 }
 
 void _oct_AssetsEnd(Oct_Context ctx) {
@@ -112,20 +115,20 @@ Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx) {
     for (int i = 0; i < OCT_MAX_ASSETS; i++) {
         if (!SDL_GetAtomicInt(&gAssets->reserved)) {
             SDL_SetAtomicInt(&gAssets->reserved, 1);
-            return i;
+            return i + ((gAssets->generation++) << 32);
         }
     }
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset) {
-    return SDL_GetAtomicInt(&gAssets[asset].loaded);
+    return SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded);
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset) {
-    bool failed = SDL_GetAtomicInt(&gAssets[asset].failed);
+    bool failed = SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].failed);
     if (failed) {
-        SDL_SetAtomicInt(&gAssets[asset].failed, 0);
-        SDL_SetAtomicInt(&gAssets[asset].reserved, 0);
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].failed, 0);
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].reserved, 0);
     }
     return failed;
 }

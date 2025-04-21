@@ -32,10 +32,11 @@ struct Oct_Context_t {
 
 // An asset for the engine
 struct Oct_AssetData_t {
-    Oct_AssetType type;     // type of asset
-    SDL_AtomicInt reserved; // to allow the logic thread to find assets that still exist
-    SDL_AtomicInt failed;   // This will be true if the load on this asset failed
-    SDL_AtomicInt loaded;   // True when the asset is loaded
+    Oct_AssetType type;     ///< type of asset
+    SDL_AtomicInt reserved; ///< to allow the logic thread to find assets that still exist
+    SDL_AtomicInt failed;   ///< This will be true if the load on this asset failed
+    SDL_AtomicInt loaded;   ///< True when the asset is loaded
+    int64_t generation;     ///< Generation for unique ID purposes
     union {
         VK2DTexture texture;
         VK2DCameraIndex camera;
