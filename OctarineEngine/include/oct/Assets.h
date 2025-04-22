@@ -15,13 +15,20 @@ extern "C" {
 /// guaranteed to be before the next draw command is executed unless the load fails for
 /// any reason. What this means in practice is that this function does not immediately
 /// load the asset but you may treat the asset as thought it were.
+///
+/// Assets in Octarine are just 64-bit integers. They internally index an asset array
+/// but also their more significant 32 bits represent their generation which means that
+/// no two assets will ever have the same asset value throughout the course of your game.
+/// For that reason, if you delete an asset and allocate a new one that ends up in the
+/// same spot in the asset array, something like oct_AssetLoaded will still say that the deleted
+/// asset is not loaded because it knows the generation does not match.
 OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load);
 
 /// \brief Returns true if the asset was successfully loaded, false if its not loaded for any reason
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset);
 
 /// \brief Returns true if an asset was failed to load for any reason
-/// \warning If this returns true that asset is invalidated
+/// \warning If this returns true that asset ID is invalidated
 OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset);
 
 /// \brief Returns an error message or null if there is none (or the allocation fails)

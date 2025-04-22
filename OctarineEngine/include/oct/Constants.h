@@ -21,8 +21,14 @@ extern int32_t OCT_RING_BUFFER_SIZE;   ///< Size of the command/event ring buffe
 extern int32_t OCT_STANDARD_PAGE_SIZE; ///< Size of a page in a virtual page allocator
 extern int32_t OCT_PAGE_SCALE_FACTOR;  ///< How much bigger a page should be to accommodate large memory
 
+// Drawing
+extern int32_t OCT_SPRITE_LAST_FRAME;    ///< Draw the last frame of the animation
+extern int32_t OCT_SPRITE_FIRST_FRAME;   ///< Draw the first frame of the animation
+extern int32_t OCT_SPRITE_CURRENT_FRAME; ///< Draw the current frame of the animation
+
 // Various
 extern Oct_Asset OCT_TARGET_SWAPCHAIN; ///< Target the swapchain (window)
+extern Oct_Asset OCT_NO_ASSET;         ///< For things like specifying a new texture in sprite creation
 
 #ifdef __cplusplus
 };

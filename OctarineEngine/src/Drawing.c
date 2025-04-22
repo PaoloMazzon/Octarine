@@ -3,6 +3,7 @@
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 #include "oct/Subsystems.h"
+#include "oct/Core.h"
 
 // Commands are tied to the frame they came from for interpolation and triple buffering
 typedef struct FrameCommandBuffer_t {
@@ -229,10 +230,14 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
     scale[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->Texture.scale[1], cmd->Texture.scale[1]);
     rotation = interpolate(cmd->interpolate & OCT_INTERPOLATE_ROTATION, prevCmd, interpolatedTime, prevCmd->Texture.rotation, cmd->Texture.rotation);
 
-    // Process origin
-    _oct_ProcessOrigin(cmd->Texture.origin, origin, vk2dTextureWidth(tex), vk2dTextureHeight(tex));
+    // Find viewport
+    const float w = cmd->Texture.viewport.size[0] == OCT_WHOLE_TEXTURE ? vk2dTextureWidth(tex) : cmd->Texture.viewport.size[0];
+    const float h = cmd->Texture.viewport.size[1] == OCT_WHOLE_TEXTURE ? vk2dTextureHeight(tex) : cmd->Texture.viewport.size[1];
 
-        // Draw texture
+    // Process origin
+    _oct_ProcessOrigin(cmd->Texture.origin, origin, w, h);
+
+    // Draw texture
     vk2dRendererDrawTexture(
             tex,
             position[0] - origin[0],
@@ -244,9 +249,83 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
             origin[1],
             cmd->Texture.viewport.position[0],
             cmd->Texture.viewport.position[1],
-            cmd->Texture.viewport.size[0] == OCT_WHOLE_TEXTURE ? vk2dTextureWidth(tex) : cmd->Texture.viewport.size[0],
-            cmd->Texture.viewport.size[1] == OCT_WHOLE_TEXTURE ? vk2dTextureHeight(tex) : cmd->Texture.viewport.size[1]
+            w,
+            h
     );
+}
+
+static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    if (_oct_AssetType(ctx, cmd->Sprite.sprite) != OCT_ASSET_TYPE_SPRITE)
+        return; // TODO: Error on incorrect asset type
+    Oct_SpriteData spr = _oct_AssetGet(ctx, cmd->Sprite.sprite)->sprite;
+
+    // Process interpolation
+    Oct_Vec2 position;
+    Oct_Vec2 scale;
+    Oct_Vec2 origin;
+    float rotation;
+    position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Sprite.position[0], cmd->Sprite.position[0]);
+    position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Sprite.position[1], cmd->Sprite.position[1]);
+    scale[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_X, prevCmd, interpolatedTime, prevCmd->Sprite.scale[0], cmd->Sprite.scale[0]);
+    scale[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->Sprite.scale[1], cmd->Sprite.scale[1]);
+    rotation = interpolate(cmd->interpolate & OCT_INTERPOLATE_ROTATION, prevCmd, interpolatedTime, prevCmd->Sprite.rotation, cmd->Sprite.rotation);
+
+    // Find current frame
+    int32_t frame = cmd->Sprite.frame;
+    if (frame == OCT_SPRITE_CURRENT_FRAME) {
+        frame = spr.frame;
+    } else if (frame == OCT_SPRITE_LAST_FRAME) {
+        frame = spr.frameCount - 1;
+    } else {
+        frame -= 1;
+    }
+
+    // Locate frame in the texture
+    const int totalHorizontal = frame * (spr.frameSize[0] + spr.padding[0]);
+    const int lineBreaks = (int)(spr.startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(spr.texture) - spr.xStop);
+    float x = (float)((int)(spr.startPos[0] + (totalHorizontal - (spr.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(spr.texture) - spr.xStop));
+    float y = lineBreaks * spr.frameSize[1];
+    float w = spr.frameSize[0];
+    float h = spr.frameSize[1];
+
+    // Process the viewport for the sprite
+    if (cmd->Sprite.viewport.size[0] != OCT_WHOLE_TEXTURE) {
+        w = cmd->Sprite.viewport.size[0];
+    }
+    if (cmd->Sprite.viewport.size[1] != OCT_WHOLE_TEXTURE) {
+        w = cmd->Sprite.viewport.size[1];
+    }
+    x += cmd->Sprite.viewport.position[0];
+    y += cmd->Sprite.viewport.position[1];
+
+    // Process origin
+    _oct_ProcessOrigin(cmd->Sprite.origin, origin, w, h);
+
+    // Draw sprite
+    vk2dRendererDrawTexture(
+            spr.texture,
+            position[0] - origin[0],
+            position[1] - origin[1],
+            scale[0],
+            scale[1],
+            rotation,
+            origin[0],
+            origin[1],
+            x,
+            y,
+            w,
+            h
+    );
+
+    // Process frame update
+    if (!spr.pause && cmd->Sprite.frame > 0) {
+        spr.accumulator += oct_Time(ctx) - spr.lastTime;
+        if (spr.accumulator > spr.delay) {
+            spr.frame = (spr.frame + 1) % spr.frameCount;
+            spr.accumulator -= spr.delay;
+        }
+        spr.lastTime = oct_Time(ctx);
+    }
 }
 
 static void _oct_SwitchTarget(Oct_Context ctx, Oct_DrawCommand *cmd) {

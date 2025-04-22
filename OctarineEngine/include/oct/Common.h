@@ -222,6 +222,16 @@ struct Oct_LoadCommand_t {
         struct {
             Oct_Vec2 dimensions; ///< Dimensions of the new surface
         } Surface;               ///< Information needed to create a surface
+        struct {
+            Oct_Texture texture; ///< Texture the sprite comes from
+            int32_t frameCount;  ///< Number of frames in the animation
+            Oct_Bool repeat;     ///< Whether or not the animation repeats
+            double fps;          ///< Number of seconds between each frame
+            Oct_Vec2 startPos;   ///< Starting position in the texture of the animation
+            Oct_Vec2 frameSize;  ///< Size (in pixels) of each cell of the animation
+            Oct_Vec2 padding;    ///< Horizontal and vertical padding (in pixels) between each animation frame
+            float xStop;         ///< Horizontal stop for consecutive animation cells to start from (like if the animation is only in the right half of the image)
+        } Sprite;                ///< Information needed to load a sprite
     };
     // TODO: This
     void *pNext; ///< For future use
@@ -313,6 +323,15 @@ struct Oct_DrawCommand_t {
             Oct_Vec2 origin;        ///< Origin of rotation and offset
             float rotation;         ///< Rotation in radians
         } Texture;
+        struct {
+            Oct_Sprite sprite;      ///< Sprite to draw
+            Oct_Rectangle viewport; ///< Where in the animation frame to draw (use OCT_WHOLE_TEXTURE)
+            Oct_Vec2 position;      ///< Where on the game world to draw it
+            Oct_Vec2 scale;         ///< Scale of the texture, {1, 1} being normal
+            Oct_Vec2 origin;        ///< Origin of rotation and offset
+            int32_t frame;          ///< Animation frame to render (use OCT_SPRITE_*_FRAME, typically OCT_SPRITE_CURRENT_FRAME, frames are indexed starting at 1)
+            float rotation;         ///< Rotation in radians
+        } Sprite;
         struct {
             Oct_Asset texture; ///< Texture that the render target will switch to (or OCT_TARGET_SWAPCHAIN)
         } Target;              ///< For changing render targets

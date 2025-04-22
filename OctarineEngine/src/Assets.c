@@ -75,6 +75,8 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to create camera\n");
         }
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE) {
+        // TODO: Load the sprite
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
         if (gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_TEXTURE) {
             vk2dRendererWait();
@@ -83,7 +85,10 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
         } else if (gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_CAMERA) {
             vk2dCameraSetState(gAssets[ASSET_INDEX(load->_assetID)].camera, VK2D_CAMERA_STATE_DELETED);
             _oct_DestroyAssetMetadata(ctx, load->_assetID);
+        } else if (gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_SPRITE) {
+            // TODO: Free the sprite
         }
+        SDL_AddAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].generation, 1);
     }
 }
 
@@ -103,6 +108,8 @@ void _oct_AssetsEnd(Oct_Context ctx) {
             if (data->type == OCT_ASSET_TYPE_TEXTURE) {
                 vk2dRendererWait();
                 vk2dTextureFree(data->texture);
+            } else if (data->type == OCT_ASSET_TYPE_SPRITE) {
+                // TODO: Free the sprite?
             } // TODO: The other types
             _oct_DestroyAssetMetadata(ctx, i);
         }
@@ -113,15 +120,19 @@ void _oct_AssetsEnd(Oct_Context ctx) {
 
 Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx) {
     for (int i = 0; i < OCT_MAX_ASSETS; i++) {
-        if (!SDL_GetAtomicInt(&gAssets->reserved)) {
-            SDL_SetAtomicInt(&gAssets->reserved, 1);
-            return i + ((gAssets->generation++) << 32);
+        if (!SDL_GetAtomicInt(&gAssets[i].reserved)) {
+            SDL_SetAtomicInt(&gAssets[i].reserved, 1);
+            const int64_t gen = SDL_GetAtomicInt(&gAssets[i].generation);
+            return i + ((gen) << 32);
         }
     }
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset) {
-    return SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded);
+    const Oct_Bool loaded = SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded);
+    const int64_t gen = SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].generation);
+    const Oct_Bool matchesGeneration = gen == asset >> 32;
+    return loaded && matchesGeneration;
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset) {

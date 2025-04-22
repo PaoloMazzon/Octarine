@@ -30,16 +30,34 @@ struct Oct_Context_t {
     } RingBuffer;              ///< Ring buffer for commands
 };
 
-// An asset for the engine
+/// \brief Data needed to draw and manage a sprite
+typedef struct Oct_SpriteData_t {
+    VK2DTexture texture;  ///< Texture the sprite comes from TODO - Store this by asset so it can be confirmed that we aren't using a deleted texture
+    Oct_Bool ownsTexture; ///< Whether or not this specific sprite owns the texture (will delete it on its own deletion)
+    int32_t frameCount;   ///< Number of frames in the animation
+    int32_t frame;        ///< Current frame
+    Oct_Bool repeat;      ///< Whether or not the animation repeats
+    Oct_Bool pause;       ///< Whether or not the animation is currently paused
+    double delay;         ///< Number of seconds between each frame
+    double lastTime;      ///< The last time a frame was changed
+    double accumulator;   ///< Time accumulator for more accurate animation timings
+    Oct_Vec2 startPos;    ///< Starting position in the texture of the animation
+    Oct_Vec2 frameSize;   ///< Size (in pixels) of each cell of the animation
+    Oct_Vec2 padding;     ///< Horizontal and vertical padding (in pixels) between each animation frame
+    float xStop;          ///< Horizontal stop for consecutive animation cells to start from (like if the animation is only in the right half of the image)
+} Oct_SpriteData;
+
+/// \brief An asset for the engine
 struct Oct_AssetData_t {
-    Oct_AssetType type;     ///< type of asset
-    SDL_AtomicInt reserved; ///< to allow the logic thread to find assets that still exist
-    SDL_AtomicInt failed;   ///< This will be true if the load on this asset failed
-    SDL_AtomicInt loaded;   ///< True when the asset is loaded
-    int64_t generation;     ///< Generation for unique ID purposes
+    Oct_AssetType type;       ///< type of asset
+    SDL_AtomicInt reserved;   ///< to allow the logic thread to find assets that still exist
+    SDL_AtomicInt failed;     ///< This will be true if the load on this asset failed
+    SDL_AtomicInt loaded;     ///< True when the asset is loaded
+    SDL_AtomicInt generation; ///< Generation for unique ID purposes
     union {
         VK2DTexture texture;
         VK2DCameraIndex camera;
+        Oct_SpriteData sprite;
     };
 };
 typedef struct Oct_AssetData_t Oct_AssetData;
