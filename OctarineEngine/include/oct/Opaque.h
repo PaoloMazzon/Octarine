@@ -24,10 +24,10 @@ struct Oct_Context_t {
     uint64_t gameStartTime;         ///< Time the logic thread started for the user to query time
 
     struct {
-        Oct_Command *commands;  ///< Internal buffer
-        SDL_AtomicInt head;     ///< The reading end of the buffer
-        SDL_AtomicInt tail;     ///< The writing end of the buffer
-    } RingBuffer;               ///< Ring buffer for commands
+        Oct_Command *commands; ///< Internal buffer
+        SDL_AtomicInt head;    ///< The reading end of the buffer
+        SDL_AtomicInt tail;    ///< The writing end of the buffer
+    } RingBuffer;              ///< Ring buffer for commands
 };
 
 // An asset for the engine
