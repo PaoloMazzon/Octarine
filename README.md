@@ -1,14 +1,68 @@
 # Octarine
 
-Octarine is a game engine written in C for C/C++. 
+Octarine is a game engine written in C for C/C++ designed to be used on 2D games with fixed-timestep logic. The
+renderer is able to automatically interpolate draws to render at unlocked framerates while the user need not concern
+themselves with anything other than game logic.
 
 ## Notable Features
 
  + Logic is done on its own thread, drawing must be done by queueing draws for the main thread
+ + Fixed-timestep logic with interpolation makes physics incredibly simple without sacrificing visuals
  + Performant and safe(r) allocators are provided for the user
- + Fixed time-step with interpolation is the default
- + Flecs built-in and optional
- + Powerful and versatile asset loading system
+ + Fixed time-step with interpolation is the default and incredibly simple to use
+ + Incredibly simple API
+
+## Example
+This example program displays a rotating rectangle, where the rectangle will be drawn at an uncapped, interpolated
+framerate but the `update` function will only update 30 times a second. To see the difference, draw another
+rectangle near the original one without interpolation and you will see the difference clear as day. 
+
+```c
+#include <oct/Octarine.h>
+#include <math.h>
+
+void *startup(Oct_Context ctx) {
+    // ...
+}
+
+void *update(Oct_Context ctx, void *ptr) {
+    Oct_DrawCommand rectangleDraw = {
+        .type = OCT_DRAW_COMMAND_TYPE_RECTANGLE,
+        .interpolate = OCT_INTERPOLATE_POSITION | OCT_INTERPOLATE_ROTATION,
+        .id = 1,
+        .colour = {1, 1, 1, 1},
+        .Rectangle = {
+            .rectangle = {
+                .position = {320 + (cosf(oct_Time(ctx)) * 200), 240 + (sinf(oct_Time(ctx)) * 200)},
+                .size = {40, 40},
+            },
+            .rotation = oct_Time(ctx),
+            .filled = true,
+        }
+    };
+    oct_Draw(ctx, &rectangleDraw);
+}
+
+void shutdown(Oct_Context ctx, void *ptr) {
+    // ...
+}
+
+int main() {
+    Oct_InitInfo initInfo = {
+            .sType = OCT_STRUCTURE_TYPE_INIT_INFO,
+            .startup = startup,
+            .update = update,
+            .shutdown = shutdown,
+            .windowTitle = "Octarine",
+            .windowWidth = 640,
+            .windowHeight = 480,
+            .debug = true,
+    };
+
+    oct_Init(&initInfo);
+    return 0;
+}
+```
 
 ## Libraries it uses
 
