@@ -134,6 +134,78 @@ OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load) {
     return load->_assetID;
 }
 
+OCTARINE_API Oct_Asset oct_LoadTexture(Oct_Context ctx, const char *filename) {
+    Oct_Asset id = _oct_AssetReserveSpace(ctx);
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE,
+                    .pNext = null,
+                    ._assetID = id,
+                    .Texture.filename = _oct_CopyIntoFrameMemory(ctx, (void*)filename, strlen(filename) + 1)
+            }
+    };
+    pushCommand(ctx, &cmd);
+    return id;
+}
+
+OCTARINE_API Oct_Asset oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size) {
+    Oct_Asset id = _oct_AssetReserveSpace(ctx);
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE,
+                    .pNext = null,
+                    ._assetID = id,
+                    .Surface.dimensions = {size[0], size[1]}
+            }
+    };
+    pushCommand(ctx, &cmd);
+    return id;
+}
+
+OCTARINE_API Oct_Asset oct_CreateCamera(Oct_Context ctx) {
+    Oct_Asset id = _oct_AssetReserveSpace(ctx);
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA,
+                    .pNext = null,
+                    ._assetID = id,
+            }
+    };
+    pushCommand(ctx, &cmd);
+    return id;
+}
+
+OCTARINE_API Oct_Asset oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize) {
+    Oct_Asset id = _oct_AssetReserveSpace(ctx);
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE,
+                    .pNext = null,
+                    ._assetID = id,
+                    .Sprite = {
+                            .texture = tex,
+                            .frameCount = frameCount,
+                            .repeat = true,
+                            .fps = fps,
+                            .startPos = {startPos[0], startPos[1]},
+                            .frameSize = {frameSize[0], frameSize[1]},
+                            .padding = {0, 0},
+                            .xStop = 0
+                    }
+            }
+    };
+    pushCommand(ctx, &cmd);
+    return id;
+}
+
 OCTARINE_API void oct_FreeAsset(Oct_Context ctx, Oct_Asset asset) {
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
@@ -168,4 +240,8 @@ void _oct_CommandBufferDispatch(Oct_Context ctx) {
             _oct_AssetsProcessCommand(ctx, &cmd);
         }
     }
+}
+
+OCTARINE_API void *oct_CopyFrameData(Oct_Context ctx, void *data, int32_t size) {
+    return _oct_CopyIntoFrameMemory(ctx, data, size);
 }

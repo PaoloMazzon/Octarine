@@ -24,6 +24,31 @@ extern "C" {
 /// asset is not loaded because it knows the generation does not match.
 OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load);
 
+/// \brief Shorthand for oct_Load for loading textures
+/// \param ctx Octarine context
+/// \param filename Filename of the texture
+/// \return Returns a new asset ID, see oct_Load for more info
+OCTARINE_API Oct_Asset oct_LoadTexture(Oct_Context ctx, const char *filename);
+
+/// \brief Shorthand for oct_Load for creating surfaces
+/// \param ctx Octarine context
+/// \param size Size of the new surface
+/// \return Returns a new asset ID, see oct_Load for more info
+OCTARINE_API Oct_Asset oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size);
+
+/// \brief Shorthand for oct_Load for creating cameras
+/// \return Returns a new asset ID, see oct_Load for more info
+OCTARINE_API Oct_Asset oct_CreateCamera(Oct_Context ctx);
+
+/// \brief Shorthand for oct_Load for loading sprites
+/// \param tex Texture for the sprite to use
+/// \param frameCount Number of frames in the animation
+/// \param fps FPS of the animation
+/// \param startPos Where in the texture the animation starts
+/// \param frameSize Size of each animation cell
+/// \return Returns a new asset ID, see oct_Load for more info
+OCTARINE_API Oct_Asset oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
+
 /// \brief Returns true if the asset was successfully loaded, false if its not loaded for any reason
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset);
 
@@ -44,6 +69,12 @@ OCTARINE_API const char *oct_AssetErrorMessage(Oct_Allocator allocator);
 /// \return Returns buffer, if buffer was provided
 /// \warning This will clear the error message and load failed status
 OCTARINE_API const char *oct_AssetGetErrorMessage(int *size, char *buffer);
+
+/// \brief Frees any asset
+///
+/// You don't need to use this, the engine will free everything automatically
+/// on exit. This is more for memory management in bigger projects.
+OCTARINE_API void oct_FreeAsset(Oct_Context ctx, Oct_Asset asset);
 
 /// \brief Returns true if any load as failed, can be used as an indication to get the error message
 OCTARINE_API Oct_Bool oct_AssetLoadHasFailed();

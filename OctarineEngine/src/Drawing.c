@@ -258,12 +258,13 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
 static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     if (_oct_AssetType(ctx, cmd->Sprite.sprite) != OCT_ASSET_TYPE_SPRITE)
         return; // TODO: Error on incorrect asset type
-    Oct_SpriteData spr = _oct_AssetGet(ctx, cmd->Sprite.sprite)->sprite;
+    Oct_AssetData *asset = _oct_AssetGet(ctx, cmd->Sprite.sprite);
+    Oct_SpriteData *spr = &asset->sprite;
 
     // Make sure the sprite's texture still exists
     VK2DTexture tex = null;
-    if (oct_AssetLoaded(spr.texture)) {
-        tex = _oct_AssetGet(ctx, spr.texture)->texture;
+    if (oct_AssetLoaded(spr->texture)) {
+        tex = _oct_AssetGet(ctx, spr->texture)->texture;
     } else {
         oct_Raise(OCT_STATUS_BAD_PARAMETER, false, "Sprite ID %" PRIu64 " uses a texture that no longer exists.");
         return;
@@ -283,20 +284,24 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
     // Find current frame
     int32_t frame = cmd->Sprite.frame;
     if (frame == OCT_SPRITE_CURRENT_FRAME) {
-        frame = spr.frame;
+        frame = spr->frame;
     } else if (frame == OCT_SPRITE_LAST_FRAME) {
-        frame = spr.frameCount - 1;
+        frame = spr->frameCount - 1;
     } else {
         frame -= 1;
     }
 
     // Locate frame in the texture
-    const int totalHorizontal = frame * (spr.frameSize[0] + spr.padding[0]);
-    const int lineBreaks = (int)(spr.startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(tex) - spr.xStop);
-    float x = (float)((int)(spr.startPos[0] + (totalHorizontal - (spr.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(tex) - spr.xStop));
-    float y = lineBreaks * spr.frameSize[1];
-    float w = spr.frameSize[0];
-    float h = spr.frameSize[1];
+    const int totalHorizontal = frame * (spr->frameSize[0] + spr->padding[0]);
+    const int lineBreaks = (int)(spr->startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(tex) - spr->xStop);
+    float x;
+    if (lineBreaks == 0)
+        x = (float)((int)(spr->startPos[0] + (totalHorizontal - (spr->padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(tex) - spr->xStop));
+    else
+        x = (float)(spr->xStop + ((int)(spr->startPos[0] + (totalHorizontal - (spr->padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(tex) - spr->xStop)));
+    float y = lineBreaks * spr->frameSize[1];
+    float w = spr->frameSize[0];
+    float h = spr->frameSize[1];
 
     // Process the viewport for the sprite
     if (cmd->Sprite.viewport.size[0] != OCT_WHOLE_TEXTURE) {
@@ -328,13 +333,17 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
     );
 
     // Process frame update
-    if (!spr.pause && cmd->Sprite.frame > 0) {
-        spr.accumulator += oct_Time(ctx) - spr.lastTime;
-        if (spr.accumulator > spr.delay) {
-            spr.frame = (spr.frame + 1) % spr.frameCount;
-            spr.accumulator -= spr.delay;
+    if (!spr->pause && cmd->Sprite.frame > 0) {
+        spr->accumulator += oct_Time(ctx) - spr->lastTime;
+        if (spr->accumulator > spr->delay) {
+            if (spr->frame < spr->frameCount - 1) {
+                spr->frame += 1;
+            } else if (spr->frame == spr->frameCount - 1 && spr->repeat) {
+                spr->frame = 0;
+            }
+            spr->accumulator -= spr->delay;
         }
-        spr.lastTime = oct_Time(ctx);
+        spr->lastTime = oct_Time(ctx);
     }
 }
 

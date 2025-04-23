@@ -15,11 +15,15 @@ OCTARINE_API void oct_WindowUpdate(Oct_Context ctx, Oct_WindowCommand *windowUpd
 /// \brief Queues an asset load and returns the asset -- todo: make this per asset type and return the proper type
 OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load);
 
-/// \brief Frees any asset
+/// \brief Copies memory into volatile per-frame memory and returns it
 ///
-/// You don't need to use this, the engine will free everything automatically
-/// on exit. This is more for memory management in bigger projects.
-OCTARINE_API void oct_FreeAsset(Oct_Context ctx, Oct_Asset asset);
+/// Some commands require variable amounts of memory, like sending strings to the render thread, that may not
+/// exist in permanent memory on the user's side. For example, if you were to pass a string in a command that you
+/// expect to be destroyed very soon. In that case, you can copy that string into this function and use the pointer
+/// returned by this instead. This memory is guaranteed to exist until the render thread has finished processing.
+/// The shorthand functions, like oct_LoadTexture will use this automatically under the hood, and you'd only ever
+/// need to use this if you were creating your own commands.
+OCTARINE_API void *oct_CopyFrameData(Oct_Context ctx, void *data, int32_t size);
 
 #ifdef __cplusplus
 };

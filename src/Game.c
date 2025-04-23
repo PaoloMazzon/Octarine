@@ -7,11 +7,7 @@ Oct_Allocator gAllocator;
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup(Oct_Context ctx) {
     gAllocator = oct_CreateHeapAllocator();
-    Oct_LoadCommand load = {
-            .type = OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE,
-            .Texture.filename = "data/marble.jpg"
-    };
-    gTexMarble = oct_Load(ctx, &load);
+    gTexMarble = oct_LoadTexture(ctx, "data/marble.jpg");
 
     return null;
 }
