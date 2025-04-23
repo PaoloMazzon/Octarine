@@ -32,7 +32,7 @@ struct Oct_Context_t {
 
 /// \brief Data needed to draw and manage a sprite
 typedef struct Oct_SpriteData_t {
-    VK2DTexture texture;  ///< Texture the sprite comes from TODO - Store this by asset so it can be confirmed that we aren't using a deleted texture
+    Oct_Texture texture;  ///< Texture the sprite comes from
     Oct_Bool ownsTexture; ///< Whether or not this specific sprite owns the texture (will delete it on its own deletion)
     int32_t frameCount;   ///< Number of frames in the animation
     int32_t frame;        ///< Current frame

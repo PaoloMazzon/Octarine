@@ -4,6 +4,7 @@
 #include "oct/Validation.h"
 #include "oct/Subsystems.h"
 #include "oct/Core.h"
+#include "oct/Assets.h"
 
 // Commands are tied to the frame they came from for interpolation and triple buffering
 typedef struct FrameCommandBuffer_t {
@@ -259,6 +260,15 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
         return; // TODO: Error on incorrect asset type
     Oct_SpriteData spr = _oct_AssetGet(ctx, cmd->Sprite.sprite)->sprite;
 
+    // Make sure the sprite's texture still exists
+    VK2DTexture tex = null;
+    if (oct_AssetLoaded(spr.texture)) {
+        tex = _oct_AssetGet(ctx, spr.texture)->texture;
+    } else {
+        oct_Raise(OCT_STATUS_BAD_PARAMETER, false, "Sprite ID %" PRIu64 " uses a texture that no longer exists.");
+        return;
+    }
+
     // Process interpolation
     Oct_Vec2 position;
     Oct_Vec2 scale;
@@ -282,8 +292,8 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
 
     // Locate frame in the texture
     const int totalHorizontal = frame * (spr.frameSize[0] + spr.padding[0]);
-    const int lineBreaks = (int)(spr.startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(spr.texture) - spr.xStop);
-    float x = (float)((int)(spr.startPos[0] + (totalHorizontal - (spr.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(spr.texture) - spr.xStop));
+    const int lineBreaks = (int)(spr.startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(tex) - spr.xStop);
+    float x = (float)((int)(spr.startPos[0] + (totalHorizontal - (spr.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(tex) - spr.xStop));
     float y = lineBreaks * spr.frameSize[1];
     float w = spr.frameSize[0];
     float h = spr.frameSize[1];
@@ -303,7 +313,7 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
 
     // Draw sprite
     vk2dRendererDrawTexture(
-            spr.texture,
+            tex,
             position[0] - origin[0],
             position[1] - origin[1],
             scale[0],

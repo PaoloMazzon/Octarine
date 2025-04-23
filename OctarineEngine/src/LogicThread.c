@@ -10,7 +10,8 @@ int oct_UserThread(void *ptr) {
 
     _oct_InputInit(ctx);
     ctx->gameStartTime = SDL_GetPerformanceCounter();
-    void *userData = ctx->initInfo->startup(ctx);
+    void *userData = null;
+    Oct_Bool firstLoop = true;
 
     // Timekeeping
     uint64_t startTime = SDL_GetPerformanceCounter();
@@ -25,6 +26,10 @@ int oct_UserThread(void *ptr) {
 
         // Process user frame
         _oct_CommandBufferBeginFrame(ctx);
+        if (firstLoop) { // So startup can queue draw commands
+            userData = ctx->initInfo->startup(ctx);
+            firstLoop = false;
+        }
         userData = ctx->initInfo->update(ctx, userData);
         _oct_CommandBufferEndFrame(ctx); // TODO - This may need to be moved to after the wait
 

@@ -6,6 +6,7 @@
 #include "oct/Common.h"
 #include "oct/Allocators.h"
 #include "oct/Opaque.h"
+#include "oct/Core.h"
 
 // All assets
 static Oct_AssetData gAssets[OCT_MAX_ASSETS];
@@ -19,10 +20,7 @@ static char gErrorMessage[ERROR_BUFFER_SIZE];
 static SDL_Mutex *gErrorMessageMutex;
 static SDL_AtomicInt gErrorHasOccurred;
 
-void _oct_AssetsInit(Oct_Context ctx) {
-    gErrorMessageMutex = SDL_CreateMutex();
-}
-
+///////////////////////////////// ASSET CREATION HELP /////////////////////////////////
 static void _oct_LogError(const char *fmt, ...) {
     va_list l;
     va_start(l, fmt);
@@ -35,6 +33,7 @@ static void _oct_LogError(const char *fmt, ...) {
 static void _oct_DestroyAssetMetadata(Oct_Context ctx, Oct_Asset asset) {
     SDL_SetAtomicInt(&gAssets[asset].loaded, 0);
     SDL_SetAtomicInt(&gAssets[asset].reserved, 0);
+    SDL_AddAtomicInt(&gAssets[ASSET_INDEX(asset)].generation, 1);
 }
 
 static void _oct_FailLoad(Oct_Context ctx, Oct_Asset asset) {
@@ -43,52 +42,109 @@ static void _oct_FailLoad(Oct_Context ctx, Oct_Asset asset) {
     SDL_SetAtomicInt(&gErrorHasOccurred, 1);
 }
 
+///////////////////////////////// ASSET CREATION /////////////////////////////////
+static void _oct_AssetCreateTexture(Oct_Context ctx, Oct_LoadCommand *load) {
+    VK2DTexture tex = vk2dTextureLoad(load->Texture.filename);
+    if (tex) {
+        gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
+        gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+    } else {
+        _oct_FailLoad(ctx, load->_assetID);
+        _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
+    }
+}
+
+static void _oct_AssetCreateSurface(Oct_Context ctx, Oct_LoadCommand *load) {
+    VK2DTexture tex = vk2dTextureCreate(load->Surface.dimensions[0], load->Surface.dimensions[1]);
+    if (tex) {
+        gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
+        gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+    } else {
+        _oct_FailLoad(ctx, load->_assetID);
+        _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
+    }
+}
+
+static void _oct_AssetCreateCamera(Oct_Context ctx, Oct_LoadCommand *load) {
+    VK2DCameraIndex camIndex = vk2dCameraCreate(vk2dCameraGetSpec(VK2D_DEFAULT_CAMERA));
+    if (camIndex != VK2D_INVALID_CAMERA) {
+        gAssets[ASSET_INDEX(load->_assetID)].camera = camIndex;
+        gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_CAMERA;
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+    } else {
+        _oct_FailLoad(ctx, load->_assetID);
+        _oct_LogError("Failed to create camera\n");
+    }
+}
+
+static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
+    Oct_SpriteData *data = &gAssets[ASSET_INDEX(load->_assetID)].sprite;
+    data->texture = load->Sprite.texture;
+    data->ownsTexture = false;
+    data->frameCount = load->Sprite.frameCount;
+    data->frame = 0;
+    data->repeat = load->Sprite.repeat;
+    data->pause = false;
+    data->delay = 1.0 / load->Sprite.fps;
+    data->lastTime = oct_Time(ctx);
+    data->accumulator = 0;
+    data->startPos[0] = load->Sprite.startPos[0];
+    data->startPos[1] = load->Sprite.startPos[1];
+    data->frameSize[0] = load->Sprite.frameSize[0];
+    data->frameSize[1] = load->Sprite.frameSize[1];
+    data->padding[0] = load->Sprite.padding[0];
+    data->padding[1] = load->Sprite.padding[1];
+    data->xStop = load->Sprite.xStop;
+    SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+}
+
+///////////////////////////////// ASSET DESTRUCTION /////////////////////////////////
+static void _oct_AssetDestroyTexture(Oct_Context ctx, Oct_Asset asset) {
+    vk2dRendererWait();
+    vk2dTextureFree(gAssets[ASSET_INDEX(asset)].texture);
+    _oct_DestroyAssetMetadata(ctx, asset);
+}
+
+static void _oct_AssetDestroyCamera(Oct_Context ctx, Oct_Asset asset) {
+    vk2dCameraSetState(gAssets[ASSET_INDEX(asset)].camera, VK2D_CAMERA_STATE_DELETED);
+    _oct_DestroyAssetMetadata(ctx, asset);
+}
+
+static void _oct_AssetDestroySprite(Oct_Context ctx, Oct_Asset asset) {
+    // TODO: This
+    _oct_DestroyAssetMetadata(ctx, asset);
+}
+
+static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
+    if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_TEXTURE) {
+        _oct_AssetDestroyTexture(ctx, asset);
+    } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_CAMERA) {
+        _oct_AssetDestroyCamera(ctx, asset);
+    } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_SPRITE) {
+        _oct_AssetDestroySprite(ctx, asset);
+    }
+}
+
+///////////////////////////////// INTERNAL /////////////////////////////////
+void _oct_AssetsInit(Oct_Context ctx) {
+    gErrorMessageMutex = SDL_CreateMutex();
+}
+
 void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     Oct_LoadCommand *load = &cmd->loadCommand;
     if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE) {
-        VK2DTexture tex = vk2dTextureLoad(load->Texture.filename);
-        if (tex) {
-            gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
-            gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
-            SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
-        } else {
-            _oct_FailLoad(ctx, load->_assetID);
-            _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
-        }
+        _oct_AssetCreateTexture(ctx, load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE) {
-        VK2DTexture tex = vk2dTextureCreate(load->Surface.dimensions[0], load->Surface.dimensions[1]);
-        if (tex) {
-            gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
-            gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
-            SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
-        } else {
-            _oct_FailLoad(ctx, load->_assetID);
-            _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
-        }
+        _oct_AssetCreateSurface(ctx, load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA) {
-        VK2DCameraIndex camIndex = vk2dCameraCreate(vk2dCameraGetSpec(VK2D_DEFAULT_CAMERA));
-        if (camIndex != VK2D_INVALID_CAMERA) {
-            gAssets[ASSET_INDEX(load->_assetID)].camera = camIndex;
-            gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_CAMERA;
-            SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
-        } else {
-            _oct_FailLoad(ctx, load->_assetID);
-            _oct_LogError("Failed to create camera\n");
-        }
+        _oct_AssetCreateCamera(ctx, load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE) {
-        // TODO: Load the sprite
+        _oct_AssetCreateSprite(ctx, load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
-        if (gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_TEXTURE) {
-            vk2dRendererWait();
-            vk2dTextureFree(gAssets[ASSET_INDEX(load->_assetID)].texture);
-            _oct_DestroyAssetMetadata(ctx, load->_assetID);
-        } else if (gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_CAMERA) {
-            vk2dCameraSetState(gAssets[ASSET_INDEX(load->_assetID)].camera, VK2D_CAMERA_STATE_DELETED);
-            _oct_DestroyAssetMetadata(ctx, load->_assetID);
-        } else if (gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_SPRITE) {
-            // TODO: Free the sprite
-        }
-        SDL_AddAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].generation, 1);
+        if (SDL_GetAtomicInt(&gAssets[load->_assetID].loaded))
+            _oct_AssetDestroy(ctx, load->_assetID);
     }
 }
 
@@ -102,18 +158,9 @@ Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset) {
 
 void _oct_AssetsEnd(Oct_Context ctx) {
     // Delete all the assets still loaded
-    for (int i = 0; i < OCT_MAX_ASSETS; i++) {
-        if (SDL_GetAtomicInt(&gAssets[i].loaded)) {
-            Oct_AssetData *data = &gAssets[i];
-            if (data->type == OCT_ASSET_TYPE_TEXTURE) {
-                vk2dRendererWait();
-                vk2dTextureFree(data->texture);
-            } else if (data->type == OCT_ASSET_TYPE_SPRITE) {
-                // TODO: Free the sprite?
-            } // TODO: The other types
-            _oct_DestroyAssetMetadata(ctx, i);
-        }
-    }
+    for (int i = 0; i < OCT_MAX_ASSETS; i++)
+        if (SDL_GetAtomicInt(&gAssets[i].loaded))
+            _oct_AssetDestroy(ctx, i);
 
     SDL_DestroyMutex(gErrorMessageMutex);
 }
@@ -128,6 +175,7 @@ Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx) {
     }
 }
 
+///////////////////////////////// EXTERNAL /////////////////////////////////
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset) {
     const Oct_Bool loaded = SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded);
     const int64_t gen = SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].generation);
