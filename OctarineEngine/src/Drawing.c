@@ -50,13 +50,25 @@ void _oct_DrawingInit(Oct_Context ctx) {
             .stdoutLogging = false,
             .enableDebug = false
     };
-    vk2dRendererInit(ctx->window, config, &options);
+    VK2DResult result = vk2dRendererInit(ctx->window, config, &options);
+
+    if (result == VK2D_ERROR)
+        oct_Raise(OCT_STATUS_VK2D_ERROR, true, "Failed to create renderer. VK2D error: %s", vk2dStatusMessage());
 
     // Allocate frame buffers
     for (int i = 0; i < 3; i++) {
         gFrameBuffers[i].size = ctx->initInfo->ringBufferSize;
         gFrameBuffers[i].commands = mi_malloc(gFrameBuffers[i].size * sizeof(struct Oct_DrawCommand_t));
     }
+
+    // Format host info nicely
+    char copy[1024] = {0};
+    strncpy(copy, vk2dHostInformation(), 1023);
+    for (int i = 0; i < strlen(copy); i++) {
+        if (copy[i] == '\n')
+            copy[i] = ' ';
+    }
+    oct_Log("Drawing system initialized on \"%s\".", copy);
 }
 
 void _oct_DrawingEnd(Oct_Context ctx) {

@@ -57,6 +57,7 @@ void _oct_CommandBufferInit(Oct_Context ctx) {
         if (gCommandBufferAllocators[i] == null)
             oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to create command buffer allocator.");
     }
+    oct_Log("Command buffer system initialized.");
 }
 
 void _oct_CommandBufferBeginFrame(Oct_Context ctx) {

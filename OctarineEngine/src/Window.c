@@ -74,6 +74,8 @@ void _oct_WindowInit(Oct_Context ctx) {
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate events ring buffer.");
 
     _oct_RefreshControllers(ctx);
+
+    oct_Log("Window system initialized.");
 }
 
 void _oct_WindowEnd(Oct_Context ctx) {

@@ -86,6 +86,10 @@ int oct_ClockThread(void *ptr) {
 void oct_Bootstrap(Oct_Context ctx) {
     ctx->logicThread = SDL_CreateThread(oct_UserThread, "Logic Thread", ctx);
     ctx->clockThread = SDL_CreateThread(oct_ClockThread, "Clock Thread", ctx);
+    if (ctx->logicThread == null || ctx->clockThread == null) {
+        oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to create one or more threads, SDL error: %s", SDL_GetError());
+    }
+    oct_Log("Created logic and clock thread.");
 }
 
 void _oct_UnstrapBoots(Oct_Context ctx) {

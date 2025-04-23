@@ -7,6 +7,7 @@
 #include "oct/Allocators.h"
 #include "oct/Opaque.h"
 #include "oct/Core.h"
+#include "oct/Validation.h"
 
 // All assets
 static Oct_AssetData gAssets[OCT_MAX_ASSETS];
@@ -131,6 +132,7 @@ static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
 ///////////////////////////////// INTERNAL /////////////////////////////////
 void _oct_AssetsInit(Oct_Context ctx) {
     gErrorMessageMutex = SDL_CreateMutex();
+    oct_Log("Asset system initialized.");
 }
 
 void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
