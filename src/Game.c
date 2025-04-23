@@ -2,12 +2,17 @@
 #include <math.h>
 
 Oct_Texture gTexMarble;
+Oct_Texture gTexPaladinSheet;
+Oct_Sprite gSprPaladinWalkRight;
 Oct_Allocator gAllocator;
 
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup(Oct_Context ctx) {
     gAllocator = oct_CreateHeapAllocator();
     gTexMarble = oct_LoadTexture(ctx, "data/marble.jpg");
+    gTexPaladinSheet = oct_LoadTexture(ctx, "data/paladin.png");
+    gSprPaladinWalkRight = oct_LoadSprite(ctx, gTexPaladinSheet, 4, 10, (Oct_Vec2){0, 0}, (Oct_Vec2){32, 32});
+    // TODO: Test spritesheet xstop code
 
     return null;
 }
@@ -35,7 +40,7 @@ void *update(Oct_Context ctx, void *ptr) {
             .colour = {1, 1, 1, 1},
             .Texture = {
                     .texture = gTexMarble,
-                    .position = {oct_MouseX(), oct_MouseY()},
+                    .position = {oct_MouseX() + 100, oct_MouseY() + 100},
                     .viewport = {
                             .position = {0, 0},
                             .size = {OCT_WHOLE_TEXTURE, OCT_WHOLE_TEXTURE}
@@ -46,8 +51,27 @@ void *update(Oct_Context ctx, void *ptr) {
             }
     };
 
+    Oct_DrawCommand spriteCmd = {
+            .type = OCT_DRAW_COMMAND_TYPE_SPRITE,
+            .interpolate = OCT_INTERPOLATE_ALL,
+            .id = 3,
+            .colour = {1, 1, 1, 1},
+            .Sprite = {
+                    .sprite = gSprPaladinWalkRight,
+                    .position = {oct_MouseX(), oct_MouseY()},
+                    .viewport = {
+                            .position = {0, 0},
+                            .size = {OCT_WHOLE_TEXTURE, OCT_WHOLE_TEXTURE}
+                    },
+                    .scale = {4, 4},
+                    .origin = {OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE},
+                    .rotation = oct_Time(ctx)
+            }
+    };
+
     oct_Draw(ctx, &cmd);
     oct_Draw(ctx, &textureCmd);
+    oct_Draw(ctx, &spriteCmd);
 
     // Check for errors
     if (oct_AssetLoadHasFailed()) {

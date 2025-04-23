@@ -223,7 +223,7 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
     // Process interpolation
     Oct_Vec2 position;
     Oct_Vec2 scale;
-    Oct_Vec2 origin;
+    Oct_Vec2 origin = {0, 0};
     float rotation;
     position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Texture.position[0], cmd->Texture.position[0]);
     position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Texture.position[1], cmd->Texture.position[1]);
@@ -241,8 +241,8 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
     // Draw texture
     vk2dRendererDrawTexture(
             tex,
-            position[0] - origin[0],
-            position[1] - origin[1],
+            position[0] - (origin[0] * cmd->Texture.scale[0]),
+            position[1] - (origin[1] * cmd->Texture.scale[1]),
             scale[0],
             scale[1],
             rotation,
@@ -273,7 +273,7 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
     // Process interpolation
     Oct_Vec2 position;
     Oct_Vec2 scale;
-    Oct_Vec2 origin;
+    Oct_Vec2 origin = {0, 0};
     float rotation;
     position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Sprite.position[0], cmd->Sprite.position[0]);
     position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Sprite.position[1], cmd->Sprite.position[1]);
@@ -319,8 +319,8 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
     // Draw sprite
     vk2dRendererDrawTexture(
             tex,
-            position[0] - origin[0],
-            position[1] - origin[1],
+            position[0] - (origin[0] * cmd->Sprite.scale[0]),
+            position[1] - (origin[1] * cmd->Sprite.scale[1]),
             scale[0],
             scale[1],
             rotation,
@@ -333,7 +333,7 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
     );
 
     // Process frame update
-    if (!spr->pause && cmd->Sprite.frame > 0) {
+    if (!spr->pause && cmd->Sprite.frame == OCT_SPRITE_CURRENT_FRAME) {
         spr->accumulator += oct_Time(ctx) - spr->lastTime;
         if (spr->accumulator > spr->delay) {
             if (spr->frame < spr->frameCount - 1) {
@@ -376,6 +376,8 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
             _oct_DrawRectangle(ctx, cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_TEXTURE) {
             _oct_DrawTexture(ctx, cmd, prevCmd, interpolatedTime);
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_SPRITE) {
+            _oct_DrawSprite(ctx, cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CIRCLE) {
             _oct_DrawCircle(ctx, cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_TARGET) {

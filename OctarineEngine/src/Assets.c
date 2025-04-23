@@ -81,6 +81,7 @@ static void _oct_AssetCreateCamera(Oct_Context ctx, Oct_LoadCommand *load) {
 
 static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
     Oct_SpriteData *data = &gAssets[ASSET_INDEX(load->_assetID)].sprite;
+    gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_SPRITE;
     data->texture = load->Sprite.texture;
     data->ownsTexture = false;
     data->frameCount = load->Sprite.frameCount;

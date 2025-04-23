@@ -49,6 +49,8 @@ OCTARINE_API Oct_Asset oct_CreateCamera(Oct_Context ctx);
 /// \return Returns a new asset ID, see oct_Load for more info
 OCTARINE_API Oct_Asset oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
 
+// TODO - Duplicate sprite function
+
 /// \brief Returns true if the asset was successfully loaded, false if its not loaded for any reason
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset);
 
