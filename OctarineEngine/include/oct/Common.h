@@ -67,6 +67,7 @@ typedef Oct_Asset Oct_Model;   ///< Any asset in the engine
 typedef Oct_Asset Oct_Sprite;  ///< Any asset in the engine
 typedef Oct_Asset Oct_Font;    ///< Any asset in the engine
 typedef Oct_Asset Oct_Camera;  ///< Any asset in the engine
+typedef uint64_t Oct_Sound;    ///< A sound that is currently playing
 typedef float Oct_Vec4[4];     ///< Array of 4 floats
 typedef float Oct_Vec3[3];     ///< Array of 3 floats
 typedef float Oct_Vec2[2];     ///< Array of 2 floats
@@ -241,7 +242,19 @@ struct Oct_LoadCommand_t {
 struct Oct_AudioCommand_t {
     Oct_StructureType sType;   ///< Structure type
     Oct_AudioCommandType type; ///< Type of load command this is
-    // TODO: This
+    union {
+        struct {
+            Oct_Sound _soundID; ///< Internal use
+            Oct_Audio audio;    ///< Audio asset to play
+            Oct_Bool repeat;    ///< Whether or not the sound will repeat
+            Oct_Vec2 volume;    ///< L/R normalized volume
+        } Play;                 ///< Things needed to play a sound
+        struct {
+            Oct_Sound sound; ///< Sound ID of a sound currently playing
+            Oct_Bool repeat; ///< Whether or not the sound will repeat
+            Oct_Vec2 volume; ///< L/R normalized volume
+        } Update;            ///< Things needed to update a sound
+    };
     void *pNext;               ///< For future use
 };
 
@@ -352,6 +365,7 @@ struct Oct_Command_t {
         Oct_DrawCommand drawCommand;     ///< Draw command
         Oct_WindowCommand windowCommand; ///< Window command
         Oct_LoadCommand loadCommand;     ///< Load command
+        Oct_AudioCommand audioCommand;   ///< Audio command
         Oct_MetaCommand metaCommand;     ///< Meta command
     };
     void *pNext;                         ///< For future use

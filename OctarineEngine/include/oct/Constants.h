@@ -29,6 +29,7 @@ extern int32_t OCT_SPRITE_CURRENT_FRAME; ///< Draw the current frame of the anim
 // Various
 extern Oct_Asset OCT_TARGET_SWAPCHAIN; ///< Target the swapchain (window)
 extern Oct_Asset OCT_NO_ASSET;         ///< For things like specifying a new texture in sprite creation
+extern Oct_Sound OCT_SOUND_FAILED;     ///< Sound was failed to be played
 
 #ifdef __cplusplus
 };

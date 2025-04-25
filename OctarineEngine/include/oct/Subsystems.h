@@ -44,6 +44,7 @@ void _oct_AudioInit(Oct_Context ctx);
 void _oct_AudioUpdateBegin(Oct_Context ctx);
 void _oct_AudioUpdateEnd(Oct_Context ctx);
 void _oct_AudioProcessCommand(Oct_Context ctx, Oct_Command *cmd);
+Oct_Sound _oct_ReserveSound(Oct_Context ctx); // used from logic thread to reserve a space in the sound list
 void _oct_AudioEnd(Oct_Context ctx);
 
 // Handles loading/unloading assets
