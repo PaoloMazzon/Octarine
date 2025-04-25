@@ -61,13 +61,12 @@ extern "C" {
 typedef uint64_t Oct_Status;   ///< Status code
 typedef uint32_t Oct_Bool;     ///< Internal bool type
 typedef uint64_t Oct_Asset;    ///< Any asset in the engine
-typedef Oct_Asset Oct_Texture; ///< Any asset in the engine
-typedef Oct_Asset Oct_Audio;   ///< Any asset in the engine
-typedef Oct_Asset Oct_Model;   ///< Any asset in the engine
-typedef Oct_Asset Oct_Sprite;  ///< Any asset in the engine
-typedef Oct_Asset Oct_Font;    ///< Any asset in the engine
-typedef Oct_Asset Oct_Camera;  ///< Any asset in the engine
-typedef uint64_t Oct_Sound;    ///< A sound that is currently playing
+typedef Oct_Asset Oct_Texture; ///< A 2D texture in video memory
+typedef Oct_Asset Oct_Audio;   ///< A loaded piece of audio
+typedef Oct_Asset Oct_Sprite;  ///< 2D animation
+typedef Oct_Asset Oct_Font;    ///< Font
+typedef Oct_Asset Oct_Camera;  ///< Camera that shows some portion of the game world
+typedef uint64_t Oct_Sound;    ///< A sound that is currently playing (oct_Audio is the raw audio data, Oct_Sound is a currently playing piece of audio)
 typedef float Oct_Vec4[4];     ///< Array of 4 floats
 typedef float Oct_Vec3[3];     ///< Array of 3 floats
 typedef float Oct_Vec2[2];     ///< Array of 2 floats
@@ -233,6 +232,10 @@ struct Oct_LoadCommand_t {
             Oct_Vec2 padding;    ///< Horizontal and vertical padding (in pixels) between each animation frame
             float xStop;         ///< Horizontal stop for consecutive animation cells to start from (like if the animation is only in the right half of the image)
         } Sprite;                ///< Information needed to load a sprite
+        struct {
+            const char *filename; ///< Filename of the audio file
+            // TODO: Loading from binary
+        } Audio;                  ///< Information needed to create an audio sample
     };
     // TODO: This
     void *pNext; ///< For future use

@@ -4,6 +4,7 @@
 Oct_Texture gTexMarble;
 Oct_Texture gTexPaladinSheet;
 Oct_Sprite gSprPaladinWalkRight;
+Oct_Audio gAudTest;
 Oct_Allocator gAllocator;
 
 // Called at the start of the game after engine initialization, whatever you return is passed to update
@@ -13,6 +14,7 @@ void *startup(Oct_Context ctx) {
     gTexPaladinSheet = oct_LoadTexture(ctx, "data/paladin.png");
     gSprPaladinWalkRight = oct_LoadSprite(ctx, gTexPaladinSheet, 4, 10, (Oct_Vec2){0, 0}, (Oct_Vec2){32, 32});
     // TODO: Test spritesheet xstop code
+    gAudTest = oct_LoadAudio(ctx, "data/test.wav");
 
     return null;
 }

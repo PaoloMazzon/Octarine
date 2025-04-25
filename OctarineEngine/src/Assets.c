@@ -8,6 +8,7 @@
 #include "oct/Opaque.h"
 #include "oct/Core.h"
 #include "oct/Validation.h"
+#include "oct/Subsystems.h"
 
 // All assets
 static Oct_AssetData gAssets[OCT_MAX_ASSETS];
@@ -81,9 +82,45 @@ static void _oct_AssetCreateCamera(Oct_Context ctx, Oct_LoadCommand *load) {
 }
 
 static void _oct_AssetCreateAudio(Oct_Context ctx, Oct_LoadCommand *load) {
-    // TODO: Load audio
-    _oct_FailLoad(ctx, load->_assetID);
-    _oct_LogError("Failed to create audio\n");
+    // Find file extension
+    const char *extension = strrchr(load->Audio.filename, '.');
+    extension = extension == null ? "" : extension;
+    uint8_t *data = null;
+    uint32_t dataSize = 0;
+    SDL_AudioSpec spec;
+
+    if (strcmp(extension, ".ogg") == 0) {
+        // TODO: Implement ogg loading
+        _oct_FailLoad(ctx, load->_assetID);
+        _oct_LogError("Failed to load audio sample \"%s\", ogg is not yet supported.\n", load->Audio.filename);
+    } else if (strcmp(extension, ".wav") == 0) {
+        // Use SDL to load wavs
+        if (!SDL_LoadWAV(load->Audio.filename, &spec, &data, &dataSize)) {
+            _oct_FailLoad(ctx, load->_assetID);
+            _oct_LogError("Failed to load audio sample \"%s\", SDL Error: %s.\n", load->Audio.filename, SDL_GetError());
+        }
+    } else if (strcmp(extension, ".mp3") == 0) {
+        // TODO: Implement mp3 loading
+        _oct_FailLoad(ctx, load->_assetID);
+        _oct_LogError("Failed to load audio sample \"%s\", mp3 is not yet supported.\n", load->Audio.filename);
+    } else {
+        _oct_FailLoad(ctx, load->_assetID);
+        _oct_LogError("Failed to load audio sample \"%s\", unrecognized extension.\n", load->Audio.filename);
+    }
+
+    // Convert format if we found good data
+    if (data) {
+        int32_t newSize;
+        uint8_t *newSamples = _oct_AudioConvertFormat(data, dataSize, &newSize, &spec);
+        if (newSamples) {
+            gAssets[ASSET_INDEX(load->_assetID)].audio.size = newSize;
+            gAssets[ASSET_INDEX(load->_assetID)].audio.data = newSamples;
+        } else {
+            _oct_FailLoad(ctx, load->_assetID);
+            _oct_LogError("Failed to load audio sample \"%s\", failed to convert format, SDL Error %s.\n", load->Audio.filename, SDL_GetError());
+        }
+        SDL_free(data);
+    }
 }
 
 static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
