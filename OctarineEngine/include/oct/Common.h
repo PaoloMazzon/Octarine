@@ -106,7 +106,7 @@ typedef enum {
     OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE = 1,   ///< Load a texture
     OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,    ///< Load a sprite
     OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,      ///< Load a font
-    OCT_LOAD_COMMAND_TYPE_LOAD_MODEL = 4,     ///< Loads a model
+    OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO = 4,     ///< Loads audio
     OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA = 5,  ///< Loads a model
     OCT_LOAD_COMMAND_TYPE_FREE = 6,           ///< Frees an asset
     OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 7, ///< Creates a surface

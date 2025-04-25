@@ -80,6 +80,12 @@ static void _oct_AssetCreateCamera(Oct_Context ctx, Oct_LoadCommand *load) {
     }
 }
 
+static void _oct_AssetCreateAudio(Oct_Context ctx, Oct_LoadCommand *load) {
+    // TODO: Load audio
+    _oct_FailLoad(ctx, load->_assetID);
+    _oct_LogError("Failed to create audio\n");
+}
+
 static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
     Oct_SpriteData *data = &gAssets[ASSET_INDEX(load->_assetID)].sprite;
     gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_SPRITE;
@@ -119,6 +125,11 @@ static void _oct_AssetDestroySprite(Oct_Context ctx, Oct_Asset asset) {
     _oct_DestroyAssetMetadata(ctx, asset);
 }
 
+static void _oct_AssetDestroyAudio(Oct_Context ctx, Oct_Asset asset) {
+    // TODO: Destroy audio
+    _oct_DestroyAssetMetadata(ctx, asset);
+}
+
 static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
     if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_TEXTURE) {
         _oct_AssetDestroyTexture(ctx, asset);
@@ -126,6 +137,8 @@ static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
         _oct_AssetDestroyCamera(ctx, asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_SPRITE) {
         _oct_AssetDestroySprite(ctx, asset);
+    } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_AUDIO) {
+        _oct_AssetDestroyAudio(ctx, asset);
     }
 }
 
@@ -145,6 +158,8 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
         _oct_AssetCreateCamera(ctx, load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE) {
         _oct_AssetCreateSprite(ctx, load);
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO) {
+        _oct_AssetCreateAudio(ctx, load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
         if (SDL_GetAtomicInt(&gAssets[load->_assetID].loaded))
             _oct_AssetDestroy(ctx, load->_assetID);

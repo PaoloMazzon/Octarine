@@ -47,6 +47,12 @@ typedef struct Oct_SpriteData_t {
     float xStop;          ///< Horizontal stop for consecutive animation cells to start from (like if the animation is only in the right half of the image)
 } Oct_SpriteData;
 
+/// \brief Data for audio
+typedef struct Oct_AudioData_t {
+    uint8_t *data; ///< Raw audio data in whatever format Audio.c gDeviceSpec says
+    int32_t size;  ///< Size of the data in bytes
+} Oct_AudioData;
+
 /// \brief An asset for the engine
 struct Oct_AssetData_t {
     Oct_AssetType type;       ///< type of asset
@@ -58,6 +64,7 @@ struct Oct_AssetData_t {
         VK2DTexture texture;
         VK2DCameraIndex camera;
         Oct_SpriteData sprite;
+        Oct_AudioData audio;
     };
 };
 typedef struct Oct_AssetData_t Oct_AssetData;

@@ -128,6 +128,10 @@ void _oct_AudioProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     // TODO: This
 }
 
+uint8_t *_oct_AudioConvertFormat(uint8_t *data, int32_t size, int32_t *newSize, SDL_AudioSpec *spec) {
+    // TODO: Convert
+    return null;
+}
 
 void _oct_AudioEnd(Oct_Context ctx) {
     SDL_free(gTestAudio);
