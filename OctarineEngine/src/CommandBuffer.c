@@ -126,13 +126,16 @@ OCTARINE_API void oct_WindowUpdate(Oct_Context ctx, Oct_WindowCommand *windowUpd
 OCTARINE_API Oct_Sound oct_AudioUpdate(Oct_Context ctx, Oct_AudioCommand *audioCommand) {
     audioCommand->sType = OCT_STRUCTURE_TYPE_AUDIO_COMMAND;
     audioCommand->pNext = null;
-    audioCommand->Play._soundID = _oct_AssetReserveSpace(ctx);
+    if (audioCommand->type == OCT_AUDIO_COMMAND_TYPE_PLAY_SOUND)
+        audioCommand->Play._soundID = _oct_ReserveSound(ctx);
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
             .audioCommand = *audioCommand
     };
     pushCommand(ctx, &cmd);
-    return audioCommand->Play._soundID;
+    if (audioCommand->type == OCT_AUDIO_COMMAND_TYPE_PLAY_SOUND)
+        return audioCommand->Play._soundID;
+    return audioCommand->Update.sound;
 }
 
 OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load) {

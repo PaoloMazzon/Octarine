@@ -122,9 +122,13 @@ typedef enum {
 
 /// \brief Types of audio commands
 typedef enum {
-    OCT_AUDIO_COMMAND_TYPE_NONE = 0,         ///< None
-    OCT_AUDIO_COMMAND_TYPE_PLAY_SOUND = 1,   ///< Resize the window
-    OCT_AUDIO_COMMAND_TYPE_UPDATE_SOUND = 2, ///< Toggle fullscreen
+    OCT_AUDIO_COMMAND_TYPE_NONE = 0,               ///< None
+    OCT_AUDIO_COMMAND_TYPE_PLAY_SOUND = 1,         ///< Play a sound
+    OCT_AUDIO_COMMAND_TYPE_UPDATE_SOUND = 2,       ///< Update a specific sound
+    OCT_AUDIO_COMMAND_TYPE_PAUSE_ALL_SOUNDS = 3,   ///< Pause all currently playing sounds
+    OCT_AUDIO_COMMAND_TYPE_UNPAUSE_ALL_SOUNDS = 4, ///< Unpause all paused sounds
+    OCT_AUDIO_COMMAND_TYPE_STOP_ALL_SOUNDS = 5,    ///< Stop all currently playing sounds
+
 } Oct_AudioCommandType;
 
 /// \brief Types of meta commands
@@ -256,6 +260,8 @@ struct Oct_AudioCommand_t {
             Oct_Sound sound; ///< Sound ID of a sound currently playing
             Oct_Bool repeat; ///< Whether or not the sound will repeat
             Oct_Vec2 volume; ///< L/R normalized volume
+            Oct_Bool paused; ///< Whether or not the sound is paused
+            Oct_Bool stop;   ///< Whether or not to stop the sound
         } Update;            ///< Things needed to update a sound
     };
     void *pNext;               ///< For future use
