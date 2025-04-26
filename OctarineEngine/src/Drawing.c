@@ -1,10 +1,13 @@
+#include <stdarg.h>
 #include <VK2D/VK2D.h>
+#include "oct/CommandBuffer.h"
 #include "oct/Drawing.h"
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 #include "oct/Subsystems.h"
 #include "oct/Core.h"
 #include "oct/Assets.h"
+#include "oct/Blobs.h"
 
 // Commands are tied to the frame they came from for interpolation and triple buffering
 typedef struct FrameCommandBuffer_t {
@@ -22,6 +25,7 @@ typedef struct FrameCommandBuffer_t {
 // Globals
 static FrameCommandBuffer gFrameBuffers[3]; // Triple buffer
 static int gCurrentFrame; // Current frame is the one not being interpolated
+static VK2DTexture gDebugFont; // Bitmap font of the debug texture
 
 ///////////////////// Internal functions /////////////////////
 // Adds a command to the current frame buffer, expanding if necessary
@@ -61,6 +65,9 @@ void _oct_DrawingInit(Oct_Context ctx) {
         gFrameBuffers[i].commands = mi_malloc(gFrameBuffers[i].size * sizeof(struct Oct_DrawCommand_t));
     }
 
+    // Allocate debug font
+    gDebugFont = vk2dTextureFrom((void*)FONT_PNG, sizeof(FONT_PNG));
+
     // Format host info nicely
     char copy[1024] = {0};
     strncpy(copy, vk2dHostInformation(), 1023);
@@ -68,10 +75,13 @@ void _oct_DrawingInit(Oct_Context ctx) {
         if (copy[i] == '\n')
             copy[i] = ' ';
     }
+
     oct_Log("Drawing system initialized on \"%s\".", copy);
 }
 
 void _oct_DrawingEnd(Oct_Context ctx) {
+    vk2dTextureFree(gDebugFont);
+
     // Free frame buffers
     for (int i = 0; i < 3; i++) {
         mi_free(gFrameBuffers[i].commands);
@@ -359,6 +369,43 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
     }
 }
 
+static void _oct_DrawDebugFont(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    // Process interpolation
+    Oct_Vec2 position;
+    float scale;
+    position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->DebugText.position[0], cmd->DebugText.position[0]);
+    position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->DebugText.position[1], cmd->DebugText.position[1]);
+    scale = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_X || cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->DebugText.scale, cmd->DebugText.scale);
+
+    // Render each character
+    float x = position[0];
+    const float width = 21;
+    const float height = 24;
+    for (int i = 0; i < strlen(cmd->DebugText.text); i++) {
+        const float c = (float)cmd->DebugText.text[i] - 32;
+        if (cmd->DebugText.text[i] == '\n') {
+            position[0] = x;
+            position[1] += height;
+            continue;
+        }
+        vk2dRendererDrawTexture(
+                gDebugFont,
+                position[0],
+                position[1],
+                scale,
+                scale,
+                0,
+                0,
+                0,
+                (int)(c * width) % 336,
+                ((int)(c * width) / 336) * height,
+                width,
+                height
+        );
+        position[0] += width;
+    }
+}
+
 static void _oct_SwitchTarget(Oct_Context ctx, Oct_DrawCommand *cmd) {
     if (cmd->Target.texture != OCT_TARGET_SWAPCHAIN && _oct_AssetType(ctx, cmd->Target.texture) != OCT_ASSET_TYPE_TEXTURE)
         return;
@@ -396,8 +443,56 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
             _oct_SwitchTarget(ctx, cmd);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CAMERA) {
             _oct_UpdateCamera(ctx, cmd, prevCmd, interpolatedTime);
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_DEBUG_TEXT) {
+            _oct_DrawDebugFont(ctx, cmd, prevCmd, interpolatedTime);
         } // TODO: Implement other command types
     }
 
     vk2dRendererEndFrame();
+}
+
+OCTARINE_API void oct_DrawDebugText(Oct_Context ctx, Oct_Vec2 position, float scale, const char *fmt, ...) {
+    char *tempBuffer = _oct_GetFrameMemory(ctx, 1024);
+    if (tempBuffer) {
+        tempBuffer[1023] = 0;
+        va_list l;
+        va_start(l, fmt);
+        SDL_vsnprintf(tempBuffer, 1023, fmt, l);
+        va_end(l);
+
+        Oct_DrawCommand cmd = {
+                .type = OCT_DRAW_COMMAND_TYPE_DEBUG_TEXT,
+                .colour = {1, 1, 1, 1},
+                .DebugText = {
+                        .scale = scale,
+                        .position = {position[0], position[1]},
+                        .text = tempBuffer
+                }
+        };
+        oct_Draw(ctx, &cmd);
+    }
+}
+
+OCTARINE_API void oct_DrawDebugTextInt(Oct_Context ctx, Oct_InterpolationType interp, uint64_t id, Oct_Vec2 position, float scale, const char *fmt, ...) {
+    char *tempBuffer = _oct_GetFrameMemory(ctx, 1024);
+    if (tempBuffer) {
+        tempBuffer[1023] = 0;
+        va_list l;
+        va_start(l, fmt);
+        SDL_vsnprintf(tempBuffer, 1023, fmt, l);
+        va_end(l);
+
+        Oct_DrawCommand cmd = {
+                .type = OCT_DRAW_COMMAND_TYPE_DEBUG_TEXT,
+                .colour = {1, 1, 1, 1},
+                .interpolate = interp,
+                .id = id,
+                .DebugText = {
+                        .scale = scale,
+                        .position = {position[0], position[1]},
+                        .text = tempBuffer
+                }
+        };
+        oct_Draw(ctx, &cmd);
+    }
 }

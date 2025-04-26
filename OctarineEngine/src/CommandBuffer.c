@@ -30,10 +30,20 @@ static inline void pushCommand(Oct_Context ctx, Oct_Command *command) {
 }
 
 // Allocates some memory into the command buffer allocator for the current frame, returns new memory location
-static void *_oct_CopyIntoFrameMemory(Oct_Context ctx, void *data, int32_t size) {
+void *_oct_CopyIntoFrameMemory(Oct_Context ctx, void *data, int32_t size) {
     void *mem = oct_Malloc(gCommandBufferAllocators[gCommandBufferAllocatorCurrent], size);
     if (mem) {
         memcpy(mem, data, size);
+        return mem;
+    } else {
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to copy memory into frame memory, size %i bytes", size);
+    }
+    return null;
+}
+
+void *_oct_GetFrameMemory(Oct_Context ctx, int32_t size) {
+    void *mem = oct_Malloc(gCommandBufferAllocators[gCommandBufferAllocatorCurrent], size);
+    if (mem) {
         return mem;
     } else {
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to copy memory into frame memory, size %i bytes", size);

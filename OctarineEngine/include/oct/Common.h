@@ -86,17 +86,17 @@ typedef enum {
 
 /// \brief Types of draw commands
 typedef enum {
-    OCT_DRAW_COMMAND_TYPE_NONE    = 0,    ///< None
-    OCT_DRAW_COMMAND_TYPE_TEXTURE = 1,    ///< Texture rendering
-    OCT_DRAW_COMMAND_TYPE_SPRITE  = 2,    ///< Sprite rendering
-    OCT_DRAW_COMMAND_TYPE_MODEL   = 3,    ///< Model rendering
-    OCT_DRAW_COMMAND_TYPE_RECTANGLE  = 4, ///< Square rendering
-    OCT_DRAW_COMMAND_TYPE_CIRCLE  = 5,    ///< Circle rendering
-    OCT_DRAW_COMMAND_TYPE_LINE    = 6,    ///< Line rendering
-    OCT_DRAW_COMMAND_TYPE_POLYGON = 7,    ///< Arbitrary polygon rendering
-    OCT_DRAW_COMMAND_TYPE_FONT    = 8,    ///< Font rendering
-    OCT_DRAW_COMMAND_TYPE_CAMERA  = 9,    ///< Some sort of camera update
-    OCT_DRAW_COMMAND_TYPE_TARGET  = 10,   ///< Changing render target
+    OCT_DRAW_COMMAND_TYPE_NONE       = 0,  ///< None
+    OCT_DRAW_COMMAND_TYPE_TEXTURE    = 1,  ///< Texture rendering
+    OCT_DRAW_COMMAND_TYPE_SPRITE     = 2,  ///< Sprite rendering
+    OCT_DRAW_COMMAND_TYPE_DEBUG_TEXT = 3,  ///< Model rendering
+    OCT_DRAW_COMMAND_TYPE_RECTANGLE  = 4,  ///< Square rendering
+    OCT_DRAW_COMMAND_TYPE_CIRCLE     = 5,  ///< Circle rendering
+    OCT_DRAW_COMMAND_TYPE_LINE       = 6,  ///< Line rendering
+    OCT_DRAW_COMMAND_TYPE_POLYGON    = 7,  ///< Arbitrary polygon rendering
+    OCT_DRAW_COMMAND_TYPE_FONT       = 8,  ///< Font rendering
+    OCT_DRAW_COMMAND_TYPE_CAMERA     = 9,  ///< Some sort of camera update
+    OCT_DRAW_COMMAND_TYPE_TARGET     = 10, ///< Changing render target
 } Oct_DrawCommandType;
 
 /// \brief Types of load commands
@@ -362,6 +362,11 @@ struct Oct_DrawCommand_t {
             Oct_CameraUpdateType updateType; ///< Type of update
             Oct_Camera camera;               ///< Which camera to update
         } Camera;                            ///< A camera update
+        struct {
+            const char *text;  ///< Text to render
+            Oct_Vec2 position; ///< Position in the game world of the text
+            float scale;       ///< Scale of the text (1 for default)
+        } DebugText;           ///< Info needed to draw a simple debug string on screen (ASCII only)
     };
     void *pNext; ///< For future use
 };

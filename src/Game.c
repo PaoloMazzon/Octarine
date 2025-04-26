@@ -72,6 +72,7 @@ void *update(Oct_Context ctx, void *ptr) {
     oct_Draw(ctx, &cmd);
     oct_Draw(ctx, &textureCmd);
     oct_Draw(ctx, &spriteCmd);
+    oct_DrawDebugText(ctx, (Oct_Vec2){0, 0}, 1, "Render: %.2fFPS\nLogic: %.2fHz", oct_GetRenderFPS(ctx), oct_GetLogicHz(ctx));
 
     // Check for errors
     if (oct_AssetLoadHasFailed()) {

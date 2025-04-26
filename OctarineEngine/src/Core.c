@@ -89,3 +89,13 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     mi_free(ctx);
     return OCT_STATUS_SUCCESS;
 }
+
+OCTARINE_API double oct_GetRenderFPS(Oct_Context ctx) {
+    int i = SDL_GetAtomicInt(&ctx->renderHzActual);
+    return OCT_INT_TO_FLOAT(i);
+}
+
+OCTARINE_API double oct_GetLogicHz(Oct_Context ctx) {
+    int i = SDL_GetAtomicInt(&ctx->logicHzActual);
+    return OCT_INT_TO_FLOAT(i);
+}

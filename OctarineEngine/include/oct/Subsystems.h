@@ -17,6 +17,8 @@ void _oct_CommandBufferBeginFrame(Oct_Context ctx); // This is for the logical t
 void _oct_CommandBufferEndFrame(Oct_Context ctx); // This is for the logical thread
 void _oct_CommandBufferEnd(Oct_Context ctx);
 void _oct_CommandBufferDispatch(Oct_Context ctx); // Handles all currently available commands in the buffer
+void *_oct_CopyIntoFrameMemory(Oct_Context ctx, void *data, int32_t size);
+void *_oct_GetFrameMemory(Oct_Context ctx, int32_t size);
 
 // Drawing subsystem is responsible for all rendering, its basically a wrapper over VK2D. Drawing commands are
 // different because they are not immediately processed, they are stored in a triple buffer by the drawing subsystem
