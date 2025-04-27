@@ -14,7 +14,7 @@ OCTARINE_API Oct_Audio oct_LoadAudio(Oct_Context ctx, const char *filename);
 /// The returned sound handle is unique for each played sound and will never be reused (unless you play
 /// and absolutely obscene amount of sounds). If you try to update a sound that has finished playing or
 /// been stopped or anything like that, the audio subsystem will know the handle is invalid and ignore
-/// the request.
+/// the request. This may also return OCT_SOUND_FAILED if there are too many sounds playing concurrently.
 OCTARINE_API Oct_Sound oct_PlaySound(Oct_Context ctx, Oct_Audio audio, Oct_Vec2 volume, Oct_Bool repeat);
 
 /// \brief Returns true if a sound has stopped playing

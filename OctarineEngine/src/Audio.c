@@ -1,9 +1,7 @@
-#include <math.h>
 #include <SDL3/SDL.h>
 #include "oct/Common.h"
 #include "oct/Validation.h"
 #include "oct/CommandBuffer.h"
-#include "oct/Core.h"
 #include "oct/Opaque.h"
 #include "oct/Subsystems.h"
 
@@ -14,7 +12,7 @@
 /// \brief Info needed for the mixer to mix any particular sound
 typedef struct Oct_PlayingSound_t {
     Oct_Audio sound;           ///< Actual sound asset being played
-    int32_t pointer;           ///< Pointer (in bytes) to where in the sound buffer the sound will be played from
+    int32_t pointer;           ///< Pointer (in samples) to where in the sound buffer the sound will be played from
     SDL_AtomicInt volumeLeft;  ///< Left volume from 0-AUDIO_VOLUME_NORMALIZED_FACTOR
     SDL_AtomicInt volumeRight; ///< Right volume from 0-AUDIO_VOLUME_NORMALIZED_FACTOR
     SDL_AtomicInt paused;      ///< Whether or not the sound is paused

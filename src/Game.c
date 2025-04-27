@@ -19,65 +19,50 @@ void *startup(Oct_Context ctx) {
 
 // Called each logical frame, whatever you return is passed to either the next update or shutdown
 void *update(Oct_Context ctx, void *ptr) {
-    Oct_DrawCommand cmd = {
-            .type = OCT_DRAW_COMMAND_TYPE_RECTANGLE,
-            .interpolate = OCT_INTERPOLATE_ALL,
-            .id = 1,
-            .colour = {1, 1, 1, 1},
-            .Rectangle = {
-                    .rectangle = {
-                            .position = {320 + (cosf(oct_Time(ctx)) * 200), 240 + (sinf(oct_Time(ctx)) * 200)},
-                            .size = {40, 40},
-                    },
-                    .filled = true,
-            }
-    };
+    oct_DrawRectangleIntColour(
+            ctx,
+            OCT_INTERPOLATE_ALL, 1,
+            &(Oct_Colour){0, 0.6, 1, 1},
+            &(Oct_Rectangle){
+                .position = {320 + (cosf(oct_Time(ctx)) * 200), 240 + (sinf(oct_Time(ctx)) * 200)},
+                .size = {40, 40}
+            },
+            true, 0
+    );
 
-    Oct_DrawCommand textureCmd = {
-            .type = OCT_DRAW_COMMAND_TYPE_TEXTURE,
-            .interpolate = OCT_INTERPOLATE_ALL,
-            .id = 2,
-            .colour = {1, 1, 1, 1},
-            .Texture = {
-                    .texture = gTexMarble,
-                    .position = {oct_MouseX() + 100, oct_MouseY() + 100},
-                    .viewport = {
-                            .position = {0, 0},
-                            .size = {OCT_WHOLE_TEXTURE, OCT_WHOLE_TEXTURE}
-                    },
-                    .scale = {1, 1},
-                    .origin = {OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE},
-                    .rotation = oct_Time(ctx)
-            }
-    };
+    oct_DrawTextureIntExt(
+            ctx,
+            OCT_INTERPOLATE_ALL, 2,
+            gTexMarble,
+            (Oct_Vec2){oct_MouseX() + 100, oct_MouseY() + 100},
+            (Oct_Vec2){1, 1},
+            oct_Time(ctx),
+            (Oct_Vec2){OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE}
+    );
 
-    Oct_DrawCommand spriteCmd = {
-            .type = OCT_DRAW_COMMAND_TYPE_SPRITE,
-            .interpolate = OCT_INTERPOLATE_ALL,
-            .id = 3,
-            .colour = {1, 1, 1, 1},
-            .Sprite = {
-                    .sprite = gSprPaladinWalkRight,
-                    .position = {oct_MouseX(), oct_MouseY()},
-                    .viewport = {
-                            .position = {0, 0},
-                            .size = {OCT_WHOLE_TEXTURE, OCT_WHOLE_TEXTURE}
-                    },
-                    .scale = {4, 4},
-                    .origin = {OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE},
-                    .rotation = oct_Time(ctx)
-            }
-    };
+    oct_DrawSpriteIntExt(
+            ctx,
+            OCT_INTERPOLATE_ALL, 3,
+            gSprPaladinWalkRight,
+            (Oct_Vec2){oct_MouseX(), oct_MouseY()},
+            (Oct_Vec2){4, 4},
+            oct_Time(ctx),
+            (Oct_Vec2){OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE}
+    );
 
-    oct_Draw(ctx, &cmd);
-    oct_Draw(ctx, &textureCmd);
-    oct_Draw(ctx, &spriteCmd);
-    oct_DrawDebugText(ctx, (Oct_Vec2){0, 0}, 1, "Render: %.2fFPS\nLogic: %.2fHz", oct_GetRenderFPS(ctx), oct_GetLogicHz(ctx));
+    oct_DrawDebugText(
+            ctx,
+            (Oct_Vec2){0, 0},
+            1,
+            "Render: %.2fFPS\nLogic: %.2fHz",
+            oct_GetRenderFPS(ctx),
+            oct_GetLogicHz(ctx)
+    );
 
     // Check for errors
     if (oct_AssetLoadHasFailed()) {
         const char *s = oct_AssetErrorMessage(gAllocator);
-        oct_Log("%s", s);
+        oct_Raise(OCT_STATUS_ERROR, false, "%s", s);
         oct_Free(gAllocator, (void*)s);
     }
 

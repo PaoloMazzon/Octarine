@@ -13,7 +13,7 @@ themselves with anything other than game logic.
  + Incredibly simple API
 
 ## Example
-This example program displays a rotating rectangle, where the rectangle will be drawn at an uncapped, interpolated
+This example program displays a rectangle going in circles, where the rectangle will be drawn at an uncapped, interpolated
 framerate but the `update` function will only update 30 times a second. To see the difference, draw another
 rectangle near the original one without interpolation and you will see the difference clear as day. 
 
@@ -26,21 +26,15 @@ void *startup(Oct_Context ctx) {
 }
 
 void *update(Oct_Context ctx, void *ptr) {
-    Oct_DrawCommand rectangleDraw = {
-        .type = OCT_DRAW_COMMAND_TYPE_RECTANGLE,
-        .interpolate = OCT_INTERPOLATE_POSITION | OCT_INTERPOLATE_ROTATION,
-        .id = 1,
-        .colour = {1, 1, 1, 1},
-        .Rectangle = {
-            .rectangle = {
-                .position = {320 + (cosf(oct_Time(ctx)) * 200), 240 + (sinf(oct_Time(ctx)) * 200)},
-                .size = {40, 40},
-            },
-            .rotation = oct_Time(ctx),
-            .filled = true,
-        }
-    };
-    oct_Draw(ctx, &rectangleDraw);
+    oct_DrawRectangleInt(
+        ctx, 
+        OCT_INTERPOLATE_ALL, 1,
+        &(Oct_Rectangle){
+            .position = {320 + (cosf(oct_Time(ctx)) * 200), 240 + (sinf(oct_Time(ctx)) * 200)},
+            .size = {40, 40}
+        },
+        true, 0
+    );
 }
 
 void shutdown(Oct_Context ctx, void *ptr) {

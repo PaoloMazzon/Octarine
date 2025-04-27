@@ -167,7 +167,7 @@ typedef enum {
     OCT_INTERPOLATE_WIDTH = 1<<5,     ///< Interpolate width
     OCT_INTERPOLATE_HEIGHT = 1<<6,    ///< Interpolate height
     OCT_INTERPOLATE_RADIUS = 1<<7,    ///< Interpolate circle radius
-    OCT_INTERPOLATE_ALL = 0xFFFFFFFF, ///< Interpolate all of the above (where available)
+    OCT_INTERPOLATE_ALL = INT32_MAX,  ///< Interpolate all of the above (where available)
 } Oct_InterpolationType;
 
 /// \brief Different ways a camera update can play out, can be bitwise or'd
@@ -297,10 +297,10 @@ struct Oct_Circle_t {
 
 /// \brief Normalized colour
 struct Oct_Colour_t {
-    float r; ///< Red component
-    float g; ///< Green component
-    float b; ///< Blue component
-    float a; ///< Alpha component
+    float r; ///< Red component (0 - 1)
+    float g; ///< Green component (0 - 1)
+    float b; ///< Blue component (0 - 1)
+    float a; ///< Alpha component (0 - 1)
 };
 
 ////////////////////// User structs //////////////////////
