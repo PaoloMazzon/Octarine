@@ -21,6 +21,7 @@ static Oct_AssetData gAssets[OCT_MAX_ASSETS];
 static char gErrorMessage[ERROR_BUFFER_SIZE];
 static SDL_Mutex *gErrorMessageMutex;
 static SDL_AtomicInt gErrorHasOccurred;
+static TTF_TextEngine *gTextEngine;
 
 ///////////////////////////////// ASSET CREATION HELP /////////////////////////////////
 static void _oct_LogError(const char *fmt, ...) {
@@ -145,6 +146,66 @@ static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
     SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
 }
 
+void _oct_AssetCreateFont(Oct_Context ctx, Oct_LoadCommand *load) {
+    Oct_AssetData *data = &gAssets[ASSET_INDEX(load->_assetID)];
+    Oct_FontData *fnt = &data->font;
+    Oct_Bool error = false;
+
+    // Load all fonts
+    for (int i = 0; i < OCT_FALLBACK_FONT_MAX; i++) {
+        if (load->Font.filename[i] != null) {
+            fnt->font[i] = TTF_OpenFont(load->Font.filename[i], load->Font.size);
+
+            // Make sure font didn't explode
+            if (fnt->font[i] == null || (i > 0 && !TTF_AddFallbackFont(fnt->font[0], fnt->font[i]))) {
+                error = true;
+
+                // Clean up previous fonts
+                for (int j = i - 1; j >= 0; j--) {
+                    TTF_CloseFont(fnt->font[j]);
+                }
+                break;
+            }
+        }
+    }
+
+    if (!error) {
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+    } else {
+        _oct_FailLoad(ctx, load->_assetID);
+        _oct_LogError("Failed to create font \"%s\", TTF error %s\n", load->Font.filename[0], SDL_GetError());
+    }
+}
+
+void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
+    // How to do this:
+    //   1. Find the dimensions of each glyph in range
+    //   2. Calculate the total dimensions of the atlas
+    //   3. Create a surface of that size
+    //   4. Copy each glyph into that surface
+    //   5. Upload the surface to a VK2D texture
+
+    // First check if we are adding to an existing bitmap or creating one
+    Oct_BitmapFontData *fnt;
+    if (load->FontAtlas.atlas != OCT_NO_ASSET) {
+        // Free the reserved asset
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].reserved, 0);
+        fnt = &gAssets[ASSET_INDEX(load->FontAtlas.atlas)].fontAtlas;
+    } else {
+        // Prepare the new asset slot
+        fnt = &gAssets[ASSET_INDEX(load->_assetID)].fontAtlas;
+        fnt->atlasCount = 0;
+        fnt->atlases = null;
+    }
+
+    // TODO: The rest of this
+}
+
+// Bitmap fonts are just font atlases
+void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
+    // TODO: This
+}
+
 ///////////////////////////////// ASSET DESTRUCTION /////////////////////////////////
 static void _oct_AssetDestroyTexture(Oct_Context ctx, Oct_Asset asset) {
     vk2dRendererWait();
@@ -158,14 +219,29 @@ static void _oct_AssetDestroyCamera(Oct_Context ctx, Oct_Asset asset) {
 }
 
 static void _oct_AssetDestroySprite(Oct_Context ctx, Oct_Asset asset) {
-    // TODO: This
+    if (gAssets[ASSET_INDEX(asset)].sprite.ownsTexture) {
+        // TODO: Free texture if sprite owns it
+    }
     _oct_DestroyAssetMetadata(ctx, asset);
 }
 
 static void _oct_AssetDestroyAudio(Oct_Context ctx, Oct_Asset asset) {
-    // TODO: Destroy audio
+    SDL_free(gAssets[ASSET_INDEX(asset)].audio.data);
     _oct_DestroyAssetMetadata(ctx, asset);
 }
+
+void _oct_AssetDestroyFont(Oct_Context ctx, Oct_Asset asset) {
+    for (int i = 0; i < OCT_FALLBACK_FONT_MAX; i++) {
+        if (gAssets[ASSET_INDEX(asset)].font.font[i])
+            TTF_CloseFont(gAssets[ASSET_INDEX(asset)].font.font[i]);
+    }
+    _oct_DestroyAssetMetadata(ctx, asset);
+}
+
+void _oct_AssetDestroyFontAtlas(Oct_Context ctx, Oct_Asset asset) {
+
+}
+
 
 static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
     if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_TEXTURE) {
@@ -186,6 +262,13 @@ static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
 ///////////////////////////////// INTERNAL /////////////////////////////////
 void _oct_AssetsInit(Oct_Context ctx) {
     gErrorMessageMutex = SDL_CreateMutex();
+    if (!TTF_Init()) {
+        oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to initialize SDL TTF, SDL error %s", SDL_GetError());
+    }
+    gTextEngine = TTF_CreateSurfaceTextEngine();
+    if (!gTextEngine) {
+        oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to initialize SDL TTF, SDL error %s", SDL_GetError());
+    }
     oct_Log("Asset system initialized.");
 }
 
@@ -227,6 +310,8 @@ void _oct_AssetsEnd(Oct_Context ctx) {
         if (SDL_GetAtomicInt(&gAssets[i].loaded))
             _oct_AssetDestroy(ctx, i);
 
+    TTF_DestroySurfaceTextEngine(gTextEngine);
+    TTF_Quit();
     SDL_DestroyMutex(gErrorMessageMutex);
 }
 

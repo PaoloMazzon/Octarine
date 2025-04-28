@@ -28,17 +28,27 @@ OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load);
 /// \param ctx Octarine context
 /// \param filename Filename of the texture
 /// \return Returns a new asset ID, see oct_Load for more info
-OCTARINE_API Oct_Asset oct_LoadTexture(Oct_Context ctx, const char *filename);
+OCTARINE_API Oct_Texture oct_LoadTexture(Oct_Context ctx, const char *filename);
+
+/// \brief Shorthand for oct_Load for loading fonts
+/// \param ctx Octarine context
+/// \param filename Filename of the font
+/// \param size Size of the font
+/// \return Returns a new asset ID, see oct_Load for more info
+///
+/// This function only allows for one font file to be associated with the font, if you
+/// want to set fallbacks you'll have to create the load command manually.
+OCTARINE_API Oct_Font oct_LoadFont(Oct_Context ctx, const char *filename, float size);
 
 /// \brief Shorthand for oct_Load for creating surfaces
 /// \param ctx Octarine context
 /// \param size Size of the new surface
 /// \return Returns a new asset ID, see oct_Load for more info
-OCTARINE_API Oct_Asset oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size);
+OCTARINE_API Oct_Texture oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size);
 
 /// \brief Shorthand for oct_Load for creating cameras
 /// \return Returns a new asset ID, see oct_Load for more info
-OCTARINE_API Oct_Asset oct_CreateCamera(Oct_Context ctx);
+OCTARINE_API Oct_Camera oct_CreateCamera(Oct_Context ctx);
 
 /// \brief Shorthand for oct_Load for loading sprites
 /// \param tex Texture for the sprite to use
@@ -47,7 +57,7 @@ OCTARINE_API Oct_Asset oct_CreateCamera(Oct_Context ctx);
 /// \param startPos Where in the texture the animation starts
 /// \param frameSize Size of each animation cell
 /// \return Returns a new asset ID, see oct_Load for more info
-OCTARINE_API Oct_Asset oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
+OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
 
 // TODO - Duplicate sprite function
 

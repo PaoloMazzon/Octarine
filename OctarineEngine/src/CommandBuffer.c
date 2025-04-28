@@ -160,7 +160,7 @@ OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load) {
     return load->_assetID;
 }
 
-OCTARINE_API Oct_Asset oct_LoadTexture(Oct_Context ctx, const char *filename) {
+OCTARINE_API Oct_Texture oct_LoadTexture(Oct_Context ctx, const char *filename) {
     Oct_Asset id = _oct_AssetReserveSpace(ctx);
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
@@ -176,7 +176,24 @@ OCTARINE_API Oct_Asset oct_LoadTexture(Oct_Context ctx, const char *filename) {
     return id;
 }
 
-OCTARINE_API Oct_Asset oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size) {
+OCTARINE_API Oct_Font oct_LoadFont(Oct_Context ctx, const char *filename, float size) {
+    Oct_Asset id = _oct_AssetReserveSpace(ctx);
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_LOAD_FONT,
+                    .pNext = null,
+                    ._assetID = id,
+                    .Font.filename[0] = _oct_CopyIntoFrameMemory(ctx, (void*)filename, strlen(filename) + 1),
+                    .Font.size = size
+            }
+    };
+    pushCommand(ctx, &cmd);
+    return id;
+}
+
+OCTARINE_API Oct_Texture oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size) {
     Oct_Asset id = _oct_AssetReserveSpace(ctx);
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
@@ -192,7 +209,7 @@ OCTARINE_API Oct_Asset oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size) {
     return id;
 }
 
-OCTARINE_API Oct_Asset oct_CreateCamera(Oct_Context ctx) {
+OCTARINE_API Oct_Camera oct_CreateCamera(Oct_Context ctx) {
     Oct_Asset id = _oct_AssetReserveSpace(ctx);
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
@@ -207,7 +224,7 @@ OCTARINE_API Oct_Asset oct_CreateCamera(Oct_Context ctx) {
     return id;
 }
 
-OCTARINE_API Oct_Asset oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize) {
+OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize) {
     Oct_Asset id = _oct_AssetReserveSpace(ctx);
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,

@@ -58,11 +58,6 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd);
 Oct_AssetType _oct_AssetType(Oct_Context ctx, Oct_Asset asset);
 Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset);
 Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx); // used from logic thread to reserve a space in the asset list
-void _oct_AssetCreateFont(Oct_Context ctx, Oct_LoadCommand *load);
-void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load);
-void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load);
-void _oct_AssetDestroyFont(Oct_Context ctx, Oct_Asset asset);
-void _oct_AssetDestroyFontAtlas(Oct_Context ctx, Oct_Asset asset);
 void _oct_AssetsEnd(Oct_Context ctx);
 
 // Handles input processing on the logical thread

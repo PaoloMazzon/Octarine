@@ -93,7 +93,7 @@ struct Oct_AssetData_t {
         Oct_SpriteData sprite;
         Oct_AudioData audio;
         Oct_FontData font;
-        Oct_FontAtlasData fontAtlas;
+        Oct_BitmapFontData fontAtlas; // bitmap fonts are collections of atlases
     };
 };
 typedef struct Oct_AssetData_t Oct_AssetData;

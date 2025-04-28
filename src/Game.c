@@ -5,6 +5,8 @@ Oct_Texture gTexMarble;
 Oct_Texture gTexPaladinSheet;
 Oct_Sprite gSprPaladinWalkRight;
 Oct_Allocator gAllocator;
+Oct_Font gPixelFont;
+Oct_FontAtlas gPixelFontAtlas;
 
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup(Oct_Context ctx) {
@@ -12,6 +14,20 @@ void *startup(Oct_Context ctx) {
     gTexMarble = oct_LoadTexture(ctx, "data/marble.jpg");
     gTexPaladinSheet = oct_LoadTexture(ctx, "data/paladin.png");
     gSprPaladinWalkRight = oct_LoadSprite(ctx, gTexPaladinSheet, 4, 10, (Oct_Vec2){0, 0}, (Oct_Vec2){32, 32});
+    gPixelFont = oct_LoadFont(ctx, "data/PixelCode.ttf", 16);
+
+    Oct_LoadCommand atlasCmd = {
+            .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+            .type = OCT_LOAD_COMMAND_TYPE_CREATE_FONT_ATLAS,
+            .FontAtlas = {
+                    .font = gPixelFont,
+                    .atlas = OCT_NO_ASSET,
+                    .unicodeStart = 32,
+                    .unicodeEnd = 128
+            }
+    };
+    gPixelFontAtlas = oct_Load(ctx, &atlasCmd);
+
     // TODO: Test spritesheet xstop code
 
     return null;
