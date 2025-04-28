@@ -176,6 +176,10 @@ static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
         _oct_AssetDestroySprite(ctx, asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_AUDIO) {
         _oct_AssetDestroyAudio(ctx, asset);
+    } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_FONT) {
+        _oct_AssetDestroyFont(ctx, asset);
+    } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_FONT_ATLAS) {
+        _oct_AssetDestroyFont(ctx, asset);
     }
 }
 
@@ -197,6 +201,12 @@ void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
         _oct_AssetCreateSprite(ctx, load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO) {
         _oct_AssetCreateAudio(ctx, load);
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_FONT) {
+        _oct_AssetCreateFont(ctx, load);
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_FONT_ATLAS) {
+        _oct_AssetCreateFontAtlas(ctx, load);
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT) {
+        _oct_AssetCreateBitmapFont(ctx, load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
         if (SDL_GetAtomicInt(&gAssets[load->_assetID].loaded))
             _oct_AssetDestroy(ctx, load->_assetID);

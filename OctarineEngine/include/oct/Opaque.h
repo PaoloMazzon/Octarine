@@ -2,6 +2,7 @@
 #pragma once
 #include <mimalloc.h>
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <VK2D/Structs.h>
 #include "oct/Common.h"
 
@@ -53,6 +54,32 @@ typedef struct Oct_AudioData_t {
     int32_t size;  ///< Size of the data in bytes
 } Oct_AudioData;
 
+/// \brief An individual glyph in a bitmap atlas
+typedef struct Oct_FontGlyphData_t {
+    Oct_Rectangle location; ///< Where in the atlas this specific glyph is
+    float xKern;            ///< Horizontal advance
+    float yOffset;          ///< Vertical offset
+} Oct_FontGlyphData;
+
+/// \brief An individual bitmap atlas
+typedef struct Oct_FontAtlasData_t {
+    VK2DTexture atlas;         ///< Texture atlas with all the characters
+    uint64_t unicodeStart;     ///< Start of the unicode range this atlas covers
+    uint64_t unicodeEnd;       ///< End of the range this atlas covers
+    Oct_FontGlyphData *glyphs; ///< Array of glyphs containing positional and offset data
+} Oct_FontAtlasData;
+
+/// \brief Data for bitmap fonts, may contain number of bitmap fonts and unicode ranges
+typedef struct Oct_BitmapFontData_t {
+    Oct_FontAtlasData *atlases; ///< Bitmap font atlas information
+    int32_t atlasCount;         ///< How many atlases exist in this bitmap font
+} Oct_BitmapFontData;
+
+/// \brief Info for fonts
+typedef struct Oct_FontData_t {
+    TTF_Font *font[OCT_FALLBACK_FONT_MAX]; ///< TTF fonts, plus extras if fallbacks are present
+} Oct_FontData;
+
 /// \brief An asset for the engine
 struct Oct_AssetData_t {
     Oct_AssetType type;       ///< type of asset
@@ -65,6 +92,8 @@ struct Oct_AssetData_t {
         VK2DCameraIndex camera;
         Oct_SpriteData sprite;
         Oct_AudioData audio;
+        Oct_FontData font;
+        Oct_FontAtlasData fontAtlas;
     };
 };
 typedef struct Oct_AssetData_t Oct_AssetData;

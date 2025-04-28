@@ -4,3 +4,6 @@
 [submodule "OctarineEngine/physfs"]
 	path = OctarineEngine/physfs
 	url = https://github.com/icculus/physfs
+[submodule "OctarineEngine/SDL_ttf"]
+	path = OctarineEngine/SDL_ttf
+	url = https://github.com/libsdl-org/SDL_ttf

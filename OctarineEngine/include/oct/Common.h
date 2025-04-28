@@ -39,6 +39,9 @@ extern "C" {
 ///< Tells origin to be on the left (or just use 0)
 #define OCT_ORIGIN_LEFT 0
 
+///< How many possible fallback fonts a font can use
+#define OCT_FALLBACK_FONT_MAX 5
+
 ///< For public definitions
 /*#ifdef OctarineEngine_EXPORTS
 #define OCTARINE_API __declspec(dllexport)
@@ -58,18 +61,19 @@ extern "C" {
 #endif
 
 ////////////////////// Types //////////////////////
-typedef uint64_t Oct_Status;   ///< Status code
-typedef uint32_t Oct_Bool;     ///< Internal bool type
-typedef uint64_t Oct_Asset;    ///< Any asset in the engine
-typedef Oct_Asset Oct_Texture; ///< A 2D texture in video memory
-typedef Oct_Asset Oct_Audio;   ///< A loaded piece of audio
-typedef Oct_Asset Oct_Sprite;  ///< 2D animation
-typedef Oct_Asset Oct_Font;    ///< Font
-typedef Oct_Asset Oct_Camera;  ///< Camera that shows some portion of the game world
-typedef uint64_t Oct_Sound;    ///< A sound that is currently playing (oct_Audio is the raw audio data, Oct_Sound is a currently playing piece of audio)
-typedef float Oct_Vec4[4];     ///< Array of 4 floats
-typedef float Oct_Vec3[3];     ///< Array of 3 floats
-typedef float Oct_Vec2[2];     ///< Array of 2 floats
+typedef uint64_t Oct_Status;     ///< Status code
+typedef uint32_t Oct_Bool;       ///< Internal bool type
+typedef uint64_t Oct_Asset;      ///< Any asset in the engine
+typedef Oct_Asset Oct_Texture;   ///< A 2D texture in video memory
+typedef Oct_Asset Oct_Audio;     ///< A loaded piece of audio
+typedef Oct_Asset Oct_Sprite;    ///< 2D animation
+typedef Oct_Asset Oct_Font;      ///< TrueType font (just the font itself)
+typedef Oct_Asset Oct_FontAtlas; ///< A bitmap font
+typedef Oct_Asset Oct_Camera;    ///< Camera that shows some portion of the game world
+typedef uint64_t Oct_Sound;      ///< A sound that is currently playing (oct_Audio is the raw audio data, Oct_Sound is a currently playing piece of audio)
+typedef float Oct_Vec4[4];       ///< Array of 4 floats
+typedef float Oct_Vec3[3];       ///< Array of 3 floats
+typedef float Oct_Vec2[2];       ///< Array of 2 floats
 
 ////////////////////// Enums //////////////////////
 /// \brief Structure types
@@ -101,14 +105,16 @@ typedef enum {
 
 /// \brief Types of load commands
 typedef enum {
-    OCT_LOAD_COMMAND_TYPE_NONE = 0,           ///< None
-    OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE = 1,   ///< Load a texture
-    OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,    ///< Load a sprite
-    OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,      ///< Load a font
-    OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO = 4,     ///< Loads audio
-    OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA = 5,  ///< Loads a model
-    OCT_LOAD_COMMAND_TYPE_FREE = 6,           ///< Frees an asset
-    OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 7, ///< Creates a surface
+    OCT_LOAD_COMMAND_TYPE_NONE = 0,              ///< None
+    OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE = 1,      ///< Load a texture
+    OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,       ///< Load a sprite
+    OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,         ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_CREATE_FONT_ATLAS = 4, ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT = 5,  ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO = 6,        ///< Loads audio
+    OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA = 7,     ///< Loads a model
+    OCT_LOAD_COMMAND_TYPE_FREE = 8,              ///< Frees an asset
+    OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 9,    ///< Creates a surface
 } Oct_LoadCommandType;
 
 /// \brief Types of window commands
@@ -128,7 +134,6 @@ typedef enum {
     OCT_AUDIO_COMMAND_TYPE_PAUSE_ALL_SOUNDS = 3,   ///< Pause all currently playing sounds
     OCT_AUDIO_COMMAND_TYPE_UNPAUSE_ALL_SOUNDS = 4, ///< Unpause all paused sounds
     OCT_AUDIO_COMMAND_TYPE_STOP_ALL_SOUNDS = 5,    ///< Stop all currently playing sounds
-
 } Oct_AudioCommandType;
 
 /// \brief Types of meta commands
@@ -148,13 +153,14 @@ typedef enum {
 
 /// \brief Types of assets stored in an Oct_Asset - mostly internal use
 typedef enum {
-    OCT_ASSET_TYPE_NONE = 0,    ///< None
-    OCT_ASSET_TYPE_TEXTURE = 1, ///< A texture
-    OCT_ASSET_TYPE_MODEL = 2,   ///< Model
-    OCT_ASSET_TYPE_FONT = 3,    ///< Font
-    OCT_ASSET_TYPE_AUDIO = 4,   ///< Audio
-    OCT_ASSET_TYPE_SPRITE = 5,  ///< Sprite
-    OCT_ASSET_TYPE_CAMERA = 6,  ///< Camera
+    OCT_ASSET_TYPE_NONE = 0,       ///< None
+    OCT_ASSET_TYPE_TEXTURE = 1,    ///< A texture
+    OCT_ASSET_TYPE_MODEL = 2,      ///< Model
+    OCT_ASSET_TYPE_FONT = 3,       ///< Font
+    OCT_ASSET_TYPE_FONT_ATLAS = 4, ///< Font
+    OCT_ASSET_TYPE_AUDIO = 5,      ///< Audio
+    OCT_ASSET_TYPE_SPRITE = 6,     ///< Sprite
+    OCT_ASSET_TYPE_CAMERA = 7,     ///< Camera
 } Oct_AssetType;
 
 /// \brief Things you can interpolate
@@ -240,6 +246,22 @@ struct Oct_LoadCommand_t {
             const char *filename; ///< Filename of the audio file
             // TODO: Loading from binary
         } Audio;                  ///< Information needed to create an audio sample
+        struct {
+            const char *filename[OCT_FALLBACK_FONT_MAX]; ///< Filename of the ttf
+        } Font;                                          ///< Information needed to load a font
+        struct {
+            Oct_Font font;         ///< Font to generate the atlas from
+            Oct_FontAtlas atlas;   ///< If this is not OCT_NO_ASSET, the new atlas will be appended to this one
+            float size;            ///< Size of the font to use when generating the atlas
+            uint64_t unicodeStart; ///< Unicode start range
+            uint64_t unicodeEnd;   ///< Unicode end range
+        } FontAtlas;               ///< Info needed to create or extend a font atlas
+        struct {
+            const char *filename;  ///< Filename of the bitmap font (an image)
+            uint64_t unicodeStart; ///< Unicode start range
+            uint64_t unicodeEnd;   ///< Unicode end range
+            Oct_Vec2 cellSize;     ///< Size (in pixels) of each font glyph
+        } BitmapFont;
     };
     // TODO: This
     void *pNext; ///< For future use

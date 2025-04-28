@@ -8,10 +8,12 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 # Packages required
 find_package(Vulkan)
 find_package(mimalloc 2.1 REQUIRED)
+find_package(Freetype REQUIRED)
 
 # Compile flecs
 add_subdirectory(flecs)
 add_subdirectory(Vulkan2D/SDL)
+add_subdirectory(SDL_ttf)
 
 # Find relavant source files
 file(GLOB OCT_C_FILES src/*.c)
@@ -23,10 +25,10 @@ if (${CMAKE_C_COMPILER_ID} STREQUAL "GNU" AND WIN32)
 endif()
 
 # Include directories
-include_directories(Vulkan2D/ Vulkan2D/VulkanMemoryAllocator/include include/ Vulkan2D/SDL/include ${Vulkan_INCLUDE_DIRS})
+include_directories(Vulkan2D/ SDL_ttf/include Vulkan2D/VulkanMemoryAllocator/include include/ Vulkan2D/SDL/include ${Vulkan_INCLUDE_DIRS})
 
 # Build dll for engine
 add_library(${PROJECT_NAME} STATIC ${VMA_FILES} ${OCT_C_FILES} ${C_FILES} ${H_FILES})
 
 # Linking
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 ${MINGW_LIBRARIES} ${Vulkan_LIBRARIES} mimalloc-static flecs)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf ${MINGW_LIBRARIES} ${Vulkan_LIBRARIES} mimalloc-static flecs)
