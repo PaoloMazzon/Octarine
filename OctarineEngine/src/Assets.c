@@ -213,7 +213,7 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
     Oct_FontData *fntData = &_oct_AssetGet(ctx, load->FontAtlas.font)->font;
 
     // Add new atlas to atlas list
-    void *newAtlas = mi_realloc(fnt->atlases, (fnt->atlasCount + 1) * sizeof(struct Oct_BitmapFontData_t));
+    void *newAtlas = mi_realloc(fnt->atlases, (fnt->atlasCount + 1) * sizeof(struct Oct_FontAtlasData_t));
     if (!newAtlas) {
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to reallocate font atlas list.");
     }
@@ -229,6 +229,19 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
     atlas->glyphs = mi_malloc(sizeof(struct Oct_FontGlyphData_t) * glyphCount);
     if (!atlas->glyphs)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate font glyph list.");
+
+    // Find space dimensions
+    char space[5] = {0};
+    int garbage1, garbage2, garbage3, garbage4;
+    int spaceSize;
+    SDL_UCS4ToUTF8(32, (void*)space);
+    TTF_GetGlyphMetrics(
+            fntData->font[0],
+            *((uint32_t*)space),
+            &garbage1, &garbage2,
+            &garbage3, &garbage4,
+            &spaceSize);
+    fnt->spaceSize = spaceSize;
 
     // Find dimensions of each glyph
     int totalWidth = 0;
@@ -282,7 +295,45 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
 
 // Bitmap fonts are just font atlases
 void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
-    // TODO: This
+    Oct_AssetData *asset = &gAssets[ASSET_INDEX(load->_assetID)];
+    asset->type = OCT_ASSET_TYPE_FONT_ATLAS;
+    asset->fontAtlas.atlases = mi_malloc(sizeof(struct Oct_FontAtlasData_t));
+    asset->fontAtlas.atlasCount = 1;
+
+    if (asset->fontAtlas.atlases)
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate font atlas list");
+
+    const uint32_t glyphCount = load->BitmapFont.unicodeEnd - load->BitmapFont.unicodeStart;
+    asset->fontAtlas.atlases[0].img = null;
+    asset->fontAtlas.atlases[0].atlas = vk2dTextureLoad(load->BitmapFont.filename);
+    asset->fontAtlas.atlases[0].glyphs = mi_malloc(sizeof(struct Oct_FontGlyphData_t) * glyphCount);
+    asset->fontAtlas.atlases[0].unicodeStart = load->BitmapFont.unicodeStart;
+    asset->fontAtlas.atlases[0].unicodeEnd = load->BitmapFont.unicodeEnd;
+    asset->fontAtlas.spaceSize = load->BitmapFont.cellSize[0];
+
+    if (!asset->fontAtlas.atlases[0].atlas) {
+        _oct_FailLoad(ctx, load->_assetID);
+        _oct_LogError("Failed to create bitmap font from \"%s\", VK2D error: %s\n", load->BitmapFont.filename, vk2dStatusMessage());
+        mi_free(asset->fontAtlas.atlases[0].glyphs);
+        mi_free(asset->fontAtlas.atlases);
+        return;
+    } else if (!asset->fontAtlas.atlases[0].glyphs) {
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate glyph list");
+    }
+
+    // Copy glyphs to position
+    for (int i = 0; i < glyphCount; i++) {
+        Oct_FontGlyphData *glyph = &asset->fontAtlas.atlases[0].glyphs[i];
+        glyph->advance = load->BitmapFont.cellSize[0];
+        glyph->location.size[0] = load->BitmapFont.cellSize[0];
+        glyph->location.size[1] = load->BitmapFont.cellSize[1];
+        glyph->location.position[0] = (int)(load->BitmapFont.cellSize[0] * i) % (int)vk2dTextureWidth(asset->fontAtlas.atlases[0].atlas);
+        glyph->location.position[1] = ((int)(load->BitmapFont.cellSize[0] * i) / (int)vk2dTextureWidth(asset->fontAtlas.atlases[0].atlas)) * load->BitmapFont.cellSize[1];
+        glyph->maxBB[0] = load->BitmapFont.cellSize[0];
+        glyph->maxBB[1] = load->BitmapFont.cellSize[1];
+        glyph->minBB[0] = 0;
+        glyph->minBB[1] = 0;
+    }
 }
 
 ///////////////////////////////// ASSET DESTRUCTION /////////////////////////////////

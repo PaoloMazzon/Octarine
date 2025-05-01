@@ -75,6 +75,7 @@ typedef struct Oct_FontAtlasData_t {
 typedef struct Oct_BitmapFontData_t {
     Oct_FontAtlasData *atlases; ///< Bitmap font atlas information
     int32_t atlasCount;         ///< How many atlases exist in this bitmap font
+    float spaceSize;            ///< Size of a space
 } Oct_BitmapFontData;
 
 /// \brief Info for fonts

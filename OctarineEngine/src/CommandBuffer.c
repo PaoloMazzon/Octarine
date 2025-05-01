@@ -249,6 +249,29 @@ OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t
     return id;
 }
 
+OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Context ctx, Oct_Font font, Oct_FontAtlas atlas, uint32_t unicodeStart, uint32_t unicodeEnd) {
+    Oct_Asset id = _oct_AssetReserveSpace(ctx);
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_CREATE_FONT_ATLAS,
+                    .pNext = null,
+                    ._assetID = id,
+                    .FontAtlas = {
+                            .font = font,
+                            .atlas = atlas,
+                            .unicodeStart = unicodeStart,
+                            .unicodeEnd = unicodeEnd
+                    }
+            }
+    };
+    pushCommand(ctx, &cmd);
+    if (atlas != OCT_NO_ASSET)
+        return atlas;
+    return id;
+}
+
 OCTARINE_API void oct_FreeAsset(Oct_Context ctx, Oct_Asset asset) {
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,

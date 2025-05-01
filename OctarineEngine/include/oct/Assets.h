@@ -51,6 +51,7 @@ OCTARINE_API Oct_Texture oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size);
 OCTARINE_API Oct_Camera oct_CreateCamera(Oct_Context ctx);
 
 /// \brief Shorthand for oct_Load for loading sprites
+/// \param ctx Context
 /// \param tex Texture for the sprite to use
 /// \param frameCount Number of frames in the animation
 /// \param fps FPS of the animation
@@ -60,6 +61,15 @@ OCTARINE_API Oct_Camera oct_CreateCamera(Oct_Context ctx);
 OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
 
 // TODO - Duplicate sprite function
+
+/// \brief Creates or extends an existing font atlas
+/// \param ctx Context
+/// \param font Font to create the atlas from
+/// \param atlas Atlas to extend, if you use OCT_NO_ASSET a new atlas will be created
+/// \param unicodeStart First unicode code point to put in the atlas (inclusive)
+/// \param unicodeEnd Last unicode code point to put in the atlas (exclusive)
+/// \return Returns either the handle to a new font atlas, or the atlas passed in if one was specified
+OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Context ctx, Oct_Font font, Oct_FontAtlas atlas, uint32_t unicodeStart, uint32_t unicodeEnd);
 
 /// \brief Returns true if the asset was successfully loaded, false if its not loaded for any reason
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset);

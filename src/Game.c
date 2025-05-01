@@ -15,19 +15,9 @@ void *startup(Oct_Context ctx) {
     gTexPaladinSheet = oct_LoadTexture(ctx, "data/paladin.png");
     gSprPaladinWalkRight = oct_LoadSprite(ctx, gTexPaladinSheet, 4, 10, (Oct_Vec2){0, 0}, (Oct_Vec2){32, 32});
     gPixelFont = oct_LoadFont(ctx, "data/PixelCode.ttf", 18);
-
-    Oct_LoadCommand atlasCmd = {
-            .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
-            .type = OCT_LOAD_COMMAND_TYPE_CREATE_FONT_ATLAS,
-            .FontAtlas = {
-                    .font = gPixelFont,
-                    .atlas = OCT_NO_ASSET,
-                    .unicodeStart = 32,
-                    .unicodeEnd = 128
-            }
-    };
-    gPixelFontAtlas = oct_Load(ctx, &atlasCmd);
-
+    gPixelFontAtlas = oct_CreateFontAtlas(ctx, gPixelFont, OCT_NO_ASSET, 32, 128);
+    oct_CreateFontAtlas(ctx, gPixelFont, gPixelFontAtlas, 0x400, 0x4ff);
+    // TODO: Test bitmap font
     // TODO: Test spritesheet xstop code
 
     return null;
@@ -80,7 +70,7 @@ void *update(Oct_Context ctx, void *ptr) {
             gPixelFontAtlas,
             (Oct_Vec2){100, 100},
             1,
-            "The quick brown fox jumps over the lazy dog."
+            "The quick brown fox jumps over the lazy dog.\n!@#$%^&*()_+-={}[]"
     );
 
     // Check for errors

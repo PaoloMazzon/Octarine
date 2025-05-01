@@ -431,6 +431,10 @@ static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
             y += vk2dTextureHeight(atlas->atlases[0].atlas);
             codePoint = SDL_StepUTF8(&t, null);
             continue;
+        } else if (codePoint == ' ') {
+            x += atlas->spaceSize;
+            codePoint = SDL_StepUTF8(&t, null);
+            continue;
         }
 
         // For each character, check each layer in the atlas until we either run out
