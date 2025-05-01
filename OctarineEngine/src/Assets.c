@@ -116,6 +116,7 @@ static void _oct_AssetCreateAudio(Oct_Context ctx, Oct_LoadCommand *load) {
         if (newSamples) {
             gAssets[ASSET_INDEX(load->_assetID)].audio.size = newSize;
             gAssets[ASSET_INDEX(load->_assetID)].audio.data = newSamples;
+            SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
         } else {
             _oct_FailLoad(ctx, load->_assetID);
             _oct_LogError("Failed to load audio sample \"%s\", failed to convert format, SDL Error %s.\n", load->Audio.filename, SDL_GetError());
@@ -193,19 +194,18 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
         // Free the reserved asset
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].reserved, 0);
         fnt = &gAssets[ASSET_INDEX(load->FontAtlas.atlas)].fontAtlas;
-        gAssets[ASSET_INDEX(load->FontAtlas.atlas)].type == OCT_ASSET_TYPE_FONT_ATLAS;
         asset = ASSET_INDEX(load->FontAtlas.atlas);
     } else {
         // Prepare the new asset slot
         fnt = &gAssets[ASSET_INDEX(load->_assetID)].fontAtlas;
-        gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_FONT_ATLAS;
         fnt->atlasCount = 0;
         fnt->atlases = null;
         asset = ASSET_INDEX(load->_assetID);
     }
+    gAssets[ASSET_INDEX(asset)].type = OCT_ASSET_TYPE_FONT_ATLAS;
 
     // Check if the passed font exists
-    if (_oct_AssetGet(ctx, load->FontAtlas.font)->type != OCT_ASSET_TYPE_FONT) {
+    if (_oct_AssetGet(ctx, load->FontAtlas.font)->type != OCT_ASSET_TYPE_FONT || !SDL_GetAtomicInt(&_oct_AssetGet(ctx, load->FontAtlas.font)->loaded)) {
         _oct_LogError("Atlas cannot be created without a font.\n");
         _oct_FailLoad(ctx, asset);
         return;
@@ -237,8 +237,8 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
         // Find glyph metrics
         char string[5] = {0};
         int w, h;
-        char * s = SDL_UCS4ToUTF8(atlas->unicodeStart + i, (void*)string);
-        TTF_GetStringSize(fntData->font[0], s, 0, &w, &h); // width is borked
+        SDL_UCS4ToUTF8(atlas->unicodeStart + i, (void*)string);
+        TTF_GetStringSize(fntData->font[0], string, 0, &w, &h);
         TTF_GetGlyphMetrics(
                 fntData->font[0],
                 *((uint32_t*)string),
@@ -256,7 +256,28 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
         maxHeight = h > maxHeight ? h : maxHeight;
     }
 
-    oct_Log("Font Size: %i/%i", totalWidth, maxHeight);
+    // Create the surface that will hold all the glyphs
+    SDL_Surface *tempSurface = SDL_CreateSurface(totalWidth, maxHeight, SDL_PIXELFORMAT_RGBA8888);
+    if (!tempSurface)
+        oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to create SDL surface, SDL error %s", SDL_GetError());
+
+    // Copy glyphs into surface
+    for (uint32_t i = 0; i < glyphCount; i++) {
+        char string[5] = {0};
+        SDL_UCS4ToUTF8(atlas->unicodeStart + i, (void*)string);
+        TTF_Text *t = TTF_CreateText(gTextEngine, fntData->font[0], string, 0);
+        Oct_Bool e = TTF_DrawSurfaceText(t, atlas->glyphs[i].location.position[0], atlas->glyphs[i].location.position[1], tempSurface);
+        TTF_DestroyText(t);
+
+        if (!t || !e)
+            oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to text or copy text, TTF error %s", SDL_GetError());
+    }
+
+    // Copy the atlas surface to a VK2D texture/cleanup
+    atlas->img = vk2dImageFromPixels(vk2dRendererGetDevice(), tempSurface->pixels, totalWidth, maxHeight, true);
+    atlas->atlas = vk2dTextureLoadFromImage(atlas->img);
+    SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded, 1);
+    SDL_DestroySurface(tempSurface);
 }
 
 // Bitmap fonts are just font atlases
@@ -297,7 +318,13 @@ void _oct_AssetDestroyFont(Oct_Context ctx, Oct_Asset asset) {
 }
 
 void _oct_AssetDestroyFontAtlas(Oct_Context ctx, Oct_Asset asset) {
-
+    for (int i = 0; i < gAssets[ASSET_INDEX(asset)].fontAtlas.atlasCount; i++) {
+        vk2dTextureFree(gAssets[ASSET_INDEX(asset)].fontAtlas.atlases[i].atlas);
+        vk2dImageFree(gAssets[ASSET_INDEX(asset)].fontAtlas.atlases[i].img);
+        mi_free(gAssets[ASSET_INDEX(asset)].fontAtlas.atlases[i].glyphs);
+    }
+    mi_free(gAssets[ASSET_INDEX(asset)].fontAtlas.atlases);
+    _oct_DestroyAssetMetadata(ctx, asset);
 }
 
 
@@ -313,7 +340,7 @@ static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_FONT) {
         _oct_AssetDestroyFont(ctx, asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_FONT_ATLAS) {
-        _oct_AssetDestroyFont(ctx, asset);
+        _oct_AssetDestroyFontAtlas(ctx, asset);
     }
 }
 

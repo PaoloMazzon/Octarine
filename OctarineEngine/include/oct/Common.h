@@ -98,9 +98,9 @@ typedef enum {
     OCT_DRAW_COMMAND_TYPE_CIRCLE     = 5,  ///< Circle rendering
     OCT_DRAW_COMMAND_TYPE_LINE       = 6,  ///< Line rendering
     OCT_DRAW_COMMAND_TYPE_POLYGON    = 7,  ///< Arbitrary polygon rendering
-    OCT_DRAW_COMMAND_TYPE_FONT       = 8,  ///< Font rendering
     OCT_DRAW_COMMAND_TYPE_CAMERA     = 9,  ///< Some sort of camera update
     OCT_DRAW_COMMAND_TYPE_TARGET     = 10, ///< Changing render target
+    OCT_DRAW_COMMAND_TYPE_FONT_ATLAS = 11, ///< Render bitmap fonts from an atlas
 } Oct_DrawCommandType;
 
 /// \brief Types of load commands
@@ -115,6 +115,7 @@ typedef enum {
     OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA = 7,     ///< Loads a model
     OCT_LOAD_COMMAND_TYPE_FREE = 8,              ///< Frees an asset
     OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 9,    ///< Creates a surface
+    OCT_LOAD_COMMAND_TYPE_CREATE_TEXT = 10,      ///< Creates a texture of properly formatted font TODO: This
 } Oct_LoadCommandType;
 
 /// \brief Types of window commands
@@ -389,6 +390,12 @@ struct Oct_DrawCommand_t {
             Oct_Vec2 position; ///< Position in the game world of the text
             float scale;       ///< Scale of the text (1 for default)
         } DebugText;           ///< Info needed to draw a simple debug string on screen (ASCII only)
+        struct {
+            Oct_Vec2 position;   ///< Position of the text
+            const char *text;    ///< The text itself
+            float scale;         ///< Scale of the text
+            Oct_FontAtlas atlas; ///< Atlas to use
+        } FontAtlas;             ///< Info needed to render from a font atlas
     };
     void *pNext; ///< For future use
 };

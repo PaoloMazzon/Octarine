@@ -148,6 +148,12 @@ OCTARINE_API void oct_DrawDebugTextInt(Oct_Context ctx, Oct_InterpolationType in
 /// \brief Draws debug text on screen, format like you would printf
 OCTARINE_API void oct_DrawDebugText(Oct_Context ctx, Oct_Vec2 position, float scale, const char *fmt, ...);
 
+/// \brief Draws text from a font atlas, format like you would printf
+OCTARINE_API void oct_DrawText(Oct_Context ctx, Oct_FontAtlas atlas, Oct_Vec2 position, float scale, const char *fmt, ...);
+
+/// \brief Draws text from a font atlas with interpolation, format like you would printf
+OCTARINE_API void oct_DrawTextInt(Oct_Context ctx, Oct_InterpolationType interp, uint64_t id, Oct_FontAtlas atlas, Oct_Vec2 position, float scale, const char *fmt, ...);
+
 #ifdef __cplusplus
 };
 #endif

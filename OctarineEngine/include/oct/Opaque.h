@@ -65,6 +65,7 @@ typedef struct Oct_FontGlyphData_t {
 /// \brief An individual bitmap atlas
 typedef struct Oct_FontAtlasData_t {
     VK2DTexture atlas;         ///< Texture atlas with all the characters
+    VK2DImage img;             ///< Image backing the texture
     uint64_t unicodeStart;     ///< Start of the unicode range this atlas covers
     uint64_t unicodeEnd;       ///< End of the range this atlas covers
     Oct_FontGlyphData *glyphs; ///< Array of glyphs containing positional and offset data

@@ -14,7 +14,7 @@ void *startup(Oct_Context ctx) {
     gTexMarble = oct_LoadTexture(ctx, "data/marble.jpg");
     gTexPaladinSheet = oct_LoadTexture(ctx, "data/paladin.png");
     gSprPaladinWalkRight = oct_LoadSprite(ctx, gTexPaladinSheet, 4, 10, (Oct_Vec2){0, 0}, (Oct_Vec2){32, 32});
-    gPixelFont = oct_LoadFont(ctx, "data/PixelCode.ttf", 16);
+    gPixelFont = oct_LoadFont(ctx, "data/PixelCode.ttf", 18);
 
     Oct_LoadCommand atlasCmd = {
             .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
@@ -73,6 +73,14 @@ void *update(Oct_Context ctx, void *ptr) {
             "Render: %.2fFPS\nLogic: %.2fHz",
             oct_GetRenderFPS(ctx),
             oct_GetLogicHz(ctx)
+    );
+
+    oct_DrawText(
+            ctx,
+            gPixelFontAtlas,
+            (Oct_Vec2){100, 100},
+            1,
+            "The quick brown fox jumps over the lazy dog."
     );
 
     // Check for errors

@@ -406,6 +406,61 @@ static void _oct_DrawDebugFont(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     }
 }
 
+static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    // Process interpolation
+    Oct_Vec2 position;
+    float scale;
+    position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->FontAtlas.position[0], cmd->FontAtlas.position[0]);
+    position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->FontAtlas.position[1], cmd->FontAtlas.position[1]);
+    scale = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_X || cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->FontAtlas.scale, cmd->FontAtlas.scale);
+
+    // Find atlas
+    Oct_AssetData *asset = _oct_AssetGet(ctx, cmd->FontAtlas.atlas);
+    if (asset->type != OCT_ASSET_TYPE_FONT_ATLAS)
+        return;
+    Oct_BitmapFontData *atlas = &asset->fontAtlas;
+
+    // Iterate each utf-8 codepoint in the string
+    const char *t = cmd->FontAtlas.text;
+    uint32_t codePoint = SDL_StepUTF8(&t, null);
+    float x = position[0];
+    float y = position[1];
+    while (codePoint) {
+        if (codePoint == '\n') {
+            x = position[0];
+            y += vk2dTextureHeight(atlas->atlases[0].atlas);
+            codePoint = SDL_StepUTF8(&t, null);
+            continue;
+        }
+
+        // For each character, check each layer in the atlas until we either run out
+        // of layers, or find an atlas that contains the given character
+        int layer = -1;
+        for (int i = 0; i < atlas->atlasCount; i++) {
+            if (codePoint >= atlas->atlases[i].unicodeStart && codePoint < atlas->atlases[i].unicodeEnd) {
+                layer = i;
+                break;
+            }
+        }
+
+        if (layer != -1) {
+            vk2dRendererDrawTexture(
+                    atlas->atlases[layer].atlas,
+                    x, y,
+                    scale, scale,
+                    0, 0, 0,
+                    atlas->atlases[layer].glyphs[codePoint - atlas->atlases[layer].unicodeStart].location.position[0],
+                    atlas->atlases[layer].glyphs[codePoint - atlas->atlases[layer].unicodeStart].location.position[1],
+                    atlas->atlases[layer].glyphs[codePoint - atlas->atlases[layer].unicodeStart].location.size[0],
+                    atlas->atlases[layer].glyphs[codePoint - atlas->atlases[layer].unicodeStart].location.size[1]
+            );
+            x += atlas->atlases[layer].glyphs[codePoint - atlas->atlases[layer].unicodeStart].advance * scale;
+        }
+
+        codePoint = SDL_StepUTF8(&t, null);
+    }
+}
+
 static void _oct_SwitchTarget(Oct_Context ctx, Oct_DrawCommand *cmd) {
     if (cmd->Target.texture != OCT_TARGET_SWAPCHAIN && _oct_AssetType(ctx, cmd->Target.texture) != OCT_ASSET_TYPE_TEXTURE)
         return;
@@ -445,6 +500,8 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
             _oct_UpdateCamera(ctx, cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_DEBUG_TEXT) {
             _oct_DrawDebugFont(ctx, cmd, prevCmd, interpolatedTime);
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_FONT_ATLAS) {
+            _oct_DrawFontAtlas(ctx, cmd, prevCmd, interpolatedTime);
         } // TODO: Implement other command types
     }
 
