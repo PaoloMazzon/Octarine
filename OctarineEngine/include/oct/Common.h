@@ -258,8 +258,8 @@ struct Oct_LoadCommand_t {
         } FontAtlas;               ///< Info needed to create or extend a font atlas
         struct {
             const char *filename;  ///< Filename of the bitmap font (an image)
-            uint64_t unicodeStart; ///< Unicode start range
-            uint64_t unicodeEnd;   ///< Unicode end range
+            uint64_t unicodeStart; ///< Unicode start range (inclusive)
+            uint64_t unicodeEnd;   ///< Unicode end range (exclusive)
             Oct_Vec2 cellSize;     ///< Size (in pixels) of each font glyph
         } BitmapFont;
     };

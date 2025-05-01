@@ -57,8 +57,9 @@ typedef struct Oct_AudioData_t {
 /// \brief An individual glyph in a bitmap atlas
 typedef struct Oct_FontGlyphData_t {
     Oct_Rectangle location; ///< Where in the atlas this specific glyph is
-    float xKern;            ///< Horizontal advance
-    float yOffset;          ///< Vertical offset
+    int minBB[2];           ///< Minimum bounding box
+    int maxBB[2];           ///< Maximum bounding box
+    int advance;            ///< Horizontal advance
 } Oct_FontGlyphData;
 
 /// \brief An individual bitmap atlas

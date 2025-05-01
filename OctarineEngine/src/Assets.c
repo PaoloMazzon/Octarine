@@ -149,6 +149,7 @@ static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
 void _oct_AssetCreateFont(Oct_Context ctx, Oct_LoadCommand *load) {
     Oct_AssetData *data = &gAssets[ASSET_INDEX(load->_assetID)];
     Oct_FontData *fnt = &data->font;
+    data->type = OCT_ASSET_TYPE_FONT;
     Oct_Bool error = false;
 
     // Load all fonts
@@ -186,19 +187,76 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
     //   5. Upload the surface to a VK2D texture
 
     // First check if we are adding to an existing bitmap or creating one
-    Oct_BitmapFontData *fnt;
+    Oct_BitmapFontData *fnt = null;
+    Oct_Asset asset = 0;
     if (load->FontAtlas.atlas != OCT_NO_ASSET) {
         // Free the reserved asset
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].reserved, 0);
         fnt = &gAssets[ASSET_INDEX(load->FontAtlas.atlas)].fontAtlas;
+        gAssets[ASSET_INDEX(load->FontAtlas.atlas)].type == OCT_ASSET_TYPE_FONT_ATLAS;
+        asset = ASSET_INDEX(load->FontAtlas.atlas);
     } else {
         // Prepare the new asset slot
         fnt = &gAssets[ASSET_INDEX(load->_assetID)].fontAtlas;
+        gAssets[ASSET_INDEX(load->_assetID)].type == OCT_ASSET_TYPE_FONT_ATLAS;
         fnt->atlasCount = 0;
         fnt->atlases = null;
+        asset = ASSET_INDEX(load->_assetID);
     }
 
-    // TODO: The rest of this
+    // Check if the passed font exists
+    if (_oct_AssetGet(ctx, load->FontAtlas.font)->type != OCT_ASSET_TYPE_FONT) {
+        _oct_LogError("Atlas cannot be created without a font.\n");
+        _oct_FailLoad(ctx, asset);
+        return;
+    }
+    Oct_FontData *fntData = &_oct_AssetGet(ctx, load->FontAtlas.font)->font;
+
+    // Add new atlas to atlas list
+    void *newAtlas = mi_realloc(fnt->atlases, (fnt->atlasCount + 1) * sizeof(struct Oct_BitmapFontData_t));
+    if (!newAtlas) {
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to reallocate font atlas list.");
+    }
+    fnt->atlases = newAtlas;
+    fnt->atlasCount++;
+    Oct_FontAtlasData *atlas = &fnt->atlases[fnt->atlasCount - 1];
+    atlas->unicodeEnd = load->FontAtlas.unicodeEnd;
+    atlas->unicodeStart = load->FontAtlas.unicodeStart;
+    atlas->atlas = null;
+
+    // Allocate glyph list
+    const uint32_t glyphCount = load->FontAtlas.unicodeEnd - load->FontAtlas.unicodeStart;
+    atlas->glyphs = mi_malloc(sizeof(struct Oct_FontGlyphData_t) * glyphCount);
+    if (!atlas->glyphs)
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate font glyph list.");
+
+    // Find dimensions of each glyph
+    int totalWidth = 0;
+    int maxHeight = 0;
+    for (uint32_t i = 0; i < glyphCount; i++) {
+        // Find glyph metrics
+        char string[5] = {0};
+        int w, h;
+        char * s = SDL_UCS4ToUTF8(atlas->unicodeStart + i, (void*)string);
+        TTF_GetStringSize(fntData->font[0], s, 0, &w, &h); // width is borked
+        TTF_GetGlyphMetrics(
+                fntData->font[0],
+                *((uint32_t*)string),
+                &atlas->glyphs[i].minBB[0], &atlas->glyphs[i].maxBB[0],
+                &atlas->glyphs[i].minBB[1], &atlas->glyphs[i].maxBB[1],
+                &atlas->glyphs[i].advance);
+
+        // Record x/y position in the output texture
+        atlas->glyphs[i].location.position[0] = totalWidth;
+        atlas->glyphs[i].location.position[1] = 0;
+        atlas->glyphs[i].location.size[0] = w;
+        atlas->glyphs[i].location.size[1] = h;
+
+        totalWidth += w;
+        maxHeight = h > maxHeight ? h : maxHeight;
+    }
+
+    oct_Log("Font Size: %i/%i", totalWidth, maxHeight);
 }
 
 // Bitmap fonts are just font atlases
