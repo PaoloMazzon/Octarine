@@ -272,6 +272,27 @@ OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Context ctx, Oct_Font font, O
     return id;
 }
 
+OCTARINE_API Oct_FontAtlas oct_LoadBitmapFont(Oct_Context ctx, const char *filename, Oct_Vec2 cellSize, uint32_t unicodeStart, uint32_t unicodeEnd) {
+    Oct_Asset id = _oct_AssetReserveSpace(ctx);
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT,
+                    .pNext = null,
+                    ._assetID = id,
+                    .BitmapFont = {
+                            .filename = _oct_CopyIntoFrameMemory(ctx, (void*)filename, strlen(filename) + 1),
+                            .cellSize = {cellSize[0], cellSize[1]},
+                            .unicodeStart = unicodeStart,
+                            .unicodeEnd = unicodeEnd
+                    }
+            }
+    };
+    pushCommand(ctx, &cmd);
+    return id;
+}
+
 OCTARINE_API void oct_FreeAsset(Oct_Context ctx, Oct_Asset asset) {
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,

@@ -71,6 +71,15 @@ OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t
 /// \return Returns either the handle to a new font atlas, or the atlas passed in if one was specified
 OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Context ctx, Oct_Font font, Oct_FontAtlas atlas, uint32_t unicodeStart, uint32_t unicodeEnd);
 
+/// \brief Loads a font atlas from a bitmap font
+/// \param ctx Context
+/// \param filename Filename of the bitmap to load
+/// \param cellSize Size of each cell in pixels
+/// \param unicodeStart First unicode code point to put in the atlas (inclusive)
+/// \param unicodeEnd Last unicode code point to put in the atlas (exclusive)
+/// \return Returns a new font atlas that can be used like any other
+OCTARINE_API Oct_FontAtlas oct_LoadBitmapFont(Oct_Context ctx, const char *filename, Oct_Vec2 cellSize, uint32_t unicodeStart, uint32_t unicodeEnd);
+
 /// \brief Returns true if the asset was successfully loaded, false if its not loaded for any reason
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset);
 

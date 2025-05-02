@@ -16,6 +16,13 @@ static inline void _oct_SetupInitInfo(Oct_Context ctx, Oct_InitInfo *initInfo) {
     ctx->initInfo = initInfo;
 }
 
+// Returns the number of seconds from start, which should be a SDL_GetPerformanceCounter call
+inline static double _oct_GoofyTime(uint64_t start) {
+    const double current = SDL_GetPerformanceCounter();
+    const double freq = SDL_GetPerformanceFrequency();
+    return (current - start) / freq;
+}
+
 OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     // Initialization
     Oct_Context ctx = mi_zalloc(sizeof(struct Oct_Context_t));
@@ -40,6 +47,8 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     // Timekeeping
     float frameCount = 0;
     uint64_t refreshRateStartTime = SDL_GetPerformanceCounter();
+    double iterations = 0;
+    double totalTime = 0;
 
     // Main game loop
     while (SDL_GetAtomicInt(&ctx->quit) == 0) {
@@ -62,6 +71,8 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
         // Timekeeping
         const int target = SDL_GetAtomicInt(&ctx->renderHz);
         const uint64_t currentTime = SDL_GetPerformanceCounter();
+        totalTime += _oct_GoofyTime(startTime);
+        iterations += 1;
         if (target > 0) {
             const double between = (double)(currentTime - startTime) / SDL_GetPerformanceFrequency();
             vk2dSleep((1.0 / target) - between);
@@ -76,6 +87,8 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
             frameCount = 0;
         }
     }
+
+    oct_Log("Average render tick: %.2fms", (totalTime / iterations) * 1000);
 
     // Cleanup
     vk2dRendererWait();

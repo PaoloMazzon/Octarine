@@ -15,6 +15,7 @@ static Oct_AssetData gAssets[OCT_MAX_ASSETS];
 
 // Returns the actual index in the asset array given an asset id
 #define ASSET_INDEX(asset) (asset & INT32_MAX)
+#define ASSET_GENERATION(asset) (asset >> 32)
 
 // Error message in case an asset load fails
 #define ERROR_BUFFER_SIZE 1024
@@ -36,6 +37,7 @@ static void _oct_LogError(const char *fmt, ...) {
 static void _oct_DestroyAssetMetadata(Oct_Context ctx, Oct_Asset asset) {
     SDL_SetAtomicInt(&gAssets[asset].loaded, 0);
     SDL_SetAtomicInt(&gAssets[asset].reserved, 0);
+    SDL_SetAtomicInt(&gAssets[asset].failed, 0);
     SDL_AddAtomicInt(&gAssets[ASSET_INDEX(asset)].generation, 1);
 }
 
@@ -393,6 +395,7 @@ static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_FONT_ATLAS) {
         _oct_AssetDestroyFontAtlas(ctx, asset);
     }
+
 }
 
 ///////////////////////////////// INTERNAL /////////////////////////////////
@@ -440,6 +443,16 @@ Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset) {
     return &gAssets[ASSET_INDEX(asset)];
 }
 
+Oct_AssetData *_oct_AssetGetSafe(Oct_Context ctx, Oct_Asset asset, Oct_AssetType type) {
+
+    if (ASSET_INDEX(asset) >= OCT_MAX_ASSETS ||
+        ASSET_GENERATION(asset) != SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].generation) ||
+        gAssets[ASSET_INDEX(asset)].type != type ||
+        !SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded))
+        return null;
+    return &gAssets[ASSET_INDEX(asset)];
+}
+
 void _oct_AssetsEnd(Oct_Context ctx) {
     // Delete all the assets still loaded
     for (int i = 0; i < OCT_MAX_ASSETS; i++)
@@ -472,8 +485,7 @@ OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset) {
 OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset) {
     bool failed = SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].failed);
     if (failed) {
-        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].failed, 0);
-        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].reserved, 0);
+        _oct_DestroyAssetMetadata(null, asset);
     }
     return failed;
 }

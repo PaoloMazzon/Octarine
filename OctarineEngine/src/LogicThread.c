@@ -5,6 +5,13 @@
 #include "oct/Opaque.h"
 #include "oct/Subsystems.h"
 
+// Returns the number of seconds from start, which should be a SDL_GetPerformanceCounter call
+inline static double _oct_GoofyTime(uint64_t start) {
+    const double current = SDL_GetPerformanceCounter();
+    const double freq = SDL_GetPerformanceFrequency();
+    return (current - start) / freq;
+}
+
 int oct_UserThread(void *ptr) {
     Oct_Context ctx = ptr;
 
@@ -18,6 +25,8 @@ int oct_UserThread(void *ptr) {
     uint64_t between = 0;
     uint64_t frameCount = 0;
     float averageHz = 0;
+    double totalTime = 0;
+    double iterations = 0;
 
     // User-end game loop
     while (SDL_GetAtomicInt(&ctx->quit) == 0) {
@@ -32,6 +41,10 @@ int oct_UserThread(void *ptr) {
         }
         userData = ctx->initInfo->update(ctx, userData);
         _oct_CommandBufferEndFrame(ctx); // TODO - This may need to be moved to after the wait
+
+        // Keep track of average ticks
+        iterations += 1;
+        totalTime += _oct_GoofyTime(startTime);
 
         // Wait until clock thread says we may begin a new frame
         while (SDL_GetAtomicInt(&ctx->frameStart) == 0) {
@@ -52,6 +65,7 @@ int oct_UserThread(void *ptr) {
     }
 
     ctx->initInfo->shutdown(ctx, userData);
+    oct_Log("Average logic tick: %.2fms", (totalTime / iterations) * 1000);
     _oct_InputEnd(ctx);
 
     return 0;

@@ -97,6 +97,7 @@ static int _oct_MixerThread(void *data) {
     double lastTime = _oct_GoofyTime(start);
     double startTime = lastTime;
     double iterations = 0;
+    double totalTime = 0;
 
     // Create audio device and stream
     SDL_AudioDeviceID audioDevice = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &gDeviceSpec);
@@ -132,6 +133,7 @@ static int _oct_MixerThread(void *data) {
 
         // Wait to make sure we refresh at a certain frequency
         const double current = _oct_GoofyTime(start);
+        totalTime += current - lastTime;
         if (current - lastTime < 1.0 / AUDIO_REFRESH_RATE_HZ) {
             SDL_DelayPrecise((uint64_t)(((1.0 / AUDIO_REFRESH_RATE_HZ) * 10e8) - ((current - lastTime) * 10e8)));
         }
@@ -141,7 +143,7 @@ static int _oct_MixerThread(void *data) {
 
     // Print out average audio refresh rate for debug purposes
     if (ctx->initInfo->debug) {
-        oct_Log("Average audio refresh rate: %.2fHz", iterations / (_oct_GoofyTime(start) - startTime));
+        oct_Log("Average audio tick: %.2fms", (totalTime / iterations) * 1000);
     }
 
     // Cleanup

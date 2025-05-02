@@ -163,9 +163,10 @@ static void _oct_DrawRectangle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
 static void _oct_UpdateCamera(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     // Update the camera if the user wishes to
     if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA) {
-        if (_oct_AssetType(ctx, cmd->Camera.camera) != OCT_ASSET_TYPE_CAMERA)
-            return; // TODO: Error on incorrect asset type
-        VK2DCameraIndex cam = _oct_AssetGet(ctx, cmd->Camera.camera)->camera;
+        Oct_AssetData *data = _oct_AssetGetSafe(ctx, cmd->Camera.camera, OCT_ASSET_TYPE_CAMERA);
+        if (!data)
+            return;
+        VK2DCameraIndex cam = data->camera;
 
         Oct_Vec2 position;
         Oct_Vec2 size;
@@ -198,9 +199,10 @@ static void _oct_UpdateCamera(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCom
 
     // Lock/Unlock the camera
     if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA) {
-        if (_oct_AssetType(ctx, cmd->Camera.camera) != OCT_ASSET_TYPE_CAMERA)
-            return; // TODO: Error on incorrect asset type
-        VK2DCameraIndex cam = _oct_AssetGet(ctx, cmd->Camera.camera)->camera;
+        Oct_AssetData *data = _oct_AssetGetSafe(ctx, cmd->Camera.camera, OCT_ASSET_TYPE_CAMERA);
+        if (!data)
+            return;
+        VK2DCameraIndex cam = data->camera;
         vk2dRendererLockCameras(cam);
     } else if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_UNLOCK_CAMERA) {
         vk2dRendererUnlockCameras();
@@ -238,9 +240,10 @@ static void _oct_DrawCircle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
 }
 
 static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
-    if (_oct_AssetType(ctx, cmd->Texture.texture) != OCT_ASSET_TYPE_TEXTURE)
-        return; // TODO: Error on incorrect asset type
-    VK2DTexture tex = _oct_AssetGet(ctx, cmd->Texture.texture)->texture;
+    Oct_AssetData *asset = _oct_AssetGetSafe(ctx, cmd->Texture.texture, OCT_ASSET_TYPE_TEXTURE);
+    if (!asset)
+        return;
+    VK2DTexture tex = asset->texture;
 
     // Process interpolation
     Oct_Vec2 position;
@@ -278,17 +281,18 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
 }
 
 static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
-    if (_oct_AssetType(ctx, cmd->Sprite.sprite) != OCT_ASSET_TYPE_SPRITE)
-        return; // TODO: Error on incorrect asset type
-    Oct_AssetData *asset = _oct_AssetGet(ctx, cmd->Sprite.sprite);
+    Oct_AssetData *asset = _oct_AssetGetSafe(ctx, cmd->Sprite.sprite, OCT_ASSET_TYPE_SPRITE);
+    if (!asset)
+        return;
     Oct_SpriteData *spr = &asset->sprite;
 
     // Make sure the sprite's texture still exists
     VK2DTexture tex = null;
+    Oct_AssetData *texData = _oct_AssetGetSafe(ctx, spr->texture, OCT_ASSET_TYPE_TEXTURE);
     if (oct_AssetLoaded(spr->texture)) {
-        tex = _oct_AssetGet(ctx, spr->texture)->texture;
+        tex = texData->texture;
     } else {
-        oct_Raise(OCT_STATUS_BAD_PARAMETER, false, "Sprite ID %" PRIu64 " uses a texture that no longer exists.");
+        oct_Raise(OCT_STATUS_BAD_PARAMETER, true, "Sprite ID %" PRIu64 " uses a texture that no longer exists.");
         return;
     }
 
@@ -415,8 +419,8 @@ static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     scale = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_X || cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->FontAtlas.scale, cmd->FontAtlas.scale);
 
     // Find atlas
-    Oct_AssetData *asset = _oct_AssetGet(ctx, cmd->FontAtlas.atlas);
-    if (asset->type != OCT_ASSET_TYPE_FONT_ATLAS)
+    Oct_AssetData *asset = _oct_AssetGetSafe(ctx, cmd->FontAtlas.atlas, OCT_ASSET_TYPE_FONT_ATLAS);
+    if (!asset)
         return;
     Oct_BitmapFontData *atlas = &asset->fontAtlas;
 
@@ -466,11 +470,12 @@ static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
 }
 
 static void _oct_SwitchTarget(Oct_Context ctx, Oct_DrawCommand *cmd) {
-    if (cmd->Target.texture != OCT_TARGET_SWAPCHAIN && _oct_AssetType(ctx, cmd->Target.texture) != OCT_ASSET_TYPE_TEXTURE)
+    Oct_AssetData *tex = _oct_AssetGetSafe(ctx, cmd->Target.texture, OCT_ASSET_TYPE_TEXTURE);
+    if (cmd->Target.texture != OCT_TARGET_SWAPCHAIN && !tex)
         return;
-    VK2DTexture tex = cmd->Target.texture != -1 ? _oct_AssetGet(ctx, cmd->Target.texture)->texture : null;
+    VK2DTexture target = cmd->Target.texture != OCT_TARGET_SWAPCHAIN ? tex->texture : null;
 
-    vk2dRendererSetTarget(tex);
+    vk2dRendererSetTarget(target);
 }
 
 void _oct_DrawingUpdateEnd(Oct_Context ctx) {
