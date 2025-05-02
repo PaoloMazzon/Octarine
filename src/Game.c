@@ -7,6 +7,7 @@ Oct_Sprite gSprPaladinWalkRight;
 Oct_Allocator gAllocator;
 Oct_Font gPixelFont;
 Oct_FontAtlas gPixelFontAtlas;
+Oct_FontAtlas gBitmapFontAtlas;
 
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup(Oct_Context ctx) {
@@ -14,9 +15,10 @@ void *startup(Oct_Context ctx) {
     gTexMarble = oct_LoadTexture(ctx, "data/marble.jpg");
     gTexPaladinSheet = oct_LoadTexture(ctx, "data/paladin.png");
     gSprPaladinWalkRight = oct_LoadSprite(ctx, gTexPaladinSheet, 4, 10, (Oct_Vec2){0, 0}, (Oct_Vec2){32, 32});
-    gPixelFont = oct_LoadFont(ctx, "data/PixelCode.ttf", 18);
+    gPixelFont = oct_LoadFont(ctx, "data/Ubuntu-Regular.ttf", 16);
     gPixelFontAtlas = oct_CreateFontAtlas(ctx, gPixelFont, OCT_NO_ASSET, 32, 128);
     oct_CreateFontAtlas(ctx, gPixelFont, gPixelFontAtlas, 0x400, 0x4ff);
+    gBitmapFontAtlas = oct_LoadBitmapFont(ctx, "data/monogram.png", (Oct_Vec2){6, 12}, 32, 160);
     // TODO: Test bitmap font
     // TODO: Test spritesheet xstop code
 
@@ -67,7 +69,7 @@ void *update(Oct_Context ctx, void *ptr) {
 
     oct_DrawText(
             ctx,
-            gPixelFontAtlas,
+            gBitmapFontAtlas,
             (Oct_Vec2){100, 100},
             1,
             "The quick brown fox jumps over the lazy dog.\n!@#$%^&*()_+-={}[]"

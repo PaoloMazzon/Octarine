@@ -246,8 +246,11 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
     fnt->spaceSize = spaceSize;
 
     // Find dimensions of each glyph
-    int totalWidth = 0;
-    int maxHeight = 0;
+    int x = 0;
+    int y = 0;
+    int tallestGlyph = 0;
+    const int textureWidthCap = 2048;
+    Oct_Bool oversize = false;
     for (uint32_t i = 0; i < glyphCount; i++) {
         // Find glyph metrics
         char string[5] = {0};
@@ -261,18 +264,30 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
                 &atlas->glyphs[i].minBB[1], &atlas->glyphs[i].maxBB[1],
                 &atlas->glyphs[i].advance);
 
+        // Keep textures to a certain width
+        int drawX = 0;
+        if (x + w > textureWidthCap) {
+            x = 0;
+            y += tallestGlyph + 1;
+            oversize = true;
+        } else {
+            drawX = x;
+            x += w + 1;
+        }
+        tallestGlyph = h > tallestGlyph ? h : tallestGlyph;
+
         // Record x/y position in the output texture
-        atlas->glyphs[i].location.position[0] = totalWidth;
-        atlas->glyphs[i].location.position[1] = 0;
+        atlas->glyphs[i].location.position[0] = drawX;
+        atlas->glyphs[i].location.position[1] = y;
         atlas->glyphs[i].location.size[0] = w;
         atlas->glyphs[i].location.size[1] = h;
-
-        totalWidth += w;
-        maxHeight = h > maxHeight ? h : maxHeight;
     }
+    fnt->newLineSize = tallestGlyph;
 
     // Create the surface that will hold all the glyphs
-    SDL_Surface *tempSurface = SDL_CreateSurface(totalWidth, maxHeight, SDL_PIXELFORMAT_RGBA8888);
+    const int imgWidth = oversize ? textureWidthCap : x;
+    const int imgHeight = y + tallestGlyph;
+    SDL_Surface *tempSurface = SDL_CreateSurface(imgWidth, imgHeight, SDL_PIXELFORMAT_RGBA8888);
     if (!tempSurface)
         oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to create SDL surface, SDL error %s", SDL_GetError());
 
@@ -289,7 +304,8 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
     }
 
     // Copy the atlas surface to a VK2D texture/cleanup
-    atlas->img = vk2dImageFromPixels(vk2dRendererGetDevice(), tempSurface->pixels, totalWidth, maxHeight, true);
+    // TODO: Possible memory problem here, SDL_SaveBMP reports incorrect surfaces sometimes
+    atlas->img = vk2dImageFromPixels(vk2dRendererGetDevice(), tempSurface->pixels, imgWidth, imgHeight, true);
     atlas->atlas = vk2dTextureLoadFromImage(atlas->img);
     SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded, 1);
     SDL_DestroySurface(tempSurface);
@@ -302,7 +318,7 @@ void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
     asset->fontAtlas.atlases = mi_malloc(sizeof(struct Oct_FontAtlasData_t));
     asset->fontAtlas.atlasCount = 1;
 
-    if (asset->fontAtlas.atlases)
+    if (!asset->fontAtlas.atlases)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate font atlas list");
 
     const uint32_t glyphCount = load->BitmapFont.unicodeEnd - load->BitmapFont.unicodeStart;
@@ -312,6 +328,7 @@ void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
     asset->fontAtlas.atlases[0].unicodeStart = load->BitmapFont.unicodeStart;
     asset->fontAtlas.atlases[0].unicodeEnd = load->BitmapFont.unicodeEnd;
     asset->fontAtlas.spaceSize = load->BitmapFont.cellSize[0];
+    asset->fontAtlas.newLineSize = load->BitmapFont.cellSize[1];
 
     if (!asset->fontAtlas.atlases[0].atlas) {
         _oct_FailLoad(ctx, load->_assetID);
@@ -336,6 +353,7 @@ void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
         glyph->minBB[0] = 0;
         glyph->minBB[1] = 0;
     }
+    SDL_SetAtomicInt(&asset->loaded, 1);
 }
 
 ///////////////////////////////// ASSET DESTRUCTION /////////////////////////////////

@@ -432,11 +432,11 @@ static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     while (codePoint) {
         if (codePoint == '\n') {
             x = position[0];
-            y += vk2dTextureHeight(atlas->atlases[0].atlas);
+            y += atlas->newLineSize * cmd->FontAtlas.scale;
             codePoint = SDL_StepUTF8(&t, null);
             continue;
         } else if (codePoint == ' ') {
-            x += atlas->spaceSize;
+            x += atlas->spaceSize * cmd->FontAtlas.scale;
             codePoint = SDL_StepUTF8(&t, null);
             continue;
         }
