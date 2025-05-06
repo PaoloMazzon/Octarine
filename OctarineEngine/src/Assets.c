@@ -356,6 +356,14 @@ void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
     SDL_SetAtomicInt(&asset->loaded, 1);
 }
 
+void _oct_AssetCreateAssetBundle(Oct_Context ctx, Oct_LoadCommand *load) {
+    // TODO: This
+    // 1. Go through each file in the bundle and load the primitive types by their filenames
+    // 2. Iterate through manifest.json and load the non-primitive types like sprites
+    // 3. For each asset, create a load command for them and manually invoke their create function
+    // 4. Set the ready atomic to 1
+}
+
 ///////////////////////////////// ASSET DESTRUCTION /////////////////////////////////
 static void _oct_AssetDestroyTexture(Oct_Context ctx, Oct_Asset asset) {
     vk2dRendererWait();

@@ -332,3 +332,26 @@ void _oct_CommandBufferDispatch(Oct_Context ctx) {
 OCTARINE_API void *oct_CopyFrameData(Oct_Context ctx, void *data, int32_t size) {
     return _oct_CopyIntoFrameMemory(ctx, data, size);
 }
+
+OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(Oct_Context ctx, const char *filename) {
+    Oct_AssetBundle bundle = mi_zalloc(sizeof(struct Oct_AssetBundle_t));
+    if (!bundle)
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate asset bundle.");
+
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT,
+                    .pNext = null,
+                    ._assetID = OCT_NO_ASSET,
+                    .AssetBundle = {
+                            .filename = _oct_CopyIntoFrameMemory(ctx, (void*)filename, strlen(filename) + 1),
+                            .bundle = bundle
+                    }
+            }
+    };
+    pushCommand(ctx, &cmd);
+
+    return bundle;
+}

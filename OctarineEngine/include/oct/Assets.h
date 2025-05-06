@@ -113,13 +113,25 @@ OCTARINE_API Oct_Bool oct_AssetLoadHasFailed();
 /// \brief Loads an asset bundle from a file
 /// \param filename Name of the asset bundle (a compressed archive with a manifest.json in the root)
 /// \return Returns a new asset bundle or null, if it fails
-OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(const char *filename);
+/// \warning This function queues an asset bundle load like any other asset. The difference is that unlike asset loading
+///          functions, the assets are not guaranteed to be ready by the time you call oct_GetAsset -- as this function
+///          is not blocking. For this reason, calling oct_GetAsset will be blocking if the asset bundle is not done
+///          loading. Use oct_IsAssetBundleReady to check if oct_GetAsset will be blocking or not.
+OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(Oct_Context ctx, const char *filename);
 
 /// \brief Destroys an asset bundle and all the assets in it
-OCTARINE_API void oct_FreeAssetBundle(Oct_AssetBundle bundle);
+OCTARINE_API void oct_FreeAssetBundle(Oct_Context ctx, Oct_AssetBundle bundle);
+
+/// \brief Checks if an asset bundle is loaded yet
+OCTARINE_API Oct_Bool oct_IsAssetBundleReady(Oct_Context ctx, Oct_AssetBundle bundle);
 
 /// \brief Gets an asset from a bundle, or OCT_NO_ASSET if no such asset exists
-OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name);
+/// \warning If the asset bundle is not yet loaded completely, this will be blocking
+OCTARINE_API Oct_Asset oct_GetAsset(Oct_Context ctx, Oct_AssetBundle bundle, const char *name);
+
+/// \brief Returns true if a given asset exists and matches a specific asset type
+/// \warning If the asset bundle is not yet loaded completely, this will be blocking
+OCTARINE_API Oct_Bool oct_AssetExists(Oct_Context ctx, Oct_AssetBundle bundle, const char *name, Oct_AssetType type);
 
 #ifdef __cplusplus
 };

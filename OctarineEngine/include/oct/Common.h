@@ -105,17 +105,18 @@ typedef enum {
 
 /// \brief Types of load commands
 typedef enum {
-    OCT_LOAD_COMMAND_TYPE_NONE = 0,              ///< None
-    OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE = 1,      ///< Load a texture
-    OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,       ///< Load a sprite
-    OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,         ///< Load a font
-    OCT_LOAD_COMMAND_TYPE_CREATE_FONT_ATLAS = 4, ///< Load a font
-    OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT = 5,  ///< Load a font
-    OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO = 6,        ///< Loads audio
-    OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA = 7,     ///< Loads a model
-    OCT_LOAD_COMMAND_TYPE_FREE = 8,              ///< Frees an asset
-    OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 9,    ///< Creates a surface
-    OCT_LOAD_COMMAND_TYPE_CREATE_TEXT = 10,      ///< Creates a texture of properly formatted font TODO: This
+    OCT_LOAD_COMMAND_TYPE_NONE = 0,               ///< None
+    OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE = 1,       ///< Load a texture
+    OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE = 2,        ///< Load a sprite
+    OCT_LOAD_COMMAND_TYPE_LOAD_FONT = 3,          ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_CREATE_FONT_ATLAS = 4,  ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT = 5,   ///< Load a font
+    OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO = 6,         ///< Loads audio
+    OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA = 7,      ///< Loads a model
+    OCT_LOAD_COMMAND_TYPE_FREE = 8,               ///< Frees an asset
+    OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 9,     ///< Creates a surface
+    OCT_LOAD_COMMAND_TYPE_CREATE_TEXT = 10,       ///< Creates a texture of properly formatted font TODO: This
+    OCT_LOAD_COMMAND_TYPE_LOAD_ASSET_BUNDLE = 11, ///< Loads an asset bundle
 } Oct_LoadCommandType;
 
 /// \brief Types of window commands
@@ -152,7 +153,7 @@ typedef enum {
     OCT_ALLOCATOR_TYPE_VIRTUAL_PAGE = 3, ///< Virtual page allocator
 } Oct_AllocatorType;
 
-/// \brief Types of assets stored in an Oct_Asset - mostly internal use
+/// \brief Types of assets stored in an Oct_Asset
 typedef enum {
     OCT_ASSET_TYPE_NONE = 0,       ///< None
     OCT_ASSET_TYPE_TEXTURE = 1,    ///< A texture
@@ -162,6 +163,7 @@ typedef enum {
     OCT_ASSET_TYPE_AUDIO = 5,      ///< Audio
     OCT_ASSET_TYPE_SPRITE = 6,     ///< Sprite
     OCT_ASSET_TYPE_CAMERA = 7,     ///< Camera
+    OCT_ASSET_TYPE_ANY = 100       ///< Any type
 } Oct_AssetType;
 
 /// \brief Things you can interpolate
@@ -264,6 +266,10 @@ struct Oct_LoadCommand_t {
             uint64_t unicodeEnd;   ///< Unicode end range (exclusive)
             Oct_Vec2 cellSize;     ///< Size (in pixels) of each font glyph
         } BitmapFont;
+        struct {
+            const char *filename;   ///< Filename of the bundle
+            Oct_AssetBundle bundle; ///< Bundle that will be loaded into
+        } AssetBundle;              ///< Info to load a bundle
     };
     // TODO: This
     void *pNext; ///< For future use
