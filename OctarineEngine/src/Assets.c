@@ -225,6 +225,7 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
     atlas->unicodeEnd = load->FontAtlas.unicodeEnd;
     atlas->unicodeStart = load->FontAtlas.unicodeStart;
     atlas->atlas = null;
+    fnt->font = load->FontAtlas.font;
 
     // Allocate glyph list
     const uint32_t glyphCount = load->FontAtlas.unicodeEnd - load->FontAtlas.unicodeStart;
@@ -317,6 +318,7 @@ void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
     asset->type = OCT_ASSET_TYPE_FONT_ATLAS;
     asset->fontAtlas.atlases = mi_malloc(sizeof(struct Oct_FontAtlasData_t));
     asset->fontAtlas.atlasCount = 1;
+    asset->fontAtlas.font = OCT_NO_ASSET;
 
     if (!asset->fontAtlas.atlases)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate font atlas list");

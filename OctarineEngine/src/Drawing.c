@@ -424,20 +424,29 @@ static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
         return;
     Oct_BitmapFontData *atlas = &asset->fontAtlas;
 
+    // Find the font for kerning
+    TTF_Font *font = null;
+    Oct_AssetData *fontAsset = atlas->font != OCT_NO_ASSET ? _oct_AssetGetSafe(ctx, atlas->font, OCT_ASSET_TYPE_FONT) : null;
+    if (fontAsset)
+        font = fontAsset->font.font[0];
+
     // Iterate each utf-8 codepoint in the string
     const char *t = cmd->FontAtlas.text;
     uint32_t codePoint = SDL_StepUTF8(&t, null);
     float x = position[0];
     float y = position[1];
+    uint32_t previousCodePoint = UINT32_MAX;
     while (codePoint) {
         if (codePoint == '\n') {
             x = position[0];
             y += atlas->newLineSize * cmd->FontAtlas.scale;
             codePoint = SDL_StepUTF8(&t, null);
+            previousCodePoint = UINT32_MAX;
             continue;
         } else if (codePoint == ' ') {
             x += atlas->spaceSize * cmd->FontAtlas.scale;
             codePoint = SDL_StepUTF8(&t, null);
+            previousCodePoint = UINT32_MAX;
             continue;
         }
 
@@ -463,6 +472,14 @@ static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
                     atlas->atlases[layer].glyphs[codePoint - atlas->atlases[layer].unicodeStart].location.size[1]
             );
             x += atlas->atlases[layer].glyphs[codePoint - atlas->atlases[layer].unicodeStart].advance * scale;
+
+            // Find additional kerning
+            if (previousCodePoint != UINT32_MAX && font) {
+                int kern;
+                TTF_GetGlyphKerning(font, previousCodePoint, codePoint, &kern);
+                x += kern;
+            }
+            previousCodePoint = codePoint;
         }
 
         codePoint = SDL_StepUTF8(&t, null);
