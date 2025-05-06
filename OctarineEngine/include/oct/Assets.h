@@ -110,6 +110,17 @@ OCTARINE_API void oct_FreeAsset(Oct_Context ctx, Oct_Asset asset);
 /// \brief Returns true if any load as failed, can be used as an indication to get the error message
 OCTARINE_API Oct_Bool oct_AssetLoadHasFailed();
 
+/// \brief Loads an asset bundle from a file
+/// \param filename Name of the asset bundle (a compressed archive with a manifest.json in the root)
+/// \return Returns a new asset bundle or null, if it fails
+OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(const char *filename);
+
+/// \brief Destroys an asset bundle and all the assets in it
+OCTARINE_API void oct_FreeAssetBundle(Oct_AssetBundle bundle);
+
+/// \brief Gets an asset from a bundle, or OCT_NO_ASSET if no such asset exists
+OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name);
+
 #ifdef __cplusplus
 };
 #endif

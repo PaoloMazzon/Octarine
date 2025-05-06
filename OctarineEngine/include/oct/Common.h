@@ -189,6 +189,7 @@ typedef enum {
 ////////////////////// Hidden structs //////////////////////
 OCT_OPAQUE_POINTER(Oct_Context)
 OCT_OPAQUE_POINTER(Oct_Allocator)
+OCT_OPAQUE_POINTER(Oct_AssetBundle)
 
 ////////////////////// Structs //////////////////////
 

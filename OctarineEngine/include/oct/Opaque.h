@@ -148,6 +148,20 @@ struct Oct_WindowEvent_t {
 
 typedef struct Oct_WindowEvent_t Oct_WindowEvent;
 
+/// \brief Linked list for asset bundle hash map
+typedef struct Oct_AssetLink_t {
+    Oct_Asset asset; ///< Asset itself
+    void *next;      ///< Next asset in the linked list or null for the end of it
+} Oct_AssetLink;
+
+/// \brief A bundle of loaded assets in a hashmap
+struct Oct_AssetBundle_t {
+    Oct_AssetLink *bucket;       ///< Bucket where all the assets are stored
+    Oct_AssetLink *backupBucket; ///< Backup bucket (linked lists from the primary bucket point to an element of this list)
+    int backupBucketSize;        ///< Size of the backupBucket list
+    int backupBucketCount;       ///< Number of elements actually in use in the backupBucket
+};
+
 #ifdef __cplusplus
 };
 #endif

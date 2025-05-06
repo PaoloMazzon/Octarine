@@ -20,6 +20,7 @@ extern Oct_Status OCT_STATUS_BAD_PARAMETER;       ///< A parameter given was not
 extern int32_t OCT_RING_BUFFER_SIZE;   ///< Size of the command/event ring buffer
 extern int32_t OCT_STANDARD_PAGE_SIZE; ///< Size of a page in a virtual page allocator
 extern int32_t OCT_PAGE_SCALE_FACTOR;  ///< How much bigger a page should be to accommodate large memory
+extern int32_t OCT_BUCKET_SIZE;        ///< Bucket size for hash maps
 
 // Drawing
 extern int32_t OCT_SPRITE_LAST_FRAME;    ///< Draw the last frame of the animation
