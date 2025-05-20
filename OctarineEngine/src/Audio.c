@@ -39,7 +39,7 @@ static Oct_PlayingSound gPlayingSounds[MAX_PLAYING_SOUNDS];
 
 /////////////////////////// FUNCTIONS ///////////////////////////
 // Reserves space in the playing sound list, returning OCT_SOUND_FAILED if it fails (too many concurrent noises)
-Oct_Sound _oct_ReserveSound(Oct_Context ctx) {
+Oct_Sound _oct_ReserveSound() {
     for (int i = 0; i < MAX_PLAYING_SOUNDS; i++)
         if (SDL_CompareAndSwapAtomicInt(&gPlayingSounds[i].reserved, 0, 1))
             return i + (((uint64_t)SDL_GetAtomicInt(&gPlayingSounds[i].generation)) << 32);
@@ -61,9 +61,9 @@ inline static double _oct_GoofyTime(uint64_t start) {
 
 // Adds a certain number of samples from a playing sound to an audio sample, dealing with the playing sound should
 // it run out of new audio
-inline static void _oct_AddPlayingSound(Oct_Context ctx, float *buffer, int32_t samples, int32_t playingSound) {
+inline static void _oct_AddPlayingSound(float *buffer, int32_t samples, int32_t playingSound) {
     Oct_PlayingSound *snd = &gPlayingSounds[playingSound];
-    Oct_AssetData *data = _oct_AssetGet(ctx, snd->sound);
+    Oct_AssetData *data = _oct_AssetGet(snd->sound);
     float *soundBuffer = (void*)data->audio.data; // the audio that is queued
     Oct_Vec2 vol = {
             (float)SDL_GetAtomicInt(&snd->volumeLeft) / AUDIO_VOLUME_NORMALIZED_FACTOR,
@@ -123,7 +123,7 @@ static int _oct_MixerThread(void *data) {
             // Loop through each sound and add the ones that are currently playing
             for (int i = 0; i < MAX_PLAYING_SOUNDS; i++) {
                 if (SDL_GetAtomicInt(&gPlayingSounds[i].alive) && !SDL_GetAtomicInt(&gPlayingSounds[i].paused)) {
-                    _oct_AddPlayingSound(ctx, writeBuffer, UPDATE_SAMPLES, i);
+                    _oct_AddPlayingSound(writeBuffer, UPDATE_SAMPLES, i);
                 }
             }
 
@@ -154,7 +154,9 @@ static int _oct_MixerThread(void *data) {
     return 0;
 }
 
-void _oct_AudioInit(Oct_Context ctx) {
+void _oct_AudioInit() {
+    Oct_Context ctx = _oct_GetCtx();
+
     // Create the mixer thread, the mixer thread does all the actual work
     gMixerThread = SDL_CreateThread(_oct_MixerThread, "Audio Mixer", ctx);
     if (!gMixerThread) {
@@ -162,15 +164,15 @@ void _oct_AudioInit(Oct_Context ctx) {
     }
 }
 
-void _oct_AudioUpdateBegin(Oct_Context ctx) {
+void _oct_AudioUpdateBegin() {
     // All the work is done in the mixer thread
 }
 
-void _oct_AudioUpdateEnd(Oct_Context ctx) {
+void _oct_AudioUpdateEnd() {
     // All the work is done in the mixer thread
 }
 
-void _oct_AudioProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
+void _oct_AudioProcessCommand(Oct_Command *cmd) {
     if (OCT_STRUCTURE_TYPE(&cmd->topOfUnion) == OCT_STRUCTURE_TYPE_META_COMMAND) {
         // Meta commands currently do not impact the audio subsystem
     } else {
@@ -226,19 +228,19 @@ uint8_t *_oct_AudioConvertFormat(uint8_t *data, int32_t size, int32_t *newSize, 
     return newData;
 }
 
-void _oct_AudioEnd(Oct_Context ctx) {
+void _oct_AudioEnd() {
     SDL_WaitThread(gMixerThread, null);
 }
 
-OCTARINE_API Oct_Audio oct_LoadAudio(Oct_Context ctx, const char *filename) {
+OCTARINE_API Oct_Audio oct_LoadAudio(const char *filename) {
     Oct_LoadCommand command = {
             .type = OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO,
             .Audio.filename = filename
     };
-    return oct_Load(ctx, &command);
+    return oct_Load(&command);
 }
 
-OCTARINE_API Oct_Sound oct_PlaySound(Oct_Context ctx, Oct_Audio audio, Oct_Vec2 volume, Oct_Bool repeat) {
+OCTARINE_API Oct_Sound oct_PlaySound(Oct_Audio audio, Oct_Vec2 volume, Oct_Bool repeat) {
     Oct_AudioCommand command = {
             .type = OCT_AUDIO_COMMAND_TYPE_PLAY_SOUND,
             .Play = {
@@ -247,19 +249,19 @@ OCTARINE_API Oct_Sound oct_PlaySound(Oct_Context ctx, Oct_Audio audio, Oct_Vec2 
                     .volume = {volume[0], volume[1]}
             }
     };
-    return oct_AudioUpdate(ctx, &command);
+    return oct_AudioUpdate(&command);
 }
 
 // Generation is up-ticked each time a sound finishes playing in the mixer, so if the sound is a valid handle
 // and the ID's generation matches the generation in that slot, it must still be playing.
-OCTARINE_API Oct_Bool oct_SoundIsStopped(Oct_Context ctx, Oct_Sound sound) {
+OCTARINE_API Oct_Bool oct_SoundIsStopped(Oct_Sound sound) {
     if (sound < MAX_PLAYING_SOUNDS) {
         return SOUND_GENERATION(sound) == SDL_GetAtomicInt(&gPlayingSounds[SOUND_INDEX(sound)].generation);
     }
     return false;
 }
 
-OCTARINE_API Oct_Sound oct_UpdateSound(Oct_Context ctx, Oct_Sound sound, Oct_Vec2 volume, Oct_Bool repeat, Oct_Bool paused) {
+OCTARINE_API Oct_Sound oct_UpdateSound(Oct_Sound sound, Oct_Vec2 volume, Oct_Bool repeat, Oct_Bool paused) {
     Oct_AudioCommand command = {
             .type = OCT_AUDIO_COMMAND_TYPE_UPDATE_SOUND,
             .Update = {
@@ -269,10 +271,10 @@ OCTARINE_API Oct_Sound oct_UpdateSound(Oct_Context ctx, Oct_Sound sound, Oct_Vec
                     .paused = paused
             }
     };
-    return oct_AudioUpdate(ctx, &command);
+    return oct_AudioUpdate(&command);
 }
 
-OCTARINE_API void oct_StopSound(Oct_Context ctx, Oct_Sound sound) {
+OCTARINE_API void oct_StopSound(Oct_Sound sound) {
     Oct_AudioCommand command = {
             .type = OCT_AUDIO_COMMAND_TYPE_UPDATE_SOUND,
             .Update = {
@@ -280,26 +282,26 @@ OCTARINE_API void oct_StopSound(Oct_Context ctx, Oct_Sound sound) {
                     .stop = true
             }
     };
-    oct_AudioUpdate(ctx, &command);
+    oct_AudioUpdate(&command);
 }
 
-OCTARINE_API void oct_StopAllSounds(Oct_Context ctx) {
+OCTARINE_API void oct_StopAllSounds() {
     Oct_AudioCommand command = {
             .type = OCT_AUDIO_COMMAND_TYPE_STOP_ALL_SOUNDS,
     };
-    oct_AudioUpdate(ctx, &command);
+    oct_AudioUpdate(&command);
 }
 
-OCTARINE_API void oct_PauseAllSounds(Oct_Context ctx) {
+OCTARINE_API void oct_PauseAllSounds() {
     Oct_AudioCommand command = {
             .type = OCT_AUDIO_COMMAND_TYPE_PAUSE_ALL_SOUNDS,
     };
-    oct_AudioUpdate(ctx, &command);
+    oct_AudioUpdate(&command);
 }
 
-OCTARINE_API void oct_UnpauseAllSounds(Oct_Context ctx) {
+OCTARINE_API void oct_UnpauseAllSounds() {
     Oct_AudioCommand command = {
             .type = OCT_AUDIO_COMMAND_TYPE_UNPAUSE_ALL_SOUNDS,
     };
-    oct_AudioUpdate(ctx, &command);
+    oct_AudioUpdate(&command);
 }

@@ -20,12 +20,12 @@ static Oct_Status gStatus;             // General status
 static SDL_Mutex *gLogMutex;           // Mutex for logging
 static SDL_Mutex *gStatusMutex;        // Mutex for status
 
-void _oct_ValidationInit(Oct_Context ctx) {
+void _oct_ValidationInit() {
     gLogMutex = SDL_CreateMutex();
     gStatusMutex = SDL_CreateMutex();
 }
 
-void _oct_ValidationEnd(Oct_Context ctx) {
+void _oct_ValidationEnd() {
     SDL_DestroyMutex(gLogMutex);
     SDL_DestroyMutex(gStatusMutex);
 }

@@ -44,12 +44,12 @@ static int _oct_JoystickIDToArrayIndex(SDL_JoystickID id) {
     return INVALID_GAMEPAD;
 }
 
-void _oct_InputInit(Oct_Context ctx) {
+void _oct_InputInit() {
     for (int i = 0; i < GAMEPAD_COUNT; i++)
         gGamepadJoyIDMappings[i] = INVALID_GAMEPAD;
 }
 
-void _oct_InputUpdate(Oct_Context ctx) {
+void _oct_InputUpdate() {
     // Copy previous buffers
     memcpy(gKeysPrevious, gKeysCurrent, SDL_SCANCODE_COUNT * sizeof(Oct_Bool));
     memcpy(gMouseButtonsPrevious, gMouseButtonsCurrent, OCT_MOUSE_BUTTON_MAX * sizeof(Oct_Bool));
@@ -58,7 +58,7 @@ void _oct_InputUpdate(Oct_Context ctx) {
 
     // Process events
     Oct_WindowEvent event;
-    while (_oct_WindowPopEvent(ctx, &event)) {
+    while (_oct_WindowPopEvent(&event)) {
         // Keyboard event
         if (event.type == OCT_WINDOW_EVENT_TYPE_KEYBOARD) {
             if (event.keyboardEvent.type == SDL_EVENT_KEY_DOWN) {
@@ -121,7 +121,7 @@ void _oct_InputUpdate(Oct_Context ctx) {
     }
 }
 
-void _oct_InputEnd(Oct_Context ctx) {
+void _oct_InputEnd() {
     // Nothing needed here yet
 }
 

@@ -6,9 +6,9 @@
 extern "C" {
 #endif
 
-void *startup(Oct_Context ctx);
-void *update(Oct_Context ctx, void *ptr);
-void shutdown(Oct_Context ctx, void *ptr);
+void *startup();
+void *update(void *ptr);
+void shutdown(void *ptr);
 
 #ifdef __cplusplus
 };

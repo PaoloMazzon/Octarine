@@ -15,7 +15,7 @@ inline static double _oct_GoofyTime(uint64_t start) {
 int oct_UserThread(void *ptr) {
     Oct_Context ctx = ptr;
 
-    _oct_InputInit(ctx);
+    _oct_InputInit();
     ctx->gameStartTime = SDL_GetPerformanceCounter();
     void *userData = null;
     Oct_Bool firstLoop = true;
@@ -31,16 +31,16 @@ int oct_UserThread(void *ptr) {
     // User-end game loop
     while (SDL_GetAtomicInt(&ctx->quit) == 0) {
         // Process input
-        _oct_InputUpdate(ctx);
+        _oct_InputUpdate();
 
         // Process user frame
-        _oct_CommandBufferBeginFrame(ctx);
+        _oct_CommandBufferBeginFrame();
         if (firstLoop) { // So startup can queue draw commands
-            userData = ctx->initInfo->startup(ctx);
+            userData = ctx->initInfo->startup();
             firstLoop = false;
         }
-        userData = ctx->initInfo->update(ctx, userData);
-        _oct_CommandBufferEndFrame(ctx); // TODO - This may need to be moved to after the wait
+        userData = ctx->initInfo->update(userData);
+        _oct_CommandBufferEndFrame(); // TODO - This may need to be moved to after the wait
 
         // Keep track of average ticks
         iterations += 1;
@@ -64,9 +64,9 @@ int oct_UserThread(void *ptr) {
         startTime = SDL_GetPerformanceCounter();
     }
 
-    ctx->initInfo->shutdown(ctx, userData);
+    ctx->initInfo->shutdown(userData);
     oct_Log("Average logic tick: %.2fms", (totalTime / iterations) * 1000);
-    _oct_InputEnd(ctx);
+    _oct_InputEnd();
 
     return 0;
 }
@@ -97,7 +97,9 @@ int oct_ClockThread(void *ptr) {
     return 0;
 }
 
-void oct_Bootstrap(Oct_Context ctx) {
+void oct_Bootstrap() {
+    Oct_Context ctx = _oct_GetCtx();
+
     ctx->logicThread = SDL_CreateThread(oct_UserThread, "Logic Thread", ctx);
     ctx->clockThread = SDL_CreateThread(oct_ClockThread, "Clock Thread", ctx);
     if (ctx->logicThread == null || ctx->clockThread == null) {
@@ -106,11 +108,13 @@ void oct_Bootstrap(Oct_Context ctx) {
     oct_Log("Created logic and clock thread.");
 }
 
-void _oct_UnstrapBoots(Oct_Context ctx) {
+void _oct_UnstrapBoots() {
+    Oct_Context ctx = _oct_GetCtx();
     SDL_WaitThread(ctx->logicThread, null);
     SDL_WaitThread(ctx->clockThread, null);
 }
 
-OCTARINE_API double oct_Time(Oct_Context ctx) {
+OCTARINE_API double oct_Time() {
+    Oct_Context ctx = _oct_GetCtx();
     return (double)((double)SDL_GetPerformanceCounter() - ctx->gameStartTime) / (double)SDL_GetPerformanceFrequency();
 }

@@ -2,6 +2,7 @@
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 #include "oct/CommandBuffer.h"
+#include "oct/Subsystems.h"
 
 #define GAMEPAD_LIMIT 100
 
@@ -34,7 +35,7 @@ static void _oct_WindowPush(Oct_WindowEvent *event) {
 }
 
 // Refreshes game controllers
-static void _oct_RefreshControllers(Oct_Context ctx) {
+static void _oct_RefreshControllers() {
     for (int i = 0; i < GAMEPAD_LIMIT; i++) {
         if (gControllers[i] != NULL) {
             SDL_CloseGamepad(gControllers[i]);
@@ -58,7 +59,8 @@ static void _oct_RefreshControllers(Oct_Context ctx) {
     }
 }
 
-void _oct_WindowInit(Oct_Context ctx) {
+void _oct_WindowInit() {
+    Oct_Context ctx = _oct_GetCtx();
     ctx->window = SDL_CreateWindow(
             ctx->initInfo->windowTitle,
             ctx->initInfo->windowWidth,
@@ -73,17 +75,20 @@ void _oct_WindowInit(Oct_Context ctx) {
     if (!gRingBuffer)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate events ring buffer.");
 
-    _oct_RefreshControllers(ctx);
+    _oct_RefreshControllers();
 
     oct_Log("Window system initialized.");
 }
 
-void _oct_WindowEnd(Oct_Context ctx) {
+void _oct_WindowEnd() {
+    Oct_Context ctx = _oct_GetCtx();
     mi_free(gRingBuffer);
     SDL_DestroyWindow(ctx->window);
 }
 
-void _oct_WindowUpdateBegin(Oct_Context ctx) {
+void _oct_WindowUpdateBegin() {
+    Oct_Context ctx = _oct_GetCtx();
+
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_EVENT_QUIT) {
@@ -119,7 +124,7 @@ void _oct_WindowUpdateBegin(Oct_Context ctx) {
             };
             _oct_WindowPush(&event);
         } else if (e.type == SDL_EVENT_GAMEPAD_ADDED || e.type == SDL_EVENT_GAMEPAD_REMOVED) {
-            _oct_RefreshControllers(ctx);
+            _oct_RefreshControllers();
             Oct_WindowEvent event = {
                     .type = OCT_WINDOW_EVENT_TYPE_GAMEPAD_EVENT,
                     .gamepadDeviceEvent = e.gdevice
@@ -142,11 +147,13 @@ void _oct_WindowUpdateBegin(Oct_Context ctx) {
     SDL_SetAtomicInt(&gWindowFullscreen, (SDL_GetWindowFlags(ctx->window) & SDL_WINDOW_FULLSCREEN) != 0);
 }
 
-void _oct_WindowUpdateEnd(Oct_Context ctx) {
+void _oct_WindowUpdateEnd() {
     // TODO: This
 }
 
-void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
+void _oct_WindowProcessCommand(Oct_Command *cmd) {
+    Oct_Context ctx = _oct_GetCtx();
+
     if (OCT_STRUCTURE_TYPE(&cmd->topOfUnion) == OCT_STRUCTURE_TYPE_META_COMMAND) {
         // Meta commands are currently of no interest to the windowing subsystem
     } else {
@@ -163,7 +170,7 @@ void _oct_WindowProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
     }
 }
 
-Oct_Bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event) {
+Oct_Bool _oct_WindowPopEvent(Oct_WindowEvent *event) {
     int head = SDL_GetAtomicInt(&gRingHead);
 
     // There are no new events in the ring buffer
@@ -176,36 +183,36 @@ Oct_Bool _oct_WindowPopEvent(Oct_Context ctx, Oct_WindowEvent *event) {
     return true;
 }
 
-OCTARINE_API float oct_WindowWidth(Oct_Context ctx) {
+OCTARINE_API float oct_WindowWidth() {
     return (float)SDL_GetAtomicInt(&gWindowWidth);
 }
 
-OCTARINE_API float oct_WindowHeight(Oct_Context ctx) {
+OCTARINE_API float oct_WindowHeight() {
     return (float)SDL_GetAtomicInt(&gWindowHeight);
 }
 
-OCTARINE_API Oct_Bool oct_WindowIsFullscreen(Oct_Context ctx) {
+OCTARINE_API Oct_Bool oct_WindowIsFullscreen() {
     return (Oct_Bool)SDL_GetAtomicInt(&gWindowFullscreen);
 }
 
-OCTARINE_API void oct_SetFullscreen(Oct_Context ctx, Oct_Bool fullscreen) {
+OCTARINE_API void oct_SetFullscreen(Oct_Bool fullscreen) {
     Oct_WindowCommand c = {
             .type = fullscreen ? OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_ENTER : OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_EXIT,
     };
-    oct_WindowUpdate(ctx, &c);
+    oct_WindowUpdate(&c);
 }
 
-OCTARINE_API void oct_ToggleFullscreen(Oct_Context ctx) {
+OCTARINE_API void oct_ToggleFullscreen() {
     Oct_WindowCommand c = {
             .type = OCT_WINDOW_COMMAND_TYPE_FULLSCREEN_TOGGLE,
     };
-    oct_WindowUpdate(ctx, &c);
+    oct_WindowUpdate(&c);
 }
 
-OCTARINE_API void oct_ResizeWindow(Oct_Context ctx, float width, float height) {
+OCTARINE_API void oct_ResizeWindow(float width, float height) {
     Oct_WindowCommand c = {
             .type = OCT_WINDOW_COMMAND_TYPE_RESIZE,
             .Resize.size = {width, height}
     };
-    oct_WindowUpdate(ctx, &c);
+    oct_WindowUpdate(&c);
 }

@@ -7,10 +7,10 @@ extern "C" {
 #endif
 
 // Launches thread
-void oct_Bootstrap(Oct_Context ctx);
+void oct_Bootstrap();
 
 // Quits the thread
-void _oct_UnstrapBoots(Oct_Context ctx);
+void _oct_UnstrapBoots();
 
 #ifdef __cplusplus
 };

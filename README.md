@@ -21,11 +21,11 @@ rectangle near the original one without interpolation and you will see the diffe
 #include <oct/Octarine.h>
 #include <math.h>
 
-void *startup(Oct_Context ctx) {
+void *startup() {
     // ...
 }
 
-void *update(Oct_Context ctx, void *ptr) {
+void *update(void *ptr) {
     oct_DrawRectangleInt(
         ctx, 
         OCT_INTERPOLATE_ALL, 1,
@@ -37,7 +37,7 @@ void *update(Oct_Context ctx, void *ptr) {
     );
 }
 
-void shutdown(Oct_Context ctx, void *ptr) {
+void shutdown(void *ptr) {
     // ...
 }
 

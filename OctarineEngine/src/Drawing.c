@@ -42,7 +42,9 @@ void addCommand(Oct_DrawCommand *cmd) {
 }
 
 ///////////////////// Subsystem /////////////////////
-void _oct_DrawingInit(Oct_Context ctx) {
+void _oct_DrawingInit() {
+    Oct_Context ctx = _oct_GetCtx();
+
     VK2DRendererConfig config = {
             .msaa = VK2D_MSAA_32X,
             .filterMode = VK2D_FILTER_TYPE_NEAREST,
@@ -79,7 +81,7 @@ void _oct_DrawingInit(Oct_Context ctx) {
     oct_Log("Drawing system initialized on \"%s\".", copy);
 }
 
-void _oct_DrawingEnd(Oct_Context ctx) {
+void _oct_DrawingEnd() {
     vk2dTextureFree(gDebugFont);
 
     // Free frame buffers
@@ -90,11 +92,11 @@ void _oct_DrawingEnd(Oct_Context ctx) {
     vk2dRendererQuit();
 }
 
-void _oct_DrawingUpdateBegin(Oct_Context ctx) {
+void _oct_DrawingUpdateBegin() {
     vk2dRendererStartFrame(VK2D_BLACK);
 }
 
-void _oct_DrawingProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
+void _oct_DrawingProcessCommand(Oct_Command *cmd) {
     if (OCT_STRUCTURE_TYPE(&cmd->topOfUnion) == OCT_STRUCTURE_TYPE_META_COMMAND) {
         if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_END_FRAME) {
             gCurrentFrame = NEXT_INDEX(gCurrentFrame);
@@ -125,7 +127,7 @@ static void _oct_ProcessOrigin(Oct_Vec2 origin, Oct_Vec2 out, float width, float
     }
 }
 
-static void _oct_DrawRectangle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+static void _oct_DrawRectangle(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     // Process interpolation
     Oct_Vec2 position;
     Oct_Vec2 origin;
@@ -160,10 +162,10 @@ static void _oct_DrawRectangle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     }
 }
 
-static void _oct_UpdateCamera(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+static void _oct_UpdateCamera(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     // Update the camera if the user wishes to
     if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA) {
-        Oct_AssetData *data = _oct_AssetGetSafe(ctx, cmd->Camera.camera, OCT_ASSET_TYPE_CAMERA);
+        Oct_AssetData *data = _oct_AssetGetSafe(cmd->Camera.camera, OCT_ASSET_TYPE_CAMERA);
         if (!data)
             return;
         VK2DCameraIndex cam = data->camera;
@@ -199,7 +201,7 @@ static void _oct_UpdateCamera(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCom
 
     // Lock/Unlock the camera
     if (cmd->Camera.updateType & OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA) {
-        Oct_AssetData *data = _oct_AssetGetSafe(ctx, cmd->Camera.camera, OCT_ASSET_TYPE_CAMERA);
+        Oct_AssetData *data = _oct_AssetGetSafe(cmd->Camera.camera, OCT_ASSET_TYPE_CAMERA);
         if (!data)
             return;
         VK2DCameraIndex cam = data->camera;
@@ -215,7 +217,7 @@ static void _oct_UpdateCamera(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCom
     }
 }
 
-static void _oct_DrawCircle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+static void _oct_DrawCircle(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     // Process interpolation
     Oct_Vec2 position;
     float radius;
@@ -239,8 +241,8 @@ static void _oct_DrawCircle(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
     }
 }
 
-static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
-    Oct_AssetData *asset = _oct_AssetGetSafe(ctx, cmd->Texture.texture, OCT_ASSET_TYPE_TEXTURE);
+static void _oct_DrawTexture(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    Oct_AssetData *asset = _oct_AssetGetSafe(cmd->Texture.texture, OCT_ASSET_TYPE_TEXTURE);
     if (!asset)
         return;
     VK2DTexture tex = asset->texture;
@@ -280,15 +282,15 @@ static void _oct_DrawTexture(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComm
     );
 }
 
-static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
-    Oct_AssetData *asset = _oct_AssetGetSafe(ctx, cmd->Sprite.sprite, OCT_ASSET_TYPE_SPRITE);
+static void _oct_DrawSprite(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    Oct_AssetData *asset = _oct_AssetGetSafe(cmd->Sprite.sprite, OCT_ASSET_TYPE_SPRITE);
     if (!asset)
         return;
     Oct_SpriteData *spr = &asset->sprite;
 
     // Make sure the sprite's texture still exists
     VK2DTexture tex = null;
-    Oct_AssetData *texData = _oct_AssetGetSafe(ctx, spr->texture, OCT_ASSET_TYPE_TEXTURE);
+    Oct_AssetData *texData = _oct_AssetGetSafe(spr->texture, OCT_ASSET_TYPE_TEXTURE);
     if (oct_AssetLoaded(spr->texture)) {
         tex = texData->texture;
     } else {
@@ -360,7 +362,7 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
 
     // Process frame update
     if (!spr->pause && cmd->Sprite.frame == OCT_SPRITE_CURRENT_FRAME) {
-        spr->accumulator += oct_Time(ctx) - spr->lastTime;
+        spr->accumulator += oct_Time() - spr->lastTime;
         if (spr->accumulator > spr->delay) {
             if (spr->frame < spr->frameCount - 1) {
                 spr->frame += 1;
@@ -369,11 +371,11 @@ static void _oct_DrawSprite(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawComma
             }
             spr->accumulator -= spr->delay;
         }
-        spr->lastTime = oct_Time(ctx);
+        spr->lastTime = oct_Time();
     }
 }
 
-static void _oct_DrawDebugFont(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+static void _oct_DrawDebugFont(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     // Process interpolation
     Oct_Vec2 position;
     float scale;
@@ -410,7 +412,7 @@ static void _oct_DrawDebugFont(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     }
 }
 
-static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+static void _oct_DrawFontAtlas(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     // Process interpolation
     Oct_Vec2 position;
     float scale;
@@ -419,14 +421,14 @@ static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     scale = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_X || cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->FontAtlas.scale, cmd->FontAtlas.scale);
 
     // Find atlas
-    Oct_AssetData *asset = _oct_AssetGetSafe(ctx, cmd->FontAtlas.atlas, OCT_ASSET_TYPE_FONT_ATLAS);
+    Oct_AssetData *asset = _oct_AssetGetSafe(cmd->FontAtlas.atlas, OCT_ASSET_TYPE_FONT_ATLAS);
     if (!asset)
         return;
     Oct_BitmapFontData *atlas = &asset->fontAtlas;
 
     // Find the font for kerning
     TTF_Font *font = null;
-    Oct_AssetData *fontAsset = atlas->font != OCT_NO_ASSET ? _oct_AssetGetSafe(ctx, atlas->font, OCT_ASSET_TYPE_FONT) : null;
+    Oct_AssetData *fontAsset = atlas->font != OCT_NO_ASSET ? _oct_AssetGetSafe(atlas->font, OCT_ASSET_TYPE_FONT) : null;
     if (fontAsset)
         font = fontAsset->font.font[0];
 
@@ -486,8 +488,8 @@ static void _oct_DrawFontAtlas(Oct_Context ctx, Oct_DrawCommand *cmd, Oct_DrawCo
     }
 }
 
-static void _oct_SwitchTarget(Oct_Context ctx, Oct_DrawCommand *cmd) {
-    Oct_AssetData *tex = _oct_AssetGetSafe(ctx, cmd->Target.texture, OCT_ASSET_TYPE_TEXTURE);
+static void _oct_SwitchTarget(Oct_DrawCommand *cmd) {
+    Oct_AssetData *tex = _oct_AssetGetSafe(cmd->Target.texture, OCT_ASSET_TYPE_TEXTURE);
     if (cmd->Target.texture != OCT_TARGET_SWAPCHAIN && !tex)
         return;
     VK2DTexture target = cmd->Target.texture != OCT_TARGET_SWAPCHAIN ? tex->texture : null;
@@ -495,7 +497,8 @@ static void _oct_SwitchTarget(Oct_Context ctx, Oct_DrawCommand *cmd) {
     vk2dRendererSetTarget(target);
 }
 
-void _oct_DrawingUpdateEnd(Oct_Context ctx) {
+void _oct_DrawingUpdateEnd() {
+    Oct_Context ctx = _oct_GetCtx();
     int atomic = SDL_GetAtomicInt(&ctx->interpolatedTime);
     float interpolatedTime = OCT_INT_TO_FLOAT(atomic);
 
@@ -513,21 +516,21 @@ void _oct_DrawingUpdateEnd(Oct_Context ctx) {
         }
 
         if (cmd->type == OCT_DRAW_COMMAND_TYPE_RECTANGLE) {
-            _oct_DrawRectangle(ctx, cmd, prevCmd, interpolatedTime);
+            _oct_DrawRectangle(cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_TEXTURE) {
-            _oct_DrawTexture(ctx, cmd, prevCmd, interpolatedTime);
+            _oct_DrawTexture(cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_SPRITE) {
-            _oct_DrawSprite(ctx, cmd, prevCmd, interpolatedTime);
+            _oct_DrawSprite(cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CIRCLE) {
-            _oct_DrawCircle(ctx, cmd, prevCmd, interpolatedTime);
+            _oct_DrawCircle(cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_TARGET) {
-            _oct_SwitchTarget(ctx, cmd);
+            _oct_SwitchTarget(cmd);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CAMERA) {
-            _oct_UpdateCamera(ctx, cmd, prevCmd, interpolatedTime);
+            _oct_UpdateCamera(cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_DEBUG_TEXT) {
-            _oct_DrawDebugFont(ctx, cmd, prevCmd, interpolatedTime);
+            _oct_DrawDebugFont(cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_FONT_ATLAS) {
-            _oct_DrawFontAtlas(ctx, cmd, prevCmd, interpolatedTime);
+            _oct_DrawFontAtlas(cmd, prevCmd, interpolatedTime);
         } // TODO: Implement other command types
     }
 

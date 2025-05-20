@@ -7,16 +7,16 @@ extern "C" {
 #endif
 
 /// \brief Queues a draw command
-OCTARINE_API void oct_Draw(Oct_Context ctx, Oct_DrawCommand *draw);
+OCTARINE_API void oct_Draw(Oct_DrawCommand *draw);
 
 /// \brief Queues a window update
-OCTARINE_API void oct_WindowUpdate(Oct_Context ctx, Oct_WindowCommand *windowUpdate);
+OCTARINE_API void oct_WindowUpdate(Oct_WindowCommand *windowUpdate);
 
 /// \brief Queues an audio command and returns the handle of the new playing sound or whatever sound was updated
-OCTARINE_API Oct_Sound oct_AudioUpdate(Oct_Context ctx, Oct_AudioCommand *audioCommand);
+OCTARINE_API Oct_Sound oct_AudioUpdate(Oct_AudioCommand *audioCommand);
 
 /// \brief Queues an asset load and returns the asset -- todo: make this per asset type and return the proper type
-OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load);
+OCTARINE_API Oct_Asset oct_Load(Oct_LoadCommand *load);
 
 /// \brief Copies memory into volatile per-frame memory and returns it
 ///
@@ -26,7 +26,7 @@ OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load);
 /// returned by this instead. This memory is guaranteed to exist until the render thread has finished processing.
 /// The shorthand functions, like oct_LoadTexture will use this automatically under the hood, and you'd only ever
 /// need to use this if you were creating your own commands.
-OCTARINE_API void *oct_CopyFrameData(Oct_Context ctx, void *data, int32_t size);
+OCTARINE_API void *oct_CopyFrameData(void *data, int32_t size);
 
 #ifdef __cplusplus
 };

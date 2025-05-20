@@ -6,7 +6,14 @@
 #include "oct/Validation.h"
 #include "oct/Subsystems.h"
 
-static inline void _oct_SetupInitInfo(Oct_Context ctx, Oct_InitInfo *initInfo) {
+static Oct_Context gInternalCtx;
+
+Oct_Context _oct_GetCtx() {
+    return gInternalCtx;
+}
+
+static inline void _oct_SetupInitInfo(Oct_InitInfo *initInfo) {
+    Oct_Context ctx = _oct_GetCtx();
     if (initInfo->ringBufferSize == 0) {
         initInfo->ringBufferSize = 1000;
     }
@@ -26,14 +33,15 @@ inline static double _oct_GoofyTime(uint64_t start) {
 OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     // Initialization
     Oct_Context ctx = mi_zalloc(sizeof(struct Oct_Context_t));
+    gInternalCtx = ctx;
     SDL_Init(SDL_INIT_EVENTS | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO);
-    _oct_SetupInitInfo(ctx, initInfo);
-    _oct_ValidationInit(ctx);
-    _oct_WindowInit(ctx);
-    _oct_DrawingInit(ctx);
-    _oct_AudioInit(ctx);
-    _oct_CommandBufferInit(ctx);
-    _oct_AssetsInit(ctx);
+    _oct_SetupInitInfo(initInfo);
+    _oct_ValidationInit();
+    _oct_WindowInit();
+    _oct_DrawingInit();
+    _oct_AudioInit();
+    _oct_CommandBufferInit();
+    _oct_AssetsInit();
 
     // Debug settings
     if (ctx->initInfo->debug) {
@@ -42,7 +50,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     }
 
     // Bootstrap thread
-    oct_Bootstrap(ctx);
+    oct_Bootstrap();
 
     // Timekeeping
     float frameCount = 0;
@@ -56,17 +64,17 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
         const uint64_t startTime = SDL_GetPerformanceCounter();
 
         // Start subsystems
-        _oct_WindowUpdateBegin(ctx);
-        _oct_AudioUpdateBegin(ctx);
-        _oct_DrawingUpdateBegin(ctx);
+        _oct_WindowUpdateBegin();
+        _oct_AudioUpdateBegin();
+        _oct_DrawingUpdateBegin();
 
         // Process command buffer
-        _oct_CommandBufferDispatch(ctx);
+        _oct_CommandBufferDispatch();
 
         // Finish up subsystems for the frame
-        _oct_WindowUpdateEnd(ctx);
-        _oct_AudioUpdateEnd(ctx);
-        _oct_DrawingUpdateEnd(ctx);
+        _oct_WindowUpdateEnd();
+        _oct_AudioUpdateEnd();
+        _oct_DrawingUpdateEnd();
 
         // Timekeeping
         const int target = SDL_GetAtomicInt(&ctx->renderHz);
@@ -92,23 +100,25 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
 
     // Cleanup
     vk2dRendererWait();
-    _oct_AssetsEnd(ctx);
-    _oct_CommandBufferEnd(ctx);
-    _oct_UnstrapBoots(ctx);
-    _oct_AudioEnd(ctx);
-    _oct_DrawingEnd(ctx);
-    _oct_WindowEnd(ctx);
-    _oct_ValidationEnd(ctx);
+    _oct_AssetsEnd();
+    _oct_CommandBufferEnd();
+    _oct_UnstrapBoots();
+    _oct_AudioEnd();
+    _oct_DrawingEnd();
+    _oct_WindowEnd();
+    _oct_ValidationEnd();
     mi_free(ctx);
     return OCT_STATUS_SUCCESS;
 }
 
-OCTARINE_API double oct_GetRenderFPS(Oct_Context ctx) {
+OCTARINE_API double oct_GetRenderFPS() {
+    Oct_Context ctx = _oct_GetCtx();
     int i = SDL_GetAtomicInt(&ctx->renderHzActual);
     return OCT_INT_TO_FLOAT(i);
 }
 
-OCTARINE_API double oct_GetLogicHz(Oct_Context ctx) {
+OCTARINE_API double oct_GetLogicHz() {
+    Oct_Context ctx = _oct_GetCtx();
     int i = SDL_GetAtomicInt(&ctx->logicHzActual);
     return OCT_INT_TO_FLOAT(i);
 }

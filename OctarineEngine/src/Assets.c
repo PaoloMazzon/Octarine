@@ -35,57 +35,57 @@ static void _oct_LogError(const char *fmt, ...) {
 }
 
 // Destroys metadata for an asset when its being freed
-static void _oct_DestroyAssetMetadata(Oct_Context ctx, Oct_Asset asset) {
+static void _oct_DestroyAssetMetadata(Oct_Asset asset) {
     SDL_SetAtomicInt(&gAssets[asset].loaded, 0);
     SDL_SetAtomicInt(&gAssets[asset].reserved, 0);
     SDL_SetAtomicInt(&gAssets[asset].failed, 0);
     SDL_AddAtomicInt(&gAssets[ASSET_INDEX(asset)].generation, 1);
 }
 
-static void _oct_FailLoad(Oct_Context ctx, Oct_Asset asset) {
+static void _oct_FailLoad(Oct_Asset asset) {
     SDL_SetAtomicInt(&gAssets[asset].failed, 1);
     SDL_SetAtomicInt(&gAssets[asset].reserved, 1);
     SDL_SetAtomicInt(&gErrorHasOccurred, 1);
 }
 
 ///////////////////////////////// ASSET CREATION /////////////////////////////////
-static void _oct_AssetCreateTexture(Oct_Context ctx, Oct_LoadCommand *load) {
+static void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
     VK2DTexture tex = vk2dTextureLoad(load->Texture.filename);
     if (tex) {
         gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
     } else {
-        _oct_FailLoad(ctx, load->_assetID);
+        _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
     }
 }
 
-static void _oct_AssetCreateSurface(Oct_Context ctx, Oct_LoadCommand *load) {
+static void _oct_AssetCreateSurface(Oct_LoadCommand *load) {
     VK2DTexture tex = vk2dTextureCreate(load->Surface.dimensions[0], load->Surface.dimensions[1]);
     if (tex) {
         gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
     } else {
-        _oct_FailLoad(ctx, load->_assetID);
+        _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
     }
 }
 
-static void _oct_AssetCreateCamera(Oct_Context ctx, Oct_LoadCommand *load) {
+static void _oct_AssetCreateCamera(Oct_LoadCommand *load) {
     VK2DCameraIndex camIndex = vk2dCameraCreate(vk2dCameraGetSpec(VK2D_DEFAULT_CAMERA));
     if (camIndex != VK2D_INVALID_CAMERA) {
         gAssets[ASSET_INDEX(load->_assetID)].camera = camIndex;
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_CAMERA;
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
     } else {
-        _oct_FailLoad(ctx, load->_assetID);
+        _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to create camera\n");
     }
 }
 
-static void _oct_AssetCreateAudio(Oct_Context ctx, Oct_LoadCommand *load) {
+static void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     // Find file extension
     const char *extension = strrchr(load->Audio.filename, '.');
     extension = extension == null ? "" : extension;
@@ -95,20 +95,20 @@ static void _oct_AssetCreateAudio(Oct_Context ctx, Oct_LoadCommand *load) {
 
     if (strcmp(extension, ".ogg") == 0) {
         // TODO: Implement ogg loading
-        _oct_FailLoad(ctx, load->_assetID);
+        _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to load audio sample \"%s\", ogg is not yet supported.\n", load->Audio.filename);
     } else if (strcmp(extension, ".wav") == 0) {
         // Use SDL to load wavs
         if (!SDL_LoadWAV(load->Audio.filename, &spec, &data, &dataSize)) {
-            _oct_FailLoad(ctx, load->_assetID);
+            _oct_FailLoad(load->_assetID);
             _oct_LogError("Failed to load audio sample \"%s\", SDL Error: %s.\n", load->Audio.filename, SDL_GetError());
         }
     } else if (strcmp(extension, ".mp3") == 0) {
         // TODO: Implement mp3 loading
-        _oct_FailLoad(ctx, load->_assetID);
+        _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to load audio sample \"%s\", mp3 is not yet supported.\n", load->Audio.filename);
     } else {
-        _oct_FailLoad(ctx, load->_assetID);
+        _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to load audio sample \"%s\", unrecognized extension.\n", load->Audio.filename);
     }
 
@@ -121,14 +121,14 @@ static void _oct_AssetCreateAudio(Oct_Context ctx, Oct_LoadCommand *load) {
             gAssets[ASSET_INDEX(load->_assetID)].audio.data = newSamples;
             SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
         } else {
-            _oct_FailLoad(ctx, load->_assetID);
+            _oct_FailLoad(load->_assetID);
             _oct_LogError("Failed to load audio sample \"%s\", failed to convert format, SDL Error %s.\n", load->Audio.filename, SDL_GetError());
         }
         SDL_free(data);
     }
 }
 
-static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
+static void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
     Oct_SpriteData *data = &gAssets[ASSET_INDEX(load->_assetID)].sprite;
     gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_SPRITE;
     data->texture = load->Sprite.texture;
@@ -138,7 +138,7 @@ static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
     data->repeat = load->Sprite.repeat;
     data->pause = false;
     data->delay = 1.0 / load->Sprite.fps;
-    data->lastTime = oct_Time(ctx);
+    data->lastTime = oct_Time();
     data->accumulator = 0;
     data->startPos[0] = load->Sprite.startPos[0];
     data->startPos[1] = load->Sprite.startPos[1];
@@ -150,7 +150,7 @@ static void _oct_AssetCreateSprite(Oct_Context ctx, Oct_LoadCommand *load) {
     SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
 }
 
-void _oct_AssetCreateFont(Oct_Context ctx, Oct_LoadCommand *load) {
+void _oct_AssetCreateFont(Oct_LoadCommand *load) {
     Oct_AssetData *data = &gAssets[ASSET_INDEX(load->_assetID)];
     Oct_FontData *fnt = &data->font;
     data->type = OCT_ASSET_TYPE_FONT;
@@ -177,12 +177,12 @@ void _oct_AssetCreateFont(Oct_Context ctx, Oct_LoadCommand *load) {
     if (!error) {
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
     } else {
-        _oct_FailLoad(ctx, load->_assetID);
+        _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to create font \"%s\", TTF error %s\n", load->Font.filename[0], SDL_GetError());
     }
 }
 
-void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
+void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load) {
     // How to do this:
     //   1. Find the dimensions of each glyph in range
     //   2. Calculate the total dimensions of the atlas
@@ -208,12 +208,12 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
     gAssets[ASSET_INDEX(asset)].type = OCT_ASSET_TYPE_FONT_ATLAS;
 
     // Check if the passed font exists
-    if (_oct_AssetGet(ctx, load->FontAtlas.font)->type != OCT_ASSET_TYPE_FONT || !SDL_GetAtomicInt(&_oct_AssetGet(ctx, load->FontAtlas.font)->loaded)) {
+    if (_oct_AssetGet(load->FontAtlas.font)->type != OCT_ASSET_TYPE_FONT || !SDL_GetAtomicInt(&_oct_AssetGet(load->FontAtlas.font)->loaded)) {
         _oct_LogError("Atlas cannot be created without a font.\n");
-        _oct_FailLoad(ctx, asset);
+        _oct_FailLoad(asset);
         return;
     }
-    Oct_FontData *fntData = &_oct_AssetGet(ctx, load->FontAtlas.font)->font;
+    Oct_FontData *fntData = &_oct_AssetGet(load->FontAtlas.font)->font;
 
     // Add new atlas to atlas list
     void *newAtlas = mi_realloc(fnt->atlases, (fnt->atlasCount + 1) * sizeof(struct Oct_FontAtlasData_t));
@@ -314,7 +314,7 @@ void _oct_AssetCreateFontAtlas(Oct_Context ctx, Oct_LoadCommand *load) {
 }
 
 // Bitmap fonts are just font atlases
-void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
+void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load) {
     Oct_AssetData *asset = &gAssets[ASSET_INDEX(load->_assetID)];
     asset->type = OCT_ASSET_TYPE_FONT_ATLAS;
     asset->fontAtlas.atlases = mi_malloc(sizeof(struct Oct_FontAtlasData_t));
@@ -334,7 +334,7 @@ void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
     asset->fontAtlas.newLineSize = load->BitmapFont.cellSize[1];
 
     if (!asset->fontAtlas.atlases[0].atlas) {
-        _oct_FailLoad(ctx, load->_assetID);
+        _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to create bitmap font from \"%s\", VK2D error: %s\n", load->BitmapFont.filename, vk2dStatusMessage());
         mi_free(asset->fontAtlas.atlases[0].glyphs);
         mi_free(asset->fontAtlas.atlases);
@@ -359,7 +359,7 @@ void _oct_AssetCreateBitmapFont(Oct_Context ctx, Oct_LoadCommand *load) {
     SDL_SetAtomicInt(&asset->loaded, 1);
 }
 
-void _oct_AssetCreateAssetBundle(Oct_Context ctx, Oct_LoadCommand *load) {
+void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
     // TODO: This
     // 1. Go through each file in the bundle and load the primitive types by their filenames
     // 2. Iterate through manifest.json and load the non-primitive types like sprites
@@ -368,67 +368,67 @@ void _oct_AssetCreateAssetBundle(Oct_Context ctx, Oct_LoadCommand *load) {
 }
 
 ///////////////////////////////// ASSET DESTRUCTION /////////////////////////////////
-static void _oct_AssetDestroyTexture(Oct_Context ctx, Oct_Asset asset) {
+static void _oct_AssetDestroyTexture(Oct_Asset asset) {
     vk2dRendererWait();
     vk2dTextureFree(gAssets[ASSET_INDEX(asset)].texture);
-    _oct_DestroyAssetMetadata(ctx, asset);
+    _oct_DestroyAssetMetadata(asset);
 }
 
-static void _oct_AssetDestroyCamera(Oct_Context ctx, Oct_Asset asset) {
+static void _oct_AssetDestroyCamera(Oct_Asset asset) {
     vk2dCameraSetState(gAssets[ASSET_INDEX(asset)].camera, VK2D_CAMERA_STATE_DELETED);
-    _oct_DestroyAssetMetadata(ctx, asset);
+    _oct_DestroyAssetMetadata(asset);
 }
 
-static void _oct_AssetDestroySprite(Oct_Context ctx, Oct_Asset asset) {
+static void _oct_AssetDestroySprite(Oct_Asset asset) {
     if (gAssets[ASSET_INDEX(asset)].sprite.ownsTexture) {
         // TODO: Free texture if sprite owns it
     }
-    _oct_DestroyAssetMetadata(ctx, asset);
+    _oct_DestroyAssetMetadata(asset);
 }
 
-static void _oct_AssetDestroyAudio(Oct_Context ctx, Oct_Asset asset) {
+static void _oct_AssetDestroyAudio(Oct_Asset asset) {
     SDL_free(gAssets[ASSET_INDEX(asset)].audio.data);
-    _oct_DestroyAssetMetadata(ctx, asset);
+    _oct_DestroyAssetMetadata(asset);
 }
 
-void _oct_AssetDestroyFont(Oct_Context ctx, Oct_Asset asset) {
+void _oct_AssetDestroyFont(Oct_Asset asset) {
     for (int i = 0; i < OCT_FALLBACK_FONT_MAX; i++) {
         if (gAssets[ASSET_INDEX(asset)].font.font[i])
             TTF_CloseFont(gAssets[ASSET_INDEX(asset)].font.font[i]);
     }
-    _oct_DestroyAssetMetadata(ctx, asset);
+    _oct_DestroyAssetMetadata(asset);
 }
 
-void _oct_AssetDestroyFontAtlas(Oct_Context ctx, Oct_Asset asset) {
+void _oct_AssetDestroyFontAtlas(Oct_Asset asset) {
     for (int i = 0; i < gAssets[ASSET_INDEX(asset)].fontAtlas.atlasCount; i++) {
         vk2dTextureFree(gAssets[ASSET_INDEX(asset)].fontAtlas.atlases[i].atlas);
         vk2dImageFree(gAssets[ASSET_INDEX(asset)].fontAtlas.atlases[i].img);
         mi_free(gAssets[ASSET_INDEX(asset)].fontAtlas.atlases[i].glyphs);
     }
     mi_free(gAssets[ASSET_INDEX(asset)].fontAtlas.atlases);
-    _oct_DestroyAssetMetadata(ctx, asset);
+    _oct_DestroyAssetMetadata(asset);
 }
 
 
-static void _oct_AssetDestroy(Oct_Context ctx, Oct_Asset asset) {
+static void _oct_AssetDestroy(Oct_Asset asset) {
     if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_TEXTURE) {
-        _oct_AssetDestroyTexture(ctx, asset);
+        _oct_AssetDestroyTexture(asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_CAMERA) {
-        _oct_AssetDestroyCamera(ctx, asset);
+        _oct_AssetDestroyCamera(asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_SPRITE) {
-        _oct_AssetDestroySprite(ctx, asset);
+        _oct_AssetDestroySprite(asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_AUDIO) {
-        _oct_AssetDestroyAudio(ctx, asset);
+        _oct_AssetDestroyAudio(asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_FONT) {
-        _oct_AssetDestroyFont(ctx, asset);
+        _oct_AssetDestroyFont(asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_FONT_ATLAS) {
-        _oct_AssetDestroyFontAtlas(ctx, asset);
+        _oct_AssetDestroyFontAtlas(asset);
     }
 
 }
 
 ///////////////////////////////// INTERNAL /////////////////////////////////
-void _oct_AssetsInit(Oct_Context ctx) {
+void _oct_AssetsInit() {
     gErrorMessageMutex = SDL_CreateMutex();
     if (!TTF_Init()) {
         oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to initialize SDL TTF, SDL error %s", SDL_GetError());
@@ -440,39 +440,39 @@ void _oct_AssetsInit(Oct_Context ctx) {
     oct_Log("Asset system initialized.");
 }
 
-void _oct_AssetsProcessCommand(Oct_Context ctx, Oct_Command *cmd) {
+void _oct_AssetsProcessCommand(Oct_Command *cmd) {
     Oct_LoadCommand *load = &cmd->loadCommand;
     if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE) {
-        _oct_AssetCreateTexture(ctx, load);
+        _oct_AssetCreateTexture(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE) {
-        _oct_AssetCreateSurface(ctx, load);
+        _oct_AssetCreateSurface(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA) {
-        _oct_AssetCreateCamera(ctx, load);
+        _oct_AssetCreateCamera(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_SPRITE) {
-        _oct_AssetCreateSprite(ctx, load);
+        _oct_AssetCreateSprite(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO) {
-        _oct_AssetCreateAudio(ctx, load);
+        _oct_AssetCreateAudio(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_FONT) {
-        _oct_AssetCreateFont(ctx, load);
+        _oct_AssetCreateFont(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_CREATE_FONT_ATLAS) {
-        _oct_AssetCreateFontAtlas(ctx, load);
+        _oct_AssetCreateFontAtlas(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT) {
-        _oct_AssetCreateBitmapFont(ctx, load);
+        _oct_AssetCreateBitmapFont(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
         if (SDL_GetAtomicInt(&gAssets[load->_assetID].loaded))
-            _oct_AssetDestroy(ctx, load->_assetID);
+            _oct_AssetDestroy(load->_assetID);
     }
 }
 
-Oct_AssetType _oct_AssetType(Oct_Context ctx, Oct_Asset asset) {
+Oct_AssetType _oct_AssetType(Oct_Asset asset) {
     return SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded) ? gAssets[ASSET_INDEX(asset)].type : OCT_ASSET_TYPE_NONE;
 }
 
-Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset) {
+Oct_AssetData *_oct_AssetGet(Oct_Asset asset) {
     return &gAssets[ASSET_INDEX(asset)];
 }
 
-Oct_AssetData *_oct_AssetGetSafe(Oct_Context ctx, Oct_Asset asset, Oct_AssetType type) {
+Oct_AssetData *_oct_AssetGetSafe(Oct_Asset asset, Oct_AssetType type) {
 
     if (ASSET_INDEX(asset) >= OCT_MAX_ASSETS ||
         ASSET_GENERATION(asset) != SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].generation) ||
@@ -482,18 +482,18 @@ Oct_AssetData *_oct_AssetGetSafe(Oct_Context ctx, Oct_Asset asset, Oct_AssetType
     return &gAssets[ASSET_INDEX(asset)];
 }
 
-void _oct_AssetsEnd(Oct_Context ctx) {
+void _oct_AssetsEnd() {
     // Delete all the assets still loaded
     for (int i = 0; i < OCT_MAX_ASSETS; i++)
         if (SDL_GetAtomicInt(&gAssets[i].loaded))
-            _oct_AssetDestroy(ctx, i);
+            _oct_AssetDestroy(i);
 
     TTF_DestroySurfaceTextEngine(gTextEngine);
     TTF_Quit();
     SDL_DestroyMutex(gErrorMessageMutex);
 }
 
-Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx) {
+Oct_Asset _oct_AssetReserveSpace() {
     for (int i = 0; i < OCT_MAX_ASSETS; i++) {
         if (!SDL_GetAtomicInt(&gAssets[i].reserved)) {
             SDL_SetAtomicInt(&gAssets[i].reserved, 1);
@@ -514,7 +514,7 @@ OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset) {
 OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset) {
     bool failed = SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].failed);
     if (failed) {
-        _oct_DestroyAssetMetadata(null, asset);
+        _oct_DestroyAssetMetadata(asset);
     }
     return failed;
 }

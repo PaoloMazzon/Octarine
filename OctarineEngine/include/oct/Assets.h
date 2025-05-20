@@ -22,13 +22,13 @@ extern "C" {
 /// For that reason, if you delete an asset and allocate a new one that ends up in the
 /// same spot in the asset array, something like oct_AssetLoaded will still say that the deleted
 /// asset is not loaded because it knows the generation does not match.
-OCTARINE_API Oct_Asset oct_Load(Oct_Context ctx, Oct_LoadCommand *load);
+OCTARINE_API Oct_Asset oct_Load(Oct_LoadCommand *load);
 
 /// \brief Shorthand for oct_Load for loading textures
 /// \param ctx Octarine context
 /// \param filename Filename of the texture
 /// \return Returns a new asset ID, see oct_Load for more info
-OCTARINE_API Oct_Texture oct_LoadTexture(Oct_Context ctx, const char *filename);
+OCTARINE_API Oct_Texture oct_LoadTexture(const char *filename);
 
 /// \brief Shorthand for oct_Load for loading fonts
 /// \param ctx Octarine context
@@ -38,17 +38,17 @@ OCTARINE_API Oct_Texture oct_LoadTexture(Oct_Context ctx, const char *filename);
 ///
 /// This function only allows for one font file to be associated with the font, if you
 /// want to set fallbacks you'll have to create the load command manually.
-OCTARINE_API Oct_Font oct_LoadFont(Oct_Context ctx, const char *filename, float size);
+OCTARINE_API Oct_Font oct_LoadFont(const char *filename, float size);
 
 /// \brief Shorthand for oct_Load for creating surfaces
 /// \param ctx Octarine context
 /// \param size Size of the new surface
 /// \return Returns a new asset ID, see oct_Load for more info
-OCTARINE_API Oct_Texture oct_CreateSurface(Oct_Context ctx, Oct_Vec2 size);
+OCTARINE_API Oct_Texture oct_CreateSurface(Oct_Vec2 size);
 
 /// \brief Shorthand for oct_Load for creating cameras
 /// \return Returns a new asset ID, see oct_Load for more info
-OCTARINE_API Oct_Camera oct_CreateCamera(Oct_Context ctx);
+OCTARINE_API Oct_Camera oct_CreateCamera();
 
 /// \brief Shorthand for oct_Load for loading sprites
 /// \param ctx Context
@@ -58,7 +58,7 @@ OCTARINE_API Oct_Camera oct_CreateCamera(Oct_Context ctx);
 /// \param startPos Where in the texture the animation starts
 /// \param frameSize Size of each animation cell
 /// \return Returns a new asset ID, see oct_Load for more info
-OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
+OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
 
 // TODO - Duplicate sprite function
 
@@ -69,7 +69,7 @@ OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Context ctx, Oct_Texture tex, int32_t
 /// \param unicodeStart First unicode code point to put in the atlas (inclusive)
 /// \param unicodeEnd Last unicode code point to put in the atlas (exclusive)
 /// \return Returns either the handle to a new font atlas, or the atlas passed in if one was specified
-OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Context ctx, Oct_Font font, Oct_FontAtlas atlas, uint32_t unicodeStart, uint32_t unicodeEnd);
+OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Font font, Oct_FontAtlas atlas, uint32_t unicodeStart, uint32_t unicodeEnd);
 
 /// \brief Loads a font atlas from a bitmap font
 /// \param ctx Context
@@ -78,7 +78,7 @@ OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Context ctx, Oct_Font font, O
 /// \param unicodeStart First unicode code point to put in the atlas (inclusive)
 /// \param unicodeEnd Last unicode code point to put in the atlas (exclusive)
 /// \return Returns a new font atlas that can be used like any other
-OCTARINE_API Oct_FontAtlas oct_LoadBitmapFont(Oct_Context ctx, const char *filename, Oct_Vec2 cellSize, uint32_t unicodeStart, uint32_t unicodeEnd);
+OCTARINE_API Oct_FontAtlas oct_LoadBitmapFont(const char *filename, Oct_Vec2 cellSize, uint32_t unicodeStart, uint32_t unicodeEnd);
 
 /// \brief Returns true if the asset was successfully loaded, false if its not loaded for any reason
 OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset);
@@ -105,7 +105,7 @@ OCTARINE_API const char *oct_AssetGetErrorMessage(int *size, char *buffer);
 ///
 /// You don't need to use this, the engine will free everything automatically
 /// on exit. This is more for memory management in bigger projects.
-OCTARINE_API void oct_FreeAsset(Oct_Context ctx, Oct_Asset asset);
+OCTARINE_API void oct_FreeAsset(Oct_Asset asset);
 
 /// \brief Returns true if any load as failed, can be used as an indication to get the error message
 OCTARINE_API Oct_Bool oct_AssetLoadHasFailed();
@@ -117,21 +117,21 @@ OCTARINE_API Oct_Bool oct_AssetLoadHasFailed();
 ///          functions, the assets are not guaranteed to be ready by the time you call oct_GetAsset -- as this function
 ///          is not blocking. For this reason, calling oct_GetAsset will be blocking if the asset bundle is not done
 ///          loading. Use oct_IsAssetBundleReady to check if oct_GetAsset will be blocking or not.
-OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(Oct_Context ctx, const char *filename);
+OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(const char *filename);
 
 /// \brief Destroys an asset bundle and all the assets in it
-OCTARINE_API void oct_FreeAssetBundle(Oct_Context ctx, Oct_AssetBundle bundle);
+OCTARINE_API void oct_FreeAssetBundle(Oct_AssetBundle bundle);
 
 /// \brief Checks if an asset bundle is loaded yet
-OCTARINE_API Oct_Bool oct_IsAssetBundleReady(Oct_Context ctx, Oct_AssetBundle bundle);
+OCTARINE_API Oct_Bool oct_IsAssetBundleReady(Oct_AssetBundle bundle);
 
 /// \brief Gets an asset from a bundle, or OCT_NO_ASSET if no such asset exists
 /// \warning If the asset bundle is not yet loaded completely, this will be blocking
-OCTARINE_API Oct_Asset oct_GetAsset(Oct_Context ctx, Oct_AssetBundle bundle, const char *name);
+OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name);
 
 /// \brief Returns true if a given asset exists and matches a specific asset type
 /// \warning If the asset bundle is not yet loaded completely, this will be blocking
-OCTARINE_API Oct_Bool oct_AssetExists(Oct_Context ctx, Oct_AssetBundle bundle, const char *name, Oct_AssetType type);
+OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name, Oct_AssetType type);
 
 #ifdef __cplusplus
 };
