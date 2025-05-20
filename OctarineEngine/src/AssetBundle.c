@@ -3,6 +3,7 @@
 #include "oct/Common.h"
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
+#include "oct/Assets.h"
 
 static uint32_t hash(const char *str) {
     uint32_t hash = 5381;
@@ -60,7 +61,17 @@ void _oct_PlaceAssetInBucket(Oct_AssetBundle bundle, Oct_Asset asset, const char
 }
 
 OCTARINE_API void oct_FreeAssetBundle(Oct_AssetBundle bundle) {
-    // TODO: This
+    for (int i = 0; i < OCT_BUCKET_SIZE; i++) {
+        if (bundle->bucket[i].asset != OCT_NO_ASSET)
+            oct_FreeAsset(bundle->bucket[i].asset);
+    }
+    for (int i = 0; i < bundle->backupBucketCount; i++) {
+        if (bundle->backupBucket[i].asset != OCT_NO_ASSET)
+            oct_FreeAsset(bundle->backupBucket[i].asset);
+    }
+    mi_free(bundle->bucket);
+    mi_free(bundle->backupBucket);
+    mi_free(bundle);
 }
 
 OCTARINE_API Oct_Bool oct_IsAssetBundleReady(Oct_AssetBundle bundle) {
@@ -68,9 +79,37 @@ OCTARINE_API Oct_Bool oct_IsAssetBundleReady(Oct_AssetBundle bundle) {
 }
 
 OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name) {
-    return OCT_NO_ASSET; // TODO: This
+    // Wait till the bundle is loaded
+    while (!SDL_GetAtomicInt(&bundle->bundleReady));
+
+    // Get expected location
+    uint32_t bucketLocation = hash(name) % OCT_BUCKET_SIZE;
+
+    // Traverse linked list till we find it
+    Oct_AssetLink *link = &bundle->bucket[bucketLocation];
+    while (link) {
+        if (strcmp(name, link->name) == 0)
+            return link->asset;
+        link = link->next;
+    }
+
+    return OCT_NO_ASSET;
 }
 
 OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name, Oct_AssetType type) {
-    return true; // TODO: This
+    // Wait till the bundle is loaded
+    while (!SDL_GetAtomicInt(&bundle->bundleReady));
+
+    // Get expected location
+    uint32_t bucketLocation = hash(name) % OCT_BUCKET_SIZE;
+
+    // Traverse linked list till we find it
+    Oct_AssetLink *link = &bundle->bucket[bucketLocation];
+    while (link) {
+        if (strcmp(name, link->name) == 0)
+            return true;
+        link = link->next;
+    }
+
+    return false;
 }
