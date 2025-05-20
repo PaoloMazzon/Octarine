@@ -151,7 +151,7 @@ typedef struct Oct_WindowEvent_t Oct_WindowEvent;
 
 /// \brief Linked list for asset bundle hash map
 typedef struct Oct_AssetLink_t {
-    Oct_Asset asset;  ///< Asset itself
+    Oct_Asset asset;  ///< Asset itself (OCT_NO_ASSET) if spot is not occupied
     const char *name; ///< Name of the asset for collision checking
     void *next;       ///< Next asset in the linked list or null for the end of it
 } Oct_AssetLink;

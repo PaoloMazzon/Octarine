@@ -345,6 +345,13 @@ OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(const char *filename) {
     if (!bundle)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate asset bundle.");
 
+    // Allocate bucket
+    bundle->bucket = mi_zalloc(sizeof(struct Oct_AssetLink_t) * OCT_BUCKET_SIZE);
+    if (!bundle->bucket)
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate asset bundle bucket.");
+    for (int32_t i = 0; i < OCT_BUCKET_SIZE; i++)
+        bundle->bucket[i].asset = OCT_NO_ASSET;
+
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
             .loadCommand = {
