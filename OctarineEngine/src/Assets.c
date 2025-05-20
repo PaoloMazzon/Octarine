@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <SDL3/SDL.h>
 #include <VK2D/VK2D.h>
+#include <physfs.h>
 #include <stdio.h>
 
 #include "oct/Common.h"

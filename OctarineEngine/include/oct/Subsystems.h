@@ -59,6 +59,7 @@ Oct_AssetType _oct_AssetType(Oct_Context ctx, Oct_Asset asset);
 Oct_AssetData *_oct_AssetGet(Oct_Context ctx, Oct_Asset asset);
 Oct_AssetData *_oct_AssetGetSafe(Oct_Context ctx, Oct_Asset asset, Oct_AssetType type); // returns null if the type is wrong, generation is wrong, or the asset isn't loaded yet
 Oct_Asset _oct_AssetReserveSpace(Oct_Context ctx); // used from logic thread to reserve a space in the asset list
+void _oct_PlaceAssetInBucket(Oct_Context ctx, Oct_AssetBundle bundle, Oct_Asset asset, const char *name); // name will be copied
 void _oct_AssetsEnd(Oct_Context ctx);
 
 // Handles input processing on the logical thread

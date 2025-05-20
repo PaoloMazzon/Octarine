@@ -4,6 +4,10 @@
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 
+void _oct_PlaceAssetInBucket(Oct_Context ctx, Oct_AssetBundle bundle, Oct_Asset asset, const char *name) {
+    // TODO: This
+}
+
 OCTARINE_API void oct_FreeAssetBundle(Oct_Context ctx, Oct_AssetBundle bundle) {
     // TODO: This
 }
