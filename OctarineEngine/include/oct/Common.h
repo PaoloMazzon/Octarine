@@ -204,9 +204,11 @@ struct Oct_InitInfo_t {
     int32_t ringBufferSize;                      ///< Size of the draw command ring buffer, if 0 this will be 1000
     int logicHz;                                 ///< Refresh rate of the logic thread, 0 will set this to 30
     Oct_Bool debug;                              ///< Enables debug features
-    void *(*startup)();           ///< Function pointer to the startup function
-    void *(*update)(void *ptr); ///< Function pointer to the update function
-    void(*shutdown)(void *ptr); ///< Function pointer to the shutdown function
+    int argc;                                    ///< Command line parameters
+    const char **argv;                           ///< Command line parameters
+    void *(*startup)();                          ///< Function pointer to the startup function
+    void *(*update)(void *ptr);                  ///< Function pointer to the update function
+    void(*shutdown)(void *ptr);                  ///< Function pointer to the shutdown function
     void *pNext;                                 ///< For future use
 };
 

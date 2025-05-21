@@ -111,12 +111,16 @@ OCTARINE_API void oct_FreeAsset(Oct_Asset asset);
 OCTARINE_API Oct_Bool oct_AssetLoadHasFailed();
 
 /// \brief Loads an asset bundle from a file
-/// \param filename Name of the asset bundle (a compressed archive with a manifest.json in the root)
+/// \param filename Name of the asset bundle
 /// \return Returns a new asset bundle or null, if it fails
 /// \warning This function queues an asset bundle load like any other asset. The difference is that unlike asset loading
 ///          functions, the assets are not guaranteed to be ready by the time you call oct_GetAsset -- as this function
 ///          is not blocking. For this reason, calling oct_GetAsset will be blocking if the asset bundle is not done
 ///          loading. Use oct_IsAssetBundleReady to check if oct_GetAsset will be blocking or not.
+///
+/// An asset bundle is either a directory or archive with a manifest.json in the root of that directory/archive.
+/// This function internally uses PhysFS, which is to say you can use any archive supported by that library (basically
+/// anything).
 OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(const char *filename);
 
 /// \brief Destroys an asset bundle and all the assets in it

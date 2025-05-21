@@ -1,5 +1,7 @@
 #include <SDL3/SDL.h>
+#include <physfs.h>
 
+#include "oct/cJSON.h"
 #include "oct/Common.h"
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
@@ -112,4 +114,91 @@ OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name, 
     }
 
     return false;
+}
+
+void _oct_AssetCreateTexture(Oct_LoadCommand *load);
+void _oct_AssetCreateAudio(Oct_LoadCommand *load);
+void _oct_AssetCreateSprite(Oct_LoadCommand *load);
+void _oct_AssetCreateFont(Oct_LoadCommand *load);
+void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load);
+void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load);
+void _oct_LogError(const char *fmt, ...);
+void _oct_DestroyAssetMetadata(Oct_Asset asset);
+void _oct_FailLoad(Oct_Asset asset);
+typedef enum {
+    type_array,
+    type_map,
+    type_string,
+    type_bool,
+    type_num,
+    type_null
+} json_type;
+
+// Returns null if item is null or item's type is not the specified type
+static cJSON *jsonGetWithType(cJSON *item, json_type type) {
+    if (!item)
+        return null;
+    if (type == type_array && cJSON_IsArray(item))
+        return item;
+    if (type == type_map && cJSON_IsObject(item))
+        return item;
+    if (type == type_string && cJSON_IsString(item))
+        return item;
+    if (type == type_bool && cJSON_IsBool(item))
+        return item;
+    if (type == type_num && cJSON_IsNumber(item))
+        return item;
+    if (type == type_null && cJSON_IsNull(item))
+        return item;
+    return null;
+}
+
+// Returns true if a string is in the exclude list
+static Oct_Bool _oct_InExcludeList(cJSON *excludeList, const char *string) {
+    int32_t size = cJSON_GetArraySize(excludeList);
+    for (int32_t i = 0; i < size; i++) {
+        cJSON *jsonString = jsonGetWithType(cJSON_GetArrayItem(excludeList, i), type_string);
+        if (jsonString && strcmp(cJSON_GetStringValue(jsonString), string) == 0)
+            return true;
+    }
+    return false;
+}
+
+void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
+    // 1. Go through each file in the bundle and load the primitive types by their filenames
+    // 2. Iterate through manifest.json and load the non-primitive types like sprites
+    // 3. For each asset, create a load command for them and manually invoke their create function
+    // 4. Set the ready atomic to 1
+    if (PHYSFS_mount(load->AssetBundle.filename, NULL, 0)) {
+        if (!PHYSFS_exists("manifest.json")) {
+            _oct_LogError("Failed to load asset bundle from \"%s\", no manifest\n", load->AssetBundle.filename);
+            return;
+        }
+
+        // Grab json for parsing as we go along
+        PHYSFS_File *manifestFile = PHYSFS_openRead("manifest.json");
+        uint32_t manifestBufferSize = PHYSFS_fileLength(manifestFile);
+        uint8_t *manifestBuffer = mi_malloc(manifestBufferSize);
+        if (!manifestBuffer)
+            oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate manifest buffer");
+        PHYSFS_readBytes(manifestFile, manifestBuffer, manifestBufferSize);
+        PHYSFS_close(manifestFile);
+        cJSON *manifestJSON = cJSON_ParseWithLength((void*)manifestBuffer, manifestBufferSize);
+
+        // Find the exclude list
+        cJSON *excludeList = jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "exclude"), type_array);
+
+        // Iterate through primitive types first
+        // TODO: This
+
+        // Iterate over advanced types (sprites, fonts, ...)
+        // TODO: This
+
+        // Cleanup
+        cJSON_Delete(manifestJSON);
+        mi_free(manifestBuffer);
+        SDL_SetAtomicInt(&load->AssetBundle.bundle->bundleReady, 1);
+    } else {
+        _oct_LogError("Failed to load asset bundle from \"%s\"\n", load->AssetBundle.filename);
+    }
 }

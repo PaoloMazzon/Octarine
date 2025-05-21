@@ -41,12 +41,14 @@ void shutdown(void *ptr) {
     // ...
 }
 
-int main() {
+int main(int argc, const char **argv) {
     Oct_InitInfo initInfo = {
             .sType = OCT_STRUCTURE_TYPE_INIT_INFO,
             .startup = startup,
             .update = update,
             .shutdown = shutdown,
+            .argc = argc,
+            .argv = argv,
             .windowTitle = "Octarine",
             .windowWidth = 640,
             .windowHeight = 480,
@@ -77,3 +79,4 @@ int main() {
 | [PhysicsFS](https://github.com/icculus/physfs) | Asset system | zlib |
 | [minivorbis](https://github.com/edubart/minivorbis) | Parsing OGGs | BSD 3-Clause |
 | [minimp3](https://github.com/lieff/minimp3) | Parsing MP3s | CC0 |
+| [cJSON](https://github.com/DaveGamble/cJSON) | Parsing JSONs | MIT |

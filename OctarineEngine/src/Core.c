@@ -1,9 +1,9 @@
 #include <VK2D/VK2D.h>
 #include <mimalloc.h>
+#include <physfs.h>
 #include "oct/Octarine.h"
 #include "oct/LogicThread.h"
 #include "oct/Opaque.h"
-#include "oct/Validation.h"
 #include "oct/Subsystems.h"
 
 static Oct_Context gInternalCtx;
@@ -35,6 +35,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     Oct_Context ctx = mi_zalloc(sizeof(struct Oct_Context_t));
     gInternalCtx = ctx;
     SDL_Init(SDL_INIT_EVENTS | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO);
+    PHYSFS_init(initInfo->argv[0]);
     _oct_SetupInitInfo(initInfo);
     _oct_ValidationInit();
     _oct_WindowInit();
@@ -107,6 +108,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     _oct_DrawingEnd();
     _oct_WindowEnd();
     _oct_ValidationEnd();
+    PHYSFS_deinit();
     mi_free(ctx);
     return OCT_STATUS_SUCCESS;
 }

@@ -1,7 +1,6 @@
 #include <stdarg.h>
 #include <SDL3/SDL.h>
 #include <VK2D/VK2D.h>
-#include <physfs.h>
 #include <stdio.h>
 
 #include "oct/Common.h"
@@ -26,7 +25,7 @@ static SDL_AtomicInt gErrorHasOccurred;
 static TTF_TextEngine *gTextEngine;
 
 ///////////////////////////////// ASSET CREATION HELP /////////////////////////////////
-static void _oct_LogError(const char *fmt, ...) {
+void _oct_LogError(const char *fmt, ...) {
     va_list l;
     va_start(l, fmt);
     const int len = strlen(gErrorMessage);
@@ -35,21 +34,21 @@ static void _oct_LogError(const char *fmt, ...) {
 }
 
 // Destroys metadata for an asset when its being freed
-static void _oct_DestroyAssetMetadata(Oct_Asset asset) {
+void _oct_DestroyAssetMetadata(Oct_Asset asset) {
     SDL_SetAtomicInt(&gAssets[asset].loaded, 0);
     SDL_SetAtomicInt(&gAssets[asset].reserved, 0);
     SDL_SetAtomicInt(&gAssets[asset].failed, 0);
     SDL_AddAtomicInt(&gAssets[ASSET_INDEX(asset)].generation, 1);
 }
 
-static void _oct_FailLoad(Oct_Asset asset) {
+void _oct_FailLoad(Oct_Asset asset) {
     SDL_SetAtomicInt(&gAssets[asset].failed, 1);
     SDL_SetAtomicInt(&gAssets[asset].reserved, 1);
     SDL_SetAtomicInt(&gErrorHasOccurred, 1);
 }
 
 ///////////////////////////////// ASSET CREATION /////////////////////////////////
-static void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
+void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
     VK2DTexture tex = vk2dTextureLoad(load->Texture.filename);
     if (tex) {
         gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
@@ -85,7 +84,7 @@ static void _oct_AssetCreateCamera(Oct_LoadCommand *load) {
     }
 }
 
-static void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
+void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     // Find file extension
     const char *extension = strrchr(load->Audio.filename, '.');
     extension = extension == null ? "" : extension;
@@ -128,7 +127,7 @@ static void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     }
 }
 
-static void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
+void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
     Oct_SpriteData *data = &gAssets[ASSET_INDEX(load->_assetID)].sprite;
     gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_SPRITE;
     data->texture = load->Sprite.texture;
@@ -359,13 +358,7 @@ void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load) {
     SDL_SetAtomicInt(&asset->loaded, 1);
 }
 
-void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
-    // TODO: This
-    // 1. Go through each file in the bundle and load the primitive types by their filenames
-    // 2. Iterate through manifest.json and load the non-primitive types like sprites
-    // 3. For each asset, create a load command for them and manually invoke their create function
-    // 4. Set the ready atomic to 1
-}
+void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load);
 
 ///////////////////////////////// ASSET DESTRUCTION /////////////////////////////////
 static void _oct_AssetDestroyTexture(Oct_Asset asset) {
