@@ -235,7 +235,10 @@ void _oct_AudioEnd() {
 OCTARINE_API Oct_Audio oct_LoadAudio(const char *filename) {
     Oct_LoadCommand command = {
             .type = OCT_LOAD_COMMAND_TYPE_LOAD_AUDIO,
-            .Audio.filename = filename
+            .Audio.fileHandle = {
+                    .type = OCT_FILE_HANDLE_TYPE_FILENAME,
+                    .filename = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1)
+            }
     };
     return oct_Load(&command);
 }

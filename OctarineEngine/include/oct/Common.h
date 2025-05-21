@@ -74,6 +74,7 @@ typedef uint64_t Oct_Sound;      ///< A sound that is currently playing (oct_Aud
 typedef float Oct_Vec4[4];       ///< Array of 4 floats
 typedef float Oct_Vec3[3];       ///< Array of 3 floats
 typedef float Oct_Vec2[2];       ///< Array of 2 floats
+typedef void (*Oct_FileHandleCallback)(void*,uint32_t); ///< Callback for a file handle
 
 ////////////////////// Enums //////////////////////
 /// \brief Structure types
@@ -144,6 +145,13 @@ typedef enum {
     OCT_META_COMMAND_TYPE_START_FRAME = 1, ///< Resize the window
     OCT_META_COMMAND_TYPE_END_FRAME = 2,   ///< Toggle fullscreen
 } Oct_MetaCommandType;
+
+/// \brief Types of file handles
+typedef enum {
+    OCT_FILE_HANDLE_TYPE_NONE = 0,        ///< This is not a file
+    OCT_FILE_HANDLE_TYPE_FILENAME = 1,    ///< The file is a filename on disk
+    OCT_FILE_HANDLE_TYPE_FILE_BUFFER = 2, ///< The file is available from a binary buffer
+} Oct_FileHandleType;
 
 /// \brief Types of allocators
 typedef enum {
@@ -224,6 +232,20 @@ struct Oct_WindowCommand_t {
     void *pNext; ///< For future use
 };
 
+/// \brief Way of representing a file across loads
+struct Oct_FileHandle_t {
+    Oct_FileHandleType type; ///< Type of file handle this is
+    union {
+        const char *filename; ///< Filename of the file on disk
+        struct {
+            uint8_t *buffer;                 ///< Binary buffer containing the file
+            uint32_t size;                   ///< Size of the binary buffer in bytes
+            Oct_FileHandleCallback callback; ///< Callback called when the buffer is done being worked with, may be null
+        };
+    };
+};
+OCT_USER_STRUCT(Oct_FileHandle)
+
 /// \brief Load command to load or free anything (just use oct_FreeAsset, don't use this manually for freeing)
 /// \note Cameras don't require anything, just pass a load command with the type OCT_LOAD_COMMAND_TYPE_CREATE_CAMERA
 struct Oct_LoadCommand_t {
@@ -232,9 +254,8 @@ struct Oct_LoadCommand_t {
     Oct_Asset _assetID;       ///< Internal use
     union {
         struct {
-            const char *filename; ///< Filename of the texture to load (png, jpg, bmp)
-            // TODO: Loading from binary
-        } Texture;                ///< Information needed to load a texture
+            Oct_FileHandle fileHandle; ///< File handle of the texture to load (png, jpg, bmp)
+        } Texture;                     ///< Information needed to load a texture
         struct {
             Oct_Vec2 dimensions; ///< Dimensions of the new surface
         } Surface;               ///< Information needed to create a surface
@@ -249,13 +270,12 @@ struct Oct_LoadCommand_t {
             float xStop;         ///< Horizontal stop for consecutive animation cells to start from (like if the animation is only in the right half of the image)
         } Sprite;                ///< Information needed to load a sprite
         struct {
-            const char *filename; ///< Filename of the audio file
-            // TODO: Loading from binary
-        } Audio;                  ///< Information needed to create an audio sample
+            Oct_FileHandle fileHandle; ///< File handle of the audio file
+        } Audio;                       ///< Information needed to create an audio sample
         struct {
-            const char *filename[OCT_FALLBACK_FONT_MAX]; ///< Filename of the ttf
-            float size;                                  ///< Point size
-        } Font;                                          ///< Information needed to load a font
+            Oct_FileHandle fileHandles[OCT_FALLBACK_FONT_MAX]; ///< File handles of the ttf
+            float size;                                        ///< Point size
+        } Font;                                                ///< Information needed to load a font
         struct {
             Oct_Font font;         ///< Font to generate the atlas from
             Oct_FontAtlas atlas;   ///< If this is not OCT_NO_ASSET, the new atlas will be appended to this one
@@ -263,10 +283,10 @@ struct Oct_LoadCommand_t {
             uint64_t unicodeEnd;   ///< Unicode end range
         } FontAtlas;               ///< Info needed to create or extend a font atlas
         struct {
-            const char *filename;  ///< Filename of the bitmap font (an image)
-            uint64_t unicodeStart; ///< Unicode start range (inclusive)
-            uint64_t unicodeEnd;   ///< Unicode end range (exclusive)
-            Oct_Vec2 cellSize;     ///< Size (in pixels) of each font glyph
+            Oct_FileHandle fileHandle; ///< File handle of the bitmap font (an image)
+            uint64_t unicodeStart;     ///< Unicode start range (inclusive)
+            uint64_t unicodeEnd;       ///< Unicode end range (exclusive)
+            Oct_Vec2 cellSize;         ///< Size (in pixels) of each font glyph
         } BitmapFont;
         struct {
             const char *filename;   ///< Filename of the bundle

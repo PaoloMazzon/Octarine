@@ -8,6 +8,7 @@ Oct_Allocator gAllocator;
 Oct_Font gPixelFont;
 Oct_FontAtlas gPixelFontAtlas;
 Oct_FontAtlas gBitmapFontAtlas;
+Oct_AssetBundle gAssetBundle;
 
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup() {
@@ -21,6 +22,8 @@ void *startup() {
     gBitmapFontAtlas = oct_LoadBitmapFont("data/monogram.png", (Oct_Vec2){6, 12}, 32, 160);
     // TODO: Test bitmap font
     // TODO: Test spritesheet xstop code
+
+    gAssetBundle = oct_LoadAssetBundle("data");
 
     return null;
 }
@@ -87,5 +90,6 @@ void *update(void *ptr) {
 
 // Called once when the engine is about to be deinitialized
 void shutdown(void *ptr) {
+    oct_FreeAssetBundle(gAssetBundle);
     oct_FreeAllocator(gAllocator);
 }

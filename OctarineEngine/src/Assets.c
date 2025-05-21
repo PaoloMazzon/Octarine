@@ -47,16 +47,62 @@ void _oct_FailLoad(Oct_Asset asset) {
     SDL_SetAtomicInt(&gErrorHasOccurred, 1);
 }
 
+static uint8_t* _oct_ReadFile(const char *filename, uint32_t *size) {
+    FILE* file = fopen(filename, "rb");
+    unsigned char *buffer = NULL;
+    *size = 0;
+
+    if (file != NULL) {
+        // Find file size
+        fseek(file, 0, SEEK_END); // not portable but idc
+        *size = ftell(file);
+        rewind(file);
+
+        buffer = mi_malloc(*size);
+
+        if (buffer != NULL) {
+            // Fill the buffer
+            fread(buffer, 1, *size, file);
+        } else {
+            oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Unable to allocate buffer for file \"%s\".\n", filename);
+        }
+        fclose(file);
+    }
+
+    return buffer;
+}
+
+static uint8_t *_oct_GetBufferFromHandle(Oct_FileHandle *handle, uint32_t *size) {
+    if (handle->type == OCT_FILE_HANDLE_TYPE_FILENAME) {
+        return _oct_ReadFile(handle->filename, size);
+    } else {
+        *size = handle->size;
+        return handle->buffer;
+    }
+}
+
+static void _oct_CleanupBufferFromHandle(Oct_FileHandle *handle, uint8_t *buffer) {
+    if (handle->type == OCT_FILE_HANDLE_TYPE_FILENAME) {
+        mi_free(buffer);
+    } else {
+        if (handle->callback)
+            handle->callback(buffer, handle->size);
+    }
+}
+
 ///////////////////////////////// ASSET CREATION /////////////////////////////////
 void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
-    VK2DTexture tex = vk2dTextureLoad(load->Texture.filename);
+    uint32_t size;
+    uint8_t *buffer = _oct_GetBufferFromHandle(&load->Texture.fileHandle, &size);
+    VK2DTexture tex = vk2dTextureFrom(buffer, size);
+    _oct_CleanupBufferFromHandle(&load->Texture.fileHandle, buffer);
     if (tex) {
         gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
     } else {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load texture \"%s\"\n", load->Texture.filename);
+        _oct_LogError("Failed to load texture\n");
     }
 }
 
@@ -86,7 +132,8 @@ static void _oct_AssetCreateCamera(Oct_LoadCommand *load) {
 
 void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     // Find file extension
-    const char *extension = strrchr(load->Audio.filename, '.');
+    // TODO: Load from binary
+    const char *extension = strrchr(load->Audio.fileHandle.filename, '.');
     extension = extension == null ? "" : extension;
     uint8_t *data = null;
     uint32_t dataSize = 0;
@@ -95,20 +142,20 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     if (strcmp(extension, ".ogg") == 0) {
         // TODO: Implement ogg loading
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load audio sample \"%s\", ogg is not yet supported.\n", load->Audio.filename);
+        _oct_LogError("Failed to load audio sample \"%s\", ogg is not yet supported.\n", load->Audio.fileHandle.filename);
     } else if (strcmp(extension, ".wav") == 0) {
         // Use SDL to load wavs
-        if (!SDL_LoadWAV(load->Audio.filename, &spec, &data, &dataSize)) {
+        if (!SDL_LoadWAV(load->Audio.fileHandle.filename, &spec, &data, &dataSize)) {
             _oct_FailLoad(load->_assetID);
-            _oct_LogError("Failed to load audio sample \"%s\", SDL Error: %s.\n", load->Audio.filename, SDL_GetError());
+            _oct_LogError("Failed to load audio sample \"%s\", SDL Error: %s.\n", load->Audio.fileHandle.filename, SDL_GetError());
         }
     } else if (strcmp(extension, ".mp3") == 0) {
         // TODO: Implement mp3 loading
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load audio sample \"%s\", mp3 is not yet supported.\n", load->Audio.filename);
+        _oct_LogError("Failed to load audio sample \"%s\", mp3 is not yet supported.\n", load->Audio.fileHandle.filename);
     } else {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load audio sample \"%s\", unrecognized extension.\n", load->Audio.filename);
+        _oct_LogError("Failed to load audio sample \"%s\", unrecognized extension.\n", load->Audio.fileHandle.filename);
     }
 
     // Convert format if we found good data
@@ -121,7 +168,7 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
             SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
         } else {
             _oct_FailLoad(load->_assetID);
-            _oct_LogError("Failed to load audio sample \"%s\", failed to convert format, SDL Error %s.\n", load->Audio.filename, SDL_GetError());
+            _oct_LogError("Failed to load audio sample, failed to convert format, SDL Error %s.\n", SDL_GetError());
         }
         SDL_free(data);
     }
@@ -157,8 +204,12 @@ void _oct_AssetCreateFont(Oct_LoadCommand *load) {
 
     // Load all fonts
     for (int i = 0; i < OCT_FALLBACK_FONT_MAX; i++) {
-        if (load->Font.filename[i] != null) {
-            fnt->font[i] = TTF_OpenFont(load->Font.filename[i], load->Font.size);
+        if (load->Font.fileHandles[i].type != OCT_FILE_HANDLE_TYPE_NONE) {
+            uint32_t size;
+            uint8_t *buffer = _oct_GetBufferFromHandle(&load->Font.fileHandles[i], &size);
+            SDL_IOStream *io = SDL_IOFromConstMem(buffer, size);
+            fnt->font[i] = TTF_OpenFontIO(io, true, load->Font.size);
+            _oct_CleanupBufferFromHandle(&load->Font.fileHandles[i], buffer);
 
             // Make sure font didn't explode
             if (fnt->font[i] == null || (i > 0 && !TTF_AddFallbackFont(fnt->font[0], fnt->font[i]))) {
@@ -177,7 +228,7 @@ void _oct_AssetCreateFont(Oct_LoadCommand *load) {
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
     } else {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to create font \"%s\", TTF error %s\n", load->Font.filename[0], SDL_GetError());
+        _oct_LogError("Failed to create font, TTF error %s\n", SDL_GetError());
     }
 }
 
@@ -323,18 +374,23 @@ void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load) {
     if (!asset->fontAtlas.atlases)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate font atlas list");
 
+    uint32_t size;
+    uint8_t *buffer = _oct_GetBufferFromHandle(&load->BitmapFont.fileHandle, &size);
+
     const uint32_t glyphCount = load->BitmapFont.unicodeEnd - load->BitmapFont.unicodeStart;
     asset->fontAtlas.atlases[0].img = null;
-    asset->fontAtlas.atlases[0].atlas = vk2dTextureLoad(load->BitmapFont.filename);
+    asset->fontAtlas.atlases[0].atlas = vk2dTextureFrom(buffer, size);
     asset->fontAtlas.atlases[0].glyphs = mi_malloc(sizeof(struct Oct_FontGlyphData_t) * glyphCount);
     asset->fontAtlas.atlases[0].unicodeStart = load->BitmapFont.unicodeStart;
     asset->fontAtlas.atlases[0].unicodeEnd = load->BitmapFont.unicodeEnd;
     asset->fontAtlas.spaceSize = load->BitmapFont.cellSize[0];
     asset->fontAtlas.newLineSize = load->BitmapFont.cellSize[1];
 
+    _oct_CleanupBufferFromHandle(&load->BitmapFont.fileHandle, buffer);
+
     if (!asset->fontAtlas.atlases[0].atlas) {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to create bitmap font from \"%s\", VK2D error: %s\n", load->BitmapFont.filename, vk2dStatusMessage());
+        _oct_LogError("Failed to create bitmap font , VK2D error: %s\n", vk2dStatusMessage());
         mi_free(asset->fontAtlas.atlases[0].glyphs);
         mi_free(asset->fontAtlas.atlases);
         return;
@@ -451,6 +507,8 @@ void _oct_AssetsProcessCommand(Oct_Command *cmd) {
         _oct_AssetCreateFontAtlas(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT) {
         _oct_AssetCreateBitmapFont(load);
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_ASSET_BUNDLE) {
+        _oct_AssetCreateAssetBundle(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
         if (SDL_GetAtomicInt(&gAssets[load->_assetID].loaded))
             _oct_AssetDestroy(load->_assetID);

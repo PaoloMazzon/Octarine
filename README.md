@@ -4,6 +4,9 @@ Octarine is a game engine written in C for C/C++ designed to be used on 2D games
 renderer is able to automatically interpolate draws to render at unlocked framerates while the user need not concern
 themselves with anything other than game logic.
 
+*Warning*: This engine is in early development still, and while it is usable for some small games at this moment, it may
+still receive breaking changes in the near future.
+
 ## Notable Features
 
  + Logic is done on its own thread, drawing must be done by queueing draws for the main thread

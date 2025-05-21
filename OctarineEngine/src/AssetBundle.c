@@ -189,7 +189,11 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
         cJSON *excludeList = jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "exclude"), type_array);
 
         // Iterate through primitive types first
-        // TODO: This
+        const char **fileList = (void*)PHYSFS_enumerateFiles("/");
+        for (int i = 0; fileList[i]; i++) {
+            // TODO: This
+        }
+        PHYSFS_freeList(fileList);
 
         // Iterate over advanced types (sprites, fonts, ...)
         // TODO: This

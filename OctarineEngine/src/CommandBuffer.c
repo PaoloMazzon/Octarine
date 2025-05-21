@@ -176,7 +176,10 @@ OCTARINE_API Oct_Texture oct_LoadTexture(const char *filename) {
                     .type = OCT_LOAD_COMMAND_TYPE_LOAD_TEXTURE,
                     .pNext = null,
                     ._assetID = id,
-                    .Texture.filename = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1)
+                    .Texture.fileHandle = {
+                            .type = OCT_FILE_HANDLE_TYPE_FILENAME,
+                            .filename = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1)
+                    }
             }
     };
     pushCommand(&cmd);
@@ -192,7 +195,10 @@ OCTARINE_API Oct_Font oct_LoadFont(const char *filename, float size) {
                     .type = OCT_LOAD_COMMAND_TYPE_LOAD_FONT,
                     .pNext = null,
                     ._assetID = id,
-                    .Font.filename[0] = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1),
+                    .Font.fileHandles[0] = {
+                            .type = OCT_FILE_HANDLE_TYPE_FILENAME,
+                            .filename = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1),
+                    },
                     .Font.size = size
             }
     };
@@ -289,7 +295,10 @@ OCTARINE_API Oct_FontAtlas oct_LoadBitmapFont(const char *filename, Oct_Vec2 cel
                     .pNext = null,
                     ._assetID = id,
                     .BitmapFont = {
-                            .filename = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1),
+                            .fileHandle = {
+                                    .type = OCT_FILE_HANDLE_TYPE_FILENAME,
+                                    .filename = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1),
+                            },
                             .cellSize = {cellSize[0], cellSize[1]},
                             .unicodeStart = unicodeStart,
                             .unicodeEnd = unicodeEnd
@@ -356,7 +365,7 @@ OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(const char *filename) {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
             .loadCommand = {
                     .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
-                    .type = OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT,
+                    .type = OCT_LOAD_COMMAND_TYPE_LOAD_ASSET_BUNDLE,
                     .pNext = null,
                     ._assetID = OCT_NO_ASSET,
                     .AssetBundle = {
