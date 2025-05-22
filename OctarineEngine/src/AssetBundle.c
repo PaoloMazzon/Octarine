@@ -414,6 +414,21 @@ void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, const c
     mi_free(directoryBuffer);
 }
 
+void _oct_ParseFonts(Oct_AssetBundle bundle, cJSON *fonts) {
+    if (!fonts) return;
+    // TODO: This
+}
+
+void _oct_ParseBitmapFonts(Oct_AssetBundle bundle, cJSON *fonts) {
+    if (!fonts) return;
+    // TODO: This
+}
+
+void _oct_ParseSprites(Oct_AssetBundle bundle, cJSON *sprites) {
+    if (!sprites) return;
+    // TODO: This
+}
+
 void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
     // 1. Go through each file in the bundle and load the primitive types by their filenames
     // 2. Iterate through manifest.json and load the non-primitive types like sprites
@@ -439,7 +454,9 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
         _oct_EnumerateDirectory(load->AssetBundle.bundle, excludeList, "");
 
         // Finally, go through the manifest to find other 2nd-order types (bitmap fonts, sprites, etc...)
-        // TODO: This
+        _oct_ParseFonts(load->AssetBundle.bundle, jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "fonts"), type_array));
+        _oct_ParseBitmapFonts(load->AssetBundle.bundle, jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "bitmap fonts"), type_array));
+        _oct_ParseSprites(load->AssetBundle.bundle, jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "sprites"), type_array));
 
         // Cleanup
         cJSON_Delete(manifestJSON);

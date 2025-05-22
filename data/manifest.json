@@ -1,6 +1,41 @@
 {
   "exclude":
-  [
-    "monogram.png"
-  ]
+          [
+            "monogram.png"
+          ],
+
+  "fonts":
+          [
+            {
+              "name": "ubuntu",
+              "files": ["Ubuntu-Regular.ttf"]
+            },
+            {
+              "name": "kingdom",
+              "files": ["Kingdom.ttf"]
+            }
+          ],
+  "bitmap fonts":
+          [
+            {
+              "name": "monogram",
+              "image": "monogram.png",
+              "cell size": [6, 12],
+              "unicode range": [32, 128]
+            }
+          ],
+  "sprites":
+          [
+            {
+              "name": "paladin from manifest",
+              "texture":  "sprites/paladin-sheet.png",
+              "frame count": 3,
+              "repeat": 1,
+              "fps": 10,
+              "start position":  [0, 0],
+              "frame size": [32, 32],
+              "padding":  [0, 0],
+              "x stop": 0
+            }
+          ]
 }

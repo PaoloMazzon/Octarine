@@ -258,7 +258,7 @@ void _oct_AssetCreateFont(Oct_LoadCommand *load) {
             uint32_t size;
             uint8_t *buffer = _oct_GetBufferFromHandle(&load->Font.fileHandles[i], &size);
             SDL_IOStream *io = SDL_IOFromConstMem(buffer, size);
-            fnt->font[i] = TTF_OpenFontIO(io, true, load->Font.size);
+            fnt->font[i] = TTF_OpenFontIO(io, true, 10);
             _oct_CleanupBufferFromHandle(&load->Font.fileHandles[i], buffer);
 
             // Make sure font didn't explode
@@ -308,12 +308,16 @@ void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load) {
     gAssets[ASSET_INDEX(asset)].type = OCT_ASSET_TYPE_FONT_ATLAS;
 
     // Check if the passed font exists
-    if (_oct_AssetGet(load->FontAtlas.font)->type != OCT_ASSET_TYPE_FONT || !SDL_GetAtomicInt(&_oct_AssetGet(load->FontAtlas.font)->loaded)) {
+    Oct_AssetData *fontAsset = _oct_AssetGetSafe(load->FontAtlas.font, OCT_ASSET_TYPE_FONT);
+    if (!fontAsset) {
         _oct_LogError("Atlas cannot be created without a font.\n");
         _oct_FailLoad(asset);
         return;
     }
-    Oct_FontData *fntData = &_oct_AssetGet(load->FontAtlas.font)->font;
+    Oct_FontData *fntData = &fontAsset->font;
+
+    // Resize font
+    TTF_SetFontSize(fntData->font[0], load->FontAtlas.size);
 
     // Add new atlas to atlas list
     void *newAtlas = mi_realloc(fnt->atlases, (fnt->atlasCount + 1) * sizeof(struct Oct_FontAtlasData_t));

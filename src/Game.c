@@ -13,9 +13,9 @@ Oct_AssetBundle gAssetBundle;
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup() {
     gAllocator = oct_CreateHeapAllocator();
-    gPixelFont = oct_LoadFont("data/Kingdom.ttf", 20);
-    gPixelFontAtlas = oct_CreateFontAtlas(gPixelFont, OCT_NO_ASSET, 32, 128);
-    oct_CreateFontAtlas(gPixelFont, gPixelFontAtlas, 0x400, 0x4ff);
+    gPixelFont = oct_LoadFont("data/Kingdom.ttf");
+    gPixelFontAtlas = oct_CreateFontAtlas(gPixelFont, OCT_NO_ASSET, 20, 32, 128);
+    oct_CreateFontAtlas(gPixelFont, gPixelFontAtlas, 20, 0x400, 0x4ff);
     // TODO: Test bitmap font
     // TODO: Test spritesheet xstop code
 

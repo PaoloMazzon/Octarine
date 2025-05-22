@@ -275,11 +275,11 @@ struct Oct_LoadCommand_t {
         } Audio;                       ///< Information needed to create an audio sample
         struct {
             Oct_FileHandle fileHandles[OCT_FALLBACK_FONT_MAX]; ///< File handles of the ttf
-            float size;                                        ///< Point size
         } Font;                                                ///< Information needed to load a font
         struct {
             Oct_Font font;         ///< Font to generate the atlas from
             Oct_FontAtlas atlas;   ///< If this is not OCT_NO_ASSET, the new atlas will be appended to this one
+            float size;            ///< Size of the font to make the atlas for
             uint64_t unicodeStart; ///< Unicode start range
             uint64_t unicodeEnd;   ///< Unicode end range
         } FontAtlas;               ///< Info needed to create or extend a font atlas

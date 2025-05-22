@@ -33,12 +33,11 @@ OCTARINE_API Oct_Texture oct_LoadTexture(const char *filename);
 /// \brief Shorthand for oct_Load for loading fonts
 /// \param ctx Octarine context
 /// \param filename Filename of the font
-/// \param size Size of the font
 /// \return Returns a new asset ID, see oct_Load for more info
 ///
 /// This function only allows for one font file to be associated with the font, if you
 /// want to set fallbacks you'll have to create the load command manually.
-OCTARINE_API Oct_Font oct_LoadFont(const char *filename, float size);
+OCTARINE_API Oct_Font oct_LoadFont(const char *filename);
 
 /// \brief Shorthand for oct_Load for creating surfaces
 /// \param ctx Octarine context
@@ -66,10 +65,11 @@ OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Texture tex, int32_t frameCount, doub
 /// \param ctx Context
 /// \param font Font to create the atlas from
 /// \param atlas Atlas to extend, if you use OCT_NO_ASSET a new atlas will be created
+/// \param size Size of the font to use when creating the atlas
 /// \param unicodeStart First unicode code point to put in the atlas (inclusive)
 /// \param unicodeEnd Last unicode code point to put in the atlas (exclusive)
 /// \return Returns either the handle to a new font atlas, or the atlas passed in if one was specified
-OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Font font, Oct_FontAtlas atlas, uint32_t unicodeStart, uint32_t unicodeEnd);
+OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Font font, Oct_FontAtlas atlas, float size, uint32_t unicodeStart, uint32_t unicodeEnd);
 
 /// \brief Loads a font atlas from a bitmap font
 /// \param ctx Context

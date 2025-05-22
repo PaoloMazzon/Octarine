@@ -186,7 +186,7 @@ OCTARINE_API Oct_Texture oct_LoadTexture(const char *filename) {
     return id;
 }
 
-OCTARINE_API Oct_Font oct_LoadFont(const char *filename, float size) {
+OCTARINE_API Oct_Font oct_LoadFont(const char *filename) {
     Oct_Asset id = _oct_AssetReserveSpace();
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
@@ -199,7 +199,6 @@ OCTARINE_API Oct_Font oct_LoadFont(const char *filename, float size) {
                             .type = OCT_FILE_HANDLE_TYPE_FILENAME,
                             .filename = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1),
                     },
-                    .Font.size = size
             }
     };
     pushCommand(&cmd);
@@ -262,7 +261,7 @@ OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Texture tex, int32_t frameCount, doub
     return id;
 }
 
-OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Font font, Oct_FontAtlas atlas, uint32_t unicodeStart, uint32_t unicodeEnd) {
+OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Font font, Oct_FontAtlas atlas, float size, uint32_t unicodeStart, uint32_t unicodeEnd) {
     Oct_Asset id = _oct_AssetReserveSpace();
     Oct_Command cmd = {
             .sType = OCT_STRUCTURE_TYPE_COMMAND,
@@ -275,7 +274,8 @@ OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Font font, Oct_FontAtlas atla
                             .font = font,
                             .atlas = atlas,
                             .unicodeStart = unicodeStart,
-                            .unicodeEnd = unicodeEnd
+                            .unicodeEnd = unicodeEnd,
+                            .size = size
                     }
             }
     };
