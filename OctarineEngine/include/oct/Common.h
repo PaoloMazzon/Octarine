@@ -240,6 +240,7 @@ struct Oct_FileHandle_t {
         struct {
             uint8_t *buffer;                 ///< Binary buffer containing the file
             uint32_t size;                   ///< Size of the binary buffer in bytes
+            const char *name;                ///< For debug purposes, internal use
             Oct_FileHandleCallback callback; ///< Callback called when the buffer is done being worked with, may be null
         };
     };
