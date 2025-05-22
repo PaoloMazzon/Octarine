@@ -24,6 +24,7 @@ void *startup() {
     // TODO: Test spritesheet xstop code
 
     gAssetBundle = oct_LoadAssetBundle("data");
+    gTexMarble = oct_GetAsset(gAssetBundle, "marble.jpg");
 
     return null;
 }

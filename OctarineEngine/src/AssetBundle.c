@@ -6,6 +6,7 @@
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 #include "oct/Assets.h"
+#include "oct/Subsystems.h"
 
 static uint32_t hash(const char *str) {
     uint32_t hash = 5381;
@@ -63,13 +64,19 @@ void _oct_PlaceAssetInBucket(Oct_AssetBundle bundle, Oct_Asset asset, const char
 }
 
 OCTARINE_API void oct_FreeAssetBundle(Oct_AssetBundle bundle) {
+    if (!bundle)
+        return;
     for (int i = 0; i < OCT_BUCKET_SIZE; i++) {
-        if (bundle->bucket[i].asset != OCT_NO_ASSET)
+        if (bundle->bucket[i].asset != OCT_NO_ASSET) {
             oct_FreeAsset(bundle->bucket[i].asset);
+            mi_free((void*)bundle->bucket[i].name);
+        }
     }
     for (int i = 0; i < bundle->backupBucketCount; i++) {
-        if (bundle->backupBucket[i].asset != OCT_NO_ASSET)
+        if (bundle->backupBucket[i].asset != OCT_NO_ASSET) {
             oct_FreeAsset(bundle->backupBucket[i].asset);
+            mi_free((void*)bundle->backupBucket[i].name);
+        }
     }
     mi_free(bundle->bucket);
     mi_free(bundle->backupBucket);
@@ -90,7 +97,7 @@ OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name) {
     // Traverse linked list till we find it
     Oct_AssetLink *link = &bundle->bucket[bucketLocation];
     while (link) {
-        if (strcmp(name, link->name) == 0)
+        if (link->name && strcmp(name, link->name) == 0)
             return link->asset;
         link = link->next;
     }
@@ -164,6 +171,34 @@ static Oct_Bool _oct_InExcludeList(cJSON *excludeList, const char *string) {
     return false;
 }
 
+// Returns true if the two strings are equal ignoring case
+static Oct_Bool _oct_TextEqual(const char *s1, const char *s2) {
+    if (strlen(s1) != strlen(s2))
+        return false;
+    for (int i = 0; i < strlen(s1); i++) {
+        const char sc1 = s1[i] >= 'a' && s1[i] <= 'z' ? s1[i] - 32 : s1[i];
+        const char sc2 = s2[i] >= 'a' && s2[i] <= 'z' ? s2[i] - 32 : s2[i];
+        if (sc1 != sc2)
+            return false;
+    }
+    return true;
+}
+
+static uint8_t *_oct_PhysFSGetFile(const char *filename, uint32_t *size) {
+    PHYSFS_File *file = PHYSFS_openRead(filename);
+    *size = PHYSFS_fileLength(file);
+    uint8_t *buffer = mi_malloc(*size);
+    if (!buffer)
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate buffer");
+    PHYSFS_readBytes(file, buffer, *size);
+    PHYSFS_close(file);
+    return buffer;
+}
+
+void _oct_FileHandleCallback(void *buffer, uint32_t size) {
+    mi_free(buffer);
+}
+
 void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
     // 1. Go through each file in the bundle and load the primitive types by their filenames
     // 2. Iterate through manifest.json and load the non-primitive types like sprites
@@ -176,13 +211,8 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
         }
 
         // Grab json for parsing as we go along
-        PHYSFS_File *manifestFile = PHYSFS_openRead("manifest.json");
-        uint32_t manifestBufferSize = PHYSFS_fileLength(manifestFile);
-        uint8_t *manifestBuffer = mi_malloc(manifestBufferSize);
-        if (!manifestBuffer)
-            oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate manifest buffer");
-        PHYSFS_readBytes(manifestFile, manifestBuffer, manifestBufferSize);
-        PHYSFS_close(manifestFile);
+        uint32_t manifestBufferSize;
+        uint8_t *manifestBuffer = _oct_PhysFSGetFile("manifest.json", &manifestBufferSize);
         cJSON *manifestJSON = cJSON_ParseWithLength((void*)manifestBuffer, manifestBufferSize);
 
         // Find the exclude list
@@ -191,7 +221,37 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
         // Iterate through primitive types first
         const char **fileList = (void*)PHYSFS_enumerateFiles("/");
         for (int i = 0; fileList[i]; i++) {
-            // TODO: This
+            if (_oct_InExcludeList(excludeList, fileList[i]))
+                continue;
+
+            const char *extension = strrchr(fileList[i], '.');
+            if (_oct_TextEqual(extension, ".mp3") || _oct_TextEqual(extension, ".wav") || _oct_TextEqual(extension, ".ogg")) {
+                // Audio
+                uint32_t size;
+                uint8_t *buffer = _oct_PhysFSGetFile(fileList[i], &size);
+                Oct_LoadCommand l;
+                l.Audio.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
+                l.Audio.fileHandle.buffer = buffer;
+                l.Audio.fileHandle.size = size;
+                l.Audio.fileHandle.name = fileList[i];
+                l.Audio.fileHandle.callback = _oct_FileHandleCallback;
+                l._assetID = _oct_AssetReserveSpace();
+                _oct_PlaceAssetInBucket(load->AssetBundle.bundle, l._assetID, fileList[i]);
+                _oct_AssetCreateAudio(&l);
+            } else if (_oct_TextEqual(extension, ".jpg") || _oct_TextEqual(extension, ".jpeg") || _oct_TextEqual(extension, ".png") || _oct_TextEqual(extension, ".bmp")) {
+                // Texture
+                uint32_t size;
+                uint8_t *buffer = _oct_PhysFSGetFile(fileList[i], &size);
+                Oct_LoadCommand l;
+                l.Texture.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
+                l.Texture.fileHandle.buffer = buffer;
+                l.Texture.fileHandle.size = size;
+                l.Texture.fileHandle.name = fileList[i];
+                l.Texture.fileHandle.callback = _oct_FileHandleCallback;
+                l._assetID = _oct_AssetReserveSpace();
+                _oct_PlaceAssetInBucket(load->AssetBundle.bundle, l._assetID, fileList[i]);
+                _oct_AssetCreateTexture(&l);
+            }
         }
         PHYSFS_freeList(fileList);
 

@@ -101,9 +101,9 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
 
     // Cleanup
     vk2dRendererWait();
+    _oct_UnstrapBoots();
     _oct_AssetsEnd();
     _oct_CommandBufferEnd();
-    _oct_UnstrapBoots();
     _oct_AudioEnd();
     _oct_DrawingEnd();
     _oct_WindowEnd();
