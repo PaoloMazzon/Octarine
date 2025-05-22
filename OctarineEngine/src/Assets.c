@@ -205,21 +205,41 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
     Oct_SpriteData *data = &gAssets[ASSET_INDEX(load->_assetID)].sprite;
     gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_SPRITE;
     data->texture = load->Sprite.texture;
-    data->ownsTexture = false;
     data->frameCount = load->Sprite.frameCount;
     data->frame = 0;
     data->repeat = load->Sprite.repeat;
     data->pause = false;
-    data->delay = 1.0 / load->Sprite.fps;
     data->lastTime = oct_Time();
     data->accumulator = 0;
-    data->startPos[0] = load->Sprite.startPos[0];
-    data->startPos[1] = load->Sprite.startPos[1];
-    data->frameSize[0] = load->Sprite.frameSize[0];
-    data->frameSize[1] = load->Sprite.frameSize[1];
-    data->padding[0] = load->Sprite.padding[0];
-    data->padding[1] = load->Sprite.padding[1];
-    data->xStop = load->Sprite.xStop;
+
+    // Allocate the frames
+    data->frames = mi_malloc(sizeof(struct Oct_SpriteFrame_t) * data->frameCount);
+    if (!data->frames)
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate sprite frame data");
+
+    // Get the texture
+    Oct_AssetData *texData = _oct_AssetGetSafe(load->Sprite.texture, OCT_ASSET_TYPE_TEXTURE);
+    if (!texData) {
+        _oct_FailLoad(load->_assetID);
+        _oct_LogError("Sprite cannot be created with invalid texture (" PRIu64 ")", load->Sprite.texture);
+    }
+
+    // Fill frame data
+    for (int i = 0; i < data->frameCount; i++) {
+        const int totalHorizontal = i * (load->Sprite.frameSize[0] + load->Sprite.padding[0]);
+        const int lineBreaks = (int)(load->Sprite.startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(texData->texture) - load->Sprite.xStop);
+        float x;
+        if (lineBreaks == 0)
+            x = (float)((int)(load->Sprite.startPos[0] + (totalHorizontal - (load->Sprite.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(texData->texture) - load->Sprite.xStop));
+        else
+            x = (float)(load->Sprite.xStop + ((int)(load->Sprite.startPos[0] + (totalHorizontal - (load->Sprite.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(texData->texture) - load->Sprite.xStop)));
+        data->frames[i].duration = 1.0 / load->Sprite.fps;
+        data->frames[i].position[0] = x;
+        data->frames[i].position[1] = lineBreaks * load->Sprite.frameSize[1];
+        data->frames[i].size[0] = load->Sprite.frameSize[0];;
+        data->frames[i].size[1] = load->Sprite.frameSize[1];;
+    }
+
     SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
 }
 
@@ -456,9 +476,7 @@ static void _oct_AssetDestroyCamera(Oct_Asset asset) {
 }
 
 static void _oct_AssetDestroySprite(Oct_Asset asset) {
-    if (gAssets[ASSET_INDEX(asset)].sprite.ownsTexture) {
-        // TODO: Free texture if sprite owns it
-    }
+    mi_free(gAssets[ASSET_INDEX(asset)].sprite.frames);
     _oct_DestroyAssetMetadata(asset);
 }
 

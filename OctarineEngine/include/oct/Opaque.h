@@ -31,21 +31,23 @@ struct Oct_Context_t {
     } RingBuffer;              ///< Ring buffer for commands
 };
 
+/// \brief A frame of a sprite's animation
+typedef struct Oct_SpriteFrame_t {
+    Oct_Vec2 position; ///< Position of this frame
+    Oct_Vec2 size;     ///< Size of this frame
+    double duration;   ///< Duration of the frame in milliseconds
+} Oct_SpriteFrame;
+
 /// \brief Data needed to draw and manage a sprite
 typedef struct Oct_SpriteData_t {
-    Oct_Texture texture;  ///< Texture the sprite comes from
-    Oct_Bool ownsTexture; ///< Whether or not this specific sprite owns the texture (will delete it on its own deletion)
-    int32_t frameCount;   ///< Number of frames in the animation
-    int32_t frame;        ///< Current frame
-    Oct_Bool repeat;      ///< Whether or not the animation repeats
-    Oct_Bool pause;       ///< Whether or not the animation is currently paused
-    double delay;         ///< Number of seconds between each frame
-    double lastTime;      ///< The last time a frame was changed
-    double accumulator;   ///< Time accumulator for more accurate animation timings
-    Oct_Vec2 startPos;    ///< Starting position in the texture of the animation
-    Oct_Vec2 frameSize;   ///< Size (in pixels) of each cell of the animation
-    Oct_Vec2 padding;     ///< Horizontal and vertical padding (in pixels) between each animation frame
-    float xStop;          ///< Horizontal stop for consecutive animation cells to start from (like if the animation is only in the right half of the image)
+    Oct_Texture texture;     ///< Texture the sprite comes from
+    int32_t frameCount;      ///< Number of frames in the animation
+    int32_t frame;           ///< Current frame
+    Oct_Bool repeat;         ///< Whether or not the animation repeats
+    Oct_Bool pause;          ///< Whether or not the animation is currently paused
+    double lastTime;         ///< The last time a frame was changed
+    double accumulator;      ///< Time accumulator for more accurate animation timings
+    Oct_SpriteFrame *frames; ///< Each individual animation frame
 } Oct_SpriteData;
 
 /// \brief Data for audio

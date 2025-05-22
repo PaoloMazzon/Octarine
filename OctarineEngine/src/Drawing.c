@@ -291,10 +291,10 @@ static void _oct_DrawSprite(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, floa
     // Make sure the sprite's texture still exists
     VK2DTexture tex = null;
     Oct_AssetData *texData = _oct_AssetGetSafe(spr->texture, OCT_ASSET_TYPE_TEXTURE);
-    if (oct_AssetLoaded(spr->texture)) {
+    if (texData) {
         tex = texData->texture;
     } else {
-        oct_Raise(OCT_STATUS_BAD_PARAMETER, true, "Sprite ID %" PRIu64 " uses a texture that no longer exists.");
+        oct_Raise(OCT_STATUS_BAD_PARAMETER, true, "Sprite ID %" PRIu64 " uses a texture that does not exist (" PRIu64 ").", cmd->Sprite.sprite, spr->texture);
         return;
     }
 
@@ -320,16 +320,10 @@ static void _oct_DrawSprite(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, floa
     }
 
     // Locate frame in the texture
-    const int totalHorizontal = frame * (spr->frameSize[0] + spr->padding[0]);
-    const int lineBreaks = (int)(spr->startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(tex) - spr->xStop);
-    float x;
-    if (lineBreaks == 0)
-        x = (float)((int)(spr->startPos[0] + (totalHorizontal - (spr->padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(tex) - spr->xStop));
-    else
-        x = (float)(spr->xStop + ((int)(spr->startPos[0] + (totalHorizontal - (spr->padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(tex) - spr->xStop)));
-    float y = lineBreaks * spr->frameSize[1];
-    float w = spr->frameSize[0];
-    float h = spr->frameSize[1];
+    float x = spr->frames[spr->frame].position[0];
+    float y = spr->frames[spr->frame].position[1];
+    float w = spr->frames[spr->frame].size[0];
+    float h = spr->frames[spr->frame].size[1];
 
     // Process the viewport for the sprite
     if (cmd->Sprite.viewport.size[0] != OCT_WHOLE_TEXTURE) {
@@ -363,13 +357,13 @@ static void _oct_DrawSprite(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, floa
     // Process frame update
     if (!spr->pause && cmd->Sprite.frame == OCT_SPRITE_CURRENT_FRAME) {
         spr->accumulator += oct_Time() - spr->lastTime;
-        if (spr->accumulator > spr->delay) {
+        if (spr->accumulator > spr->frames[spr->frame].duration) {
             if (spr->frame < spr->frameCount - 1) {
                 spr->frame += 1;
             } else if (spr->frame == spr->frameCount - 1 && spr->repeat) {
                 spr->frame = 0;
             }
-            spr->accumulator -= spr->delay;
+            spr->accumulator -= spr->frames[spr->frame].duration;
         }
         spr->lastTime = oct_Time();
     }
