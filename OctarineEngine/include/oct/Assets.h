@@ -121,6 +121,10 @@ OCTARINE_API Oct_Bool oct_AssetLoadHasFailed();
 /// An asset bundle is either a directory or archive with a manifest.json in the root of that directory/archive.
 /// This function internally uses PhysFS, which is to say you can use any archive supported by that library (basically
 /// anything).
+///
+/// This will automatically load spritesheets exported from Aseprite that have their .json sprite data -- as long as
+/// you export metadata in that json and its exported as "Array," NOT "Hash." Sprites loaded this way will be available
+/// under the name of the json.
 OCTARINE_API Oct_AssetBundle oct_LoadAssetBundle(const char *filename);
 
 /// \brief Destroys an asset bundle and all the assets in it

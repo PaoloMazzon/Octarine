@@ -224,7 +224,7 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
     Oct_AssetData *texData = _oct_AssetGetSafe(load->Sprite.texture, OCT_ASSET_TYPE_TEXTURE);
     if (!texData) {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Sprite cannot be created with invalid texture (" PRIu64 ")", load->Sprite.texture);
+        _oct_LogError("Sprite cannot be created with invalid texture (%" PRIu64 ")", load->Sprite.texture);
     }
 
     // Fill frame data

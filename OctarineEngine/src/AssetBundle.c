@@ -1,8 +1,8 @@
 #include <SDL3/SDL.h>
 #include <physfs.h>
 
+#include "oct/Core.h"
 #include "oct/cJSON.h"
-#include "oct/Common.h"
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
 #include "oct/Assets.h"
@@ -87,10 +87,8 @@ OCTARINE_API Oct_Bool oct_IsAssetBundleReady(Oct_AssetBundle bundle) {
     return SDL_GetAtomicInt(&bundle->bundleReady);
 }
 
-OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name) {
-    // Wait till the bundle is loaded
-    while (!SDL_GetAtomicInt(&bundle->bundleReady));
-
+// For internal use
+static Oct_Asset _oct_GetAssetUnblocking(Oct_AssetBundle bundle, const char *name) {
     // Get expected location
     uint32_t bucketLocation = hash(name) % OCT_BUCKET_SIZE;
 
@@ -103,6 +101,13 @@ OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name) {
     }
 
     return OCT_NO_ASSET;
+}
+
+OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name) {
+    // Wait till the bundle is loaded
+    while (!SDL_GetAtomicInt(&bundle->bundleReady));
+
+    return _oct_GetAssetUnblocking(bundle, name);
 }
 
 OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name, Oct_AssetType type) {
@@ -173,6 +178,8 @@ static Oct_Bool _oct_InExcludeList(cJSON *excludeList, const char *string) {
 
 // Returns true if the two strings are equal ignoring case
 static Oct_Bool _oct_TextEqual(const char *s1, const char *s2) {
+    if (!s1 || !s2)
+        return false;
     if (strlen(s1) != strlen(s2))
         return false;
     for (int i = 0; i < strlen(s1); i++) {
@@ -199,6 +206,214 @@ void _oct_FileHandleCallback(void *buffer, uint32_t size) {
     mi_free(buffer);
 }
 
+// This will add the path of one filename to the other, returned string is only valid till next call
+// for example, _oct_AddRootDir("image.png", "path/to/thing.json") -> "path/to/image.png"
+const char *_oct_AddRootDir(const char *filename, const char *path) {
+    static char buffer[512] = {0};
+    if (!filename || !path)
+        return null;
+
+    // Find the last / (or \ for stupid fucking windows) in the path
+    const char *lastSlash = strrchr(path, '/');
+    if (!lastSlash)
+        lastSlash = strrchr(path, '\\');
+
+    // If there is no last slash then path is root-level, so just return filename
+    if (!lastSlash)
+        return filename;
+    lastSlash++;
+
+    // Buffer overflow bad
+    if ((lastSlash - path) + strlen(filename) + 1 > 512)
+        return "";
+
+    // It is not root level so copy everything up to the last slash then add filename
+    memcpy(buffer, path, (lastSlash - path));
+    memcpy(buffer + ((lastSlash - path)), filename, strlen(filename));
+    buffer[(lastSlash - path) + strlen(filename)] = 0;
+
+    return buffer;
+}
+
+#define jsonGetNum(json, def) cJSON_IsNumber(json) ? cJSON_GetNumberValue(json) : 0
+
+// Parses the json's frame data into a sprite's frame
+void _oct_AddFrameData(Oct_SpriteFrame *frame, cJSON *frameJSON) {
+    memset(frame, 0, sizeof(struct Oct_SpriteFrame_t));
+    if (!cJSON_IsObject(frameJSON))
+        return;
+
+    cJSON *frameSize = jsonGetWithType(cJSON_GetObjectItem(frameJSON, "frame"), type_map);
+    if (frameSize) {
+        frame->position[0] = jsonGetNum(cJSON_GetObjectItem(frameSize, "x"), 0);
+        frame->position[1] = jsonGetNum(cJSON_GetObjectItem(frameSize, "y"), 0);
+        frame->size[0] = jsonGetNum(cJSON_GetObjectItem(frameSize, "w"), 0);
+        frame->size[1] = jsonGetNum(cJSON_GetObjectItem(frameSize, "h"), 0);
+    }
+
+    frame->duration = jsonGetNum(jsonGetWithType(cJSON_GetObjectItem(frameJSON, "duration"), type_num), 100);
+    frame->duration = frame->duration / 1000;
+}
+
+// This will check a given json to see if it is a json containing a spritesheet (exported by
+// aseprite or some other program). If it is, it will add the spritesheet as an asset to the
+// bundle under the json's name.
+void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *jsonFilename) {
+    // Get json
+    uint32_t size;
+    uint8_t *jsonBuffer = _oct_PhysFSGetFile(jsonFilename, &size);
+    cJSON *json = cJSON_ParseWithLength((void*)jsonBuffer, size);
+
+    // Look for meta["image"]
+    cJSON *meta = jsonGetWithType(cJSON_GetObjectItem(json, "meta"), type_map);
+    cJSON *image = jsonGetWithType(cJSON_GetObjectItem(meta, "image"), type_string);
+
+    // Check if we actually gottem
+    Oct_Texture tex = OCT_NO_ASSET;
+    if (image) {
+        // Interpolate image filename to find it if this isn't the root
+        const char *imageFilename = _oct_AddRootDir(cJSON_GetStringValue(image), jsonFilename);
+        tex = _oct_GetAssetUnblocking(bundle, imageFilename);
+
+        if (tex == OCT_NO_ASSET) {
+            _oct_LogError("\"s\" is an invalid json for loading sprites, as the texture \"%s\" does not exist. Make sure the spritesheet texture is in the same directory as the json.", jsonFilename, cJSON_GetStringValue(image));
+            cJSON_Delete(json);
+            mi_free(jsonBuffer);
+            return;
+        }
+    }
+    if (tex != OCT_NO_ASSET) {
+        // This is a valid spritesheet and we have the corresponding texture
+        cJSON *frames = jsonGetWithType(cJSON_GetObjectItem(json, "frames"), type_array);
+        if (!frames) {
+            _oct_LogError("\"%s\" is an invalid json for loading sprites, make sure you are exporting a \"Array.\"", jsonFilename);
+            cJSON_Delete(json);
+            mi_free(jsonBuffer);
+            return;
+        }
+
+        // Create the sprite
+        Oct_Asset asset = _oct_AssetReserveSpace();
+        Oct_SpriteData *data = &_oct_AssetGet(asset)->sprite;
+        _oct_AssetGet(asset)->type = OCT_ASSET_TYPE_SPRITE;
+        data->texture = tex;
+        data->frameCount = cJSON_GetArraySize(frames);
+        data->frame = 0;
+        data->repeat = true;
+        data->pause = false;
+        data->lastTime = oct_Time();
+        data->accumulator = 0;
+
+        // Allocate the frames
+        data->frames = mi_malloc(sizeof(struct Oct_SpriteFrame_t) * data->frameCount);
+        if (!data->frames)
+            oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate sprite frame data");
+
+        // Loop each frame
+        for (int i = 0; i < cJSON_GetArraySize(frames); i++) {
+            _oct_AddFrameData(&data->frames[i], cJSON_GetArrayItem(frames, i));
+        }
+
+        // Make sprite ready
+        SDL_SetAtomicInt(&_oct_AssetGet(asset)->loaded, 1);
+        _oct_PlaceAssetInBucket(bundle, asset, jsonFilename);
+    }
+
+    // Cleanup
+    cJSON_Delete(json);
+    mi_free(jsonBuffer);
+}
+
+// Extends a path, ie _oct_ExtendPath("/", "folder", ...) -> "/folder/"
+const char *_oct_ExtendPath(const char *root, const char *folder, char *buffer, int32_t size) {
+    if (strlen(folder) + strlen(root) + 2 > size) return "";
+    memcpy(buffer, root, strlen(root));
+    memcpy(buffer + strlen(root), folder, strlen(folder));
+    buffer[strlen(root) + strlen(folder)] = '/';
+    buffer[strlen(root) + strlen(folder) + 1] = 0;
+    return buffer;
+}
+
+// Same as above but for filenames _oct_ExtendPath("/", "folder", ...) -> "/folder/"
+const char *_oct_ExtendFilename(const char *root, const char *folder, char *buffer, int32_t size) {
+    if (strlen(folder) + strlen(root) + 1 > size) return "";
+    memcpy(buffer, root, strlen(root));
+    memcpy(buffer + strlen(root), folder, strlen(folder));
+    buffer[strlen(root) + strlen(folder)] = 0;
+    return buffer;
+}
+
+void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, const char *directory) {
+    // Need temp memory to store directory stuff as to not stack overflow
+    const uint32_t BUFFER_SIZE = 1024;
+    char *filenameBuffer = mi_malloc(BUFFER_SIZE);
+    char *directoryBuffer = mi_malloc(BUFFER_SIZE);
+    if (!filenameBuffer || !directoryBuffer)
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate temporary directory memory.");
+
+    // Iterate through primitive types first
+    const char **fileList = (void*)PHYSFS_enumerateFiles(directory);
+    for (int i = 0; fileList[i]; i++) {
+        const char *completeFilename = _oct_ExtendFilename(directory, fileList[i], filenameBuffer, BUFFER_SIZE);
+
+        // Ignore excluded files/directories
+        // TODO: Directories in exclude list should be allowed to end with a '/'
+        if (_oct_InExcludeList(excludeList, completeFilename))
+            continue;
+
+        PHYSFS_Stat stat;
+        if (PHYSFS_stat(fileList[i], &stat) && stat.filetype == PHYSFS_FILETYPE_DIRECTORY) {
+            _oct_EnumerateDirectory(bundle, excludeList, _oct_ExtendPath(directory, completeFilename, directoryBuffer, BUFFER_SIZE));
+        }
+
+        const char *extension = strrchr(completeFilename, '.');
+        if (_oct_TextEqual(extension, ".mp3") || _oct_TextEqual(extension, ".wav") || _oct_TextEqual(extension, ".ogg")) {
+            // Audio
+            uint32_t size;
+            uint8_t *buffer = _oct_PhysFSGetFile(completeFilename, &size);
+            Oct_LoadCommand l;
+            l.Audio.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
+            l.Audio.fileHandle.buffer = buffer;
+            l.Audio.fileHandle.size = size;
+            l.Audio.fileHandle.name = completeFilename;
+            l.Audio.fileHandle.callback = _oct_FileHandleCallback;
+            l._assetID = _oct_AssetReserveSpace();
+            _oct_PlaceAssetInBucket(bundle, l._assetID, completeFilename);
+            _oct_AssetCreateAudio(&l);
+        } else if (_oct_TextEqual(extension, ".jpg") || _oct_TextEqual(extension, ".jpeg") || _oct_TextEqual(extension, ".png") || _oct_TextEqual(extension, ".bmp")) {
+            // Texture
+            uint32_t size;
+            uint8_t *buffer = _oct_PhysFSGetFile(completeFilename, &size);
+            Oct_LoadCommand l;
+            l.Texture.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
+            l.Texture.fileHandle.buffer = buffer;
+            l.Texture.fileHandle.size = size;
+            l.Texture.fileHandle.name = completeFilename;
+            l.Texture.fileHandle.callback = _oct_FileHandleCallback;
+            l._assetID = _oct_AssetReserveSpace();
+            _oct_PlaceAssetInBucket(bundle, l._assetID, completeFilename);
+            _oct_AssetCreateTexture(&l);
+        }
+    }
+
+    // // Find all json spritesheets
+    for (int i = 0; fileList[i]; i++) {
+        const char *completeFilename = _oct_ExtendFilename(directory, fileList[i], filenameBuffer, BUFFER_SIZE);
+
+        if (_oct_InExcludeList(excludeList, completeFilename))
+            continue;
+
+        const char *extension = strrchr(completeFilename, '.');
+        // This checks if a json is a spritesheet
+        if (_oct_TextEqual(extension, ".json")) {
+            _oct_CheckAndAddJSONSpriteSheet(bundle, completeFilename);
+        }
+    }
+    PHYSFS_freeList(fileList);
+    mi_free(filenameBuffer);
+    mi_free(directoryBuffer);
+}
+
 void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
     // 1. Go through each file in the bundle and load the primitive types by their filenames
     // 2. Iterate through manifest.json and load the non-primitive types like sprites
@@ -220,44 +435,10 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
         // Find the exclude list
         cJSON *excludeList = jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "exclude"), type_array);
 
-        // Iterate through primitive types first
-        const char **fileList = (void*)PHYSFS_enumerateFiles("/");
-        for (int i = 0; fileList[i]; i++) {
-            if (_oct_InExcludeList(excludeList, fileList[i]))
-                continue;
+        // Recursively go through directories starting from root
+        _oct_EnumerateDirectory(load->AssetBundle.bundle, excludeList, "");
 
-            const char *extension = strrchr(fileList[i], '.');
-            if (_oct_TextEqual(extension, ".mp3") || _oct_TextEqual(extension, ".wav") || _oct_TextEqual(extension, ".ogg")) {
-                // Audio
-                uint32_t size;
-                uint8_t *buffer = _oct_PhysFSGetFile(fileList[i], &size);
-                Oct_LoadCommand l;
-                l.Audio.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
-                l.Audio.fileHandle.buffer = buffer;
-                l.Audio.fileHandle.size = size;
-                l.Audio.fileHandle.name = fileList[i];
-                l.Audio.fileHandle.callback = _oct_FileHandleCallback;
-                l._assetID = _oct_AssetReserveSpace();
-                _oct_PlaceAssetInBucket(load->AssetBundle.bundle, l._assetID, fileList[i]);
-                _oct_AssetCreateAudio(&l);
-            } else if (_oct_TextEqual(extension, ".jpg") || _oct_TextEqual(extension, ".jpeg") || _oct_TextEqual(extension, ".png") || _oct_TextEqual(extension, ".bmp")) {
-                // Texture
-                uint32_t size;
-                uint8_t *buffer = _oct_PhysFSGetFile(fileList[i], &size);
-                Oct_LoadCommand l;
-                l.Texture.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
-                l.Texture.fileHandle.buffer = buffer;
-                l.Texture.fileHandle.size = size;
-                l.Texture.fileHandle.name = fileList[i];
-                l.Texture.fileHandle.callback = _oct_FileHandleCallback;
-                l._assetID = _oct_AssetReserveSpace();
-                _oct_PlaceAssetInBucket(load->AssetBundle.bundle, l._assetID, fileList[i]);
-                _oct_AssetCreateTexture(&l);
-            }
-        }
-        PHYSFS_freeList(fileList);
-
-        // Iterate over advanced types (sprites, fonts, ...)
+        // Finally, go through the manifest to find other 2nd-order types (bitmap fonts, sprites, etc...)
         // TODO: This
 
         // Cleanup
