@@ -13,7 +13,6 @@ Oct_AssetBundle gAssetBundle;
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup() {
     gAllocator = oct_CreateHeapAllocator();
-    gTexMarble = oct_LoadTexture("data/marble.jpg");
     gTexPaladinSheet = oct_LoadTexture("data/paladin.png");
     gSprPaladinWalkRight = oct_LoadSprite(gTexPaladinSheet, 4, 10, (Oct_Vec2){0, 0}, (Oct_Vec2){32, 32});
     gPixelFont = oct_LoadFont("data/Kingdom.ttf", 20);

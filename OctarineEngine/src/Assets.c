@@ -42,8 +42,10 @@ void _oct_DestroyAssetMetadata(Oct_Asset asset) {
 }
 
 void _oct_FailLoad(Oct_Asset asset) {
-    SDL_SetAtomicInt(&gAssets[asset].failed, 1);
-    SDL_SetAtomicInt(&gAssets[asset].reserved, 1);
+    if (asset != OCT_NO_ASSET) {
+        SDL_SetAtomicInt(&gAssets[asset].failed, 1);
+        SDL_SetAtomicInt(&gAssets[asset].reserved, 1);
+    }
     SDL_SetAtomicInt(&gErrorHasOccurred, 1);
 }
 
@@ -101,9 +103,9 @@ static const char *_oct_FileHandleName(Oct_FileHandle *handle) {
     }
     if (handle->type == OCT_FILE_HANDLE_TYPE_FILE_BUFFER) {
         if (handle->name)
-            SDL_snprintf(buffer, 511, "[\"%s\", buffer %p, size %i]", handle->name, (void*)handle->buffer, handle->size);
+            SDL_snprintf(buffer, 511, "[\"%s\", buffer 0x%p, size %i]", handle->name, (void*)handle->buffer, handle->size);
         else
-            SDL_snprintf(buffer, 511, "[Buffer %p, size %i]", (void*)handle->buffer, handle->size);
+            SDL_snprintf(buffer, 511, "[Buffer 0x%p, size %i]", (void*)handle->buffer, handle->size);
     }
     return buffer;
 }
@@ -170,7 +172,8 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
         _oct_LogError("Failed to load audio sample %s, ogg is not yet supported.\n", _oct_FileHandleName(&load->Audio.fileHandle));
     } else if (memcmp(fileBuffer, "RIFF", 4) == 0 && fileBufferSize >= 12 && memcmp(fileBuffer + 8, "WAVE", 4) == 0) {
         // Use SDL to load wavs
-        if (!SDL_LoadWAV(load->Audio.fileHandle.filename, &spec, &data, &dataSize)) {
+        SDL_IOStream *io = SDL_IOFromConstMem(fileBuffer, fileBufferSize);
+        if (!SDL_LoadWAV_IO(io, true, &spec, &data, &dataSize)) {
             _oct_FailLoad(load->_assetID);
             _oct_LogError("Failed to load audio sample %s, SDL Error: %s.\n", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
         }

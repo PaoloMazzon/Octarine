@@ -207,6 +207,8 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
     if (PHYSFS_mount(load->AssetBundle.filename, NULL, 0)) {
         if (!PHYSFS_exists("manifest.json")) {
             _oct_LogError("Failed to load asset bundle from \"%s\", no manifest\n", load->AssetBundle.filename);
+            _oct_FailLoad(OCT_NO_ASSET);
+            SDL_SetAtomicInt(&load->AssetBundle.bundle->bundleReady, 1);
             return;
         }
 
@@ -263,6 +265,8 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
         mi_free(manifestBuffer);
         SDL_SetAtomicInt(&load->AssetBundle.bundle->bundleReady, 1);
     } else {
+        SDL_SetAtomicInt(&load->AssetBundle.bundle->bundleReady, 1);
         _oct_LogError("Failed to load asset bundle from \"%s\"\n", load->AssetBundle.filename);
+        _oct_FailLoad(OCT_NO_ASSET);
     }
 }
