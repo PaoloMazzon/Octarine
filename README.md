@@ -13,7 +13,7 @@ still receive breaking changes in the near future.
  + Fixed-timestep logic with interpolation makes physics incredibly simple without sacrificing visuals
  + Performant and safe(r) allocators are provided for the user
  + Fixed time-step with interpolation is the default and incredibly simple to use
- + Load assets in groups from directories or archives (can auto-import sprites with json data exported from Aseprite!)
+ + Robust [asset bundle system](docs/AssetBundle.md) that works with directories or archives (Thanks PhysFS!)
 
 ## Example
 This example program displays a rectangle going in circles, where the rectangle will be drawn at an uncapped, interpolated

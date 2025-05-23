@@ -13,15 +13,15 @@ Oct_AssetBundle gAssetBundle;
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup() {
     gAllocator = oct_CreateHeapAllocator();
-    gPixelFont = oct_LoadFont("data/Kingdom.ttf");
-    gPixelFontAtlas = oct_CreateFontAtlas(gPixelFont, OCT_NO_ASSET, 20, 32, 128);
-    oct_CreateFontAtlas(gPixelFont, gPixelFontAtlas, 20, 0x400, 0x4ff);
     // TODO: Test bitmap font
     // TODO: Test spritesheet xstop code
 
     gAssetBundle = oct_LoadAssetBundle("data");
     gTexMarble = oct_GetAsset(gAssetBundle, "marble.jpg");
     gSprPaladinWalkRight = oct_GetAsset(gAssetBundle, "sprites/paladin.json");
+    gPixelFont = oct_GetAsset(gAssetBundle, "ubuntu");
+    gPixelFontAtlas = oct_CreateFontAtlas(gPixelFont, OCT_NO_ASSET, 20, 32, 128);
+    oct_CreateFontAtlas(gPixelFont, gPixelFontAtlas, 20, 0x400, 0x4ff);
 
     return null;
 }

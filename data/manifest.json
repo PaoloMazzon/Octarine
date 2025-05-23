@@ -3,7 +3,6 @@
           [
             "monogram.png"
           ],
-
   "fonts":
           [
             {
@@ -28,9 +27,9 @@
           [
             {
               "name": "paladin from manifest",
-              "texture":  "sprites/paladin-sheet.png",
-              "frame count": 3,
-              "repeat": 1,
+              "texture":  "sprites/paladinsfull.png",
+              "frame count": 4,
+              "repeat": true,
               "fps": 10,
               "start position":  [0, 0],
               "frame size": [32, 32],

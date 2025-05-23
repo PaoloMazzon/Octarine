@@ -63,6 +63,24 @@ void _oct_PlaceAssetInBucket(Oct_AssetBundle bundle, Oct_Asset asset, const char
     }
 }
 
+// For internal use
+static Oct_Asset _oct_GetAssetUnblocking(Oct_AssetBundle bundle, const char *name) {
+    // Get expected location
+    uint32_t bucketLocation = hash(name) % OCT_BUCKET_SIZE;
+
+    // Traverse linked list till we find it
+    Oct_AssetLink *link = &bundle->bucket[bucketLocation];
+    while (link) {
+        if (link->name && strcmp(name, link->name) == 0)
+            return link->asset;
+        link = link->next;
+    }
+
+    return OCT_NO_ASSET;
+}
+
+//////////////////////////////// PUBLIC INTERFACE ////////////////////////////////
+
 OCTARINE_API void oct_FreeAssetBundle(Oct_AssetBundle bundle) {
     if (!bundle)
         return;
@@ -85,22 +103,6 @@ OCTARINE_API void oct_FreeAssetBundle(Oct_AssetBundle bundle) {
 
 OCTARINE_API Oct_Bool oct_IsAssetBundleReady(Oct_AssetBundle bundle) {
     return SDL_GetAtomicInt(&bundle->bundleReady);
-}
-
-// For internal use
-static Oct_Asset _oct_GetAssetUnblocking(Oct_AssetBundle bundle, const char *name) {
-    // Get expected location
-    uint32_t bucketLocation = hash(name) % OCT_BUCKET_SIZE;
-
-    // Traverse linked list till we find it
-    Oct_AssetLink *link = &bundle->bucket[bucketLocation];
-    while (link) {
-        if (link->name && strcmp(name, link->name) == 0)
-            return link->asset;
-        link = link->next;
-    }
-
-    return OCT_NO_ASSET;
 }
 
 OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name) {
@@ -127,6 +129,8 @@ OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name, 
 
     return false;
 }
+
+//////////////////////////////// ASSET PARSER HELPER FUNCTIONS ////////////////////////////////
 
 void _oct_AssetCreateTexture(Oct_LoadCommand *load);
 void _oct_AssetCreateAudio(Oct_LoadCommand *load);
@@ -208,7 +212,7 @@ void _oct_FileHandleCallback(void *buffer, uint32_t size) {
 
 // This will add the path of one filename to the other, returned string is only valid till next call
 // for example, _oct_AddRootDir("image.png", "path/to/thing.json") -> "path/to/image.png"
-const char *_oct_AddRootDir(const char *filename, const char *path) {
+static const char *_oct_AddRootDir(const char *filename, const char *path) {
     static char buffer[512] = {0};
     if (!filename || !path)
         return null;
@@ -238,7 +242,7 @@ const char *_oct_AddRootDir(const char *filename, const char *path) {
 #define jsonGetNum(json, def) cJSON_IsNumber(json) ? cJSON_GetNumberValue(json) : 0
 
 // Parses the json's frame data into a sprite's frame
-void _oct_AddFrameData(Oct_SpriteFrame *frame, cJSON *frameJSON) {
+static void _oct_AddFrameData(Oct_SpriteFrame *frame, cJSON *frameJSON) {
     memset(frame, 0, sizeof(struct Oct_SpriteFrame_t));
     if (!cJSON_IsObject(frameJSON))
         return;
@@ -258,7 +262,7 @@ void _oct_AddFrameData(Oct_SpriteFrame *frame, cJSON *frameJSON) {
 // This will check a given json to see if it is a json containing a spritesheet (exported by
 // aseprite or some other program). If it is, it will add the spritesheet as an asset to the
 // bundle under the json's name.
-void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *jsonFilename) {
+static void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *jsonFilename) {
     // Get json
     uint32_t size;
     uint8_t *jsonBuffer = _oct_PhysFSGetFile(jsonFilename, &size);
@@ -276,7 +280,7 @@ void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *jsonFil
         tex = _oct_GetAssetUnblocking(bundle, imageFilename);
 
         if (tex == OCT_NO_ASSET) {
-            _oct_LogError("\"s\" is an invalid json for loading sprites, as the texture \"%s\" does not exist. Make sure the spritesheet texture is in the same directory as the json.", jsonFilename, cJSON_GetStringValue(image));
+            _oct_LogError("\"s\" is an invalid json for loading sprites, as the texture \"%s\" does not exist. Make sure the spritesheet texture is in the same directory as the json.\n", jsonFilename, cJSON_GetStringValue(image));
             cJSON_Delete(json);
             mi_free(jsonBuffer);
             return;
@@ -286,7 +290,7 @@ void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *jsonFil
         // This is a valid spritesheet and we have the corresponding texture
         cJSON *frames = jsonGetWithType(cJSON_GetObjectItem(json, "frames"), type_array);
         if (!frames) {
-            _oct_LogError("\"%s\" is an invalid json for loading sprites, make sure you are exporting a \"Array.\"", jsonFilename);
+            _oct_LogError("\"%s\" is an invalid json for loading sprites, make sure you are exporting a \"Array.\"\n", jsonFilename);
             cJSON_Delete(json);
             mi_free(jsonBuffer);
             return;
@@ -325,7 +329,7 @@ void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *jsonFil
 }
 
 // Extends a path, ie _oct_ExtendPath("/", "folder", ...) -> "/folder/"
-const char *_oct_ExtendPath(const char *root, const char *folder, char *buffer, int32_t size) {
+static const char *_oct_ExtendPath(const char *root, const char *folder, char *buffer, int32_t size) {
     if (strlen(folder) + strlen(root) + 2 > size) return "";
     memcpy(buffer, root, strlen(root));
     memcpy(buffer + strlen(root), folder, strlen(folder));
@@ -335,7 +339,7 @@ const char *_oct_ExtendPath(const char *root, const char *folder, char *buffer, 
 }
 
 // Same as above but for filenames _oct_ExtendPath("/", "folder", ...) -> "/folder/"
-const char *_oct_ExtendFilename(const char *root, const char *folder, char *buffer, int32_t size) {
+static const char *_oct_ExtendFilename(const char *root, const char *folder, char *buffer, int32_t size) {
     if (strlen(folder) + strlen(root) + 1 > size) return "";
     memcpy(buffer, root, strlen(root));
     memcpy(buffer + strlen(root), folder, strlen(folder));
@@ -343,7 +347,7 @@ const char *_oct_ExtendFilename(const char *root, const char *folder, char *buff
     return buffer;
 }
 
-void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, const char *directory) {
+static void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, const char *directory) {
     // Need temp memory to store directory stuff as to not stack overflow
     const uint32_t BUFFER_SIZE = 1024;
     char *filenameBuffer = mi_malloc(BUFFER_SIZE);
@@ -364,6 +368,7 @@ void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, const c
         PHYSFS_Stat stat;
         if (PHYSFS_stat(fileList[i], &stat) && stat.filetype == PHYSFS_FILETYPE_DIRECTORY) {
             _oct_EnumerateDirectory(bundle, excludeList, _oct_ExtendPath(directory, completeFilename, directoryBuffer, BUFFER_SIZE));
+            continue;
         }
 
         const char *extension = strrchr(completeFilename, '.');
@@ -414,20 +419,201 @@ void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, const c
     mi_free(directoryBuffer);
 }
 
-void _oct_ParseFonts(Oct_AssetBundle bundle, cJSON *fonts) {
-    if (!fonts) return;
-    // TODO: This
+// Parses a json array to a vec2 (ie [12, 12] -> (Oct_Vec2){12, 12})
+static void _oct_ParseTwoArray(cJSON *array, Oct_Vec2 out) {
+    if (array && cJSON_IsArray(array) && cJSON_GetArraySize(array) == 2) {
+        out[0] = jsonGetNum(cJSON_GetArrayItem(array, 0), 0);
+        out[1] = jsonGetNum(cJSON_GetArrayItem(array, 1), 0);
+    } else {
+        out[0] = 0;
+        out[1] = 0;
+    }
 }
 
-void _oct_ParseBitmapFonts(Oct_AssetBundle bundle, cJSON *fonts) {
+const char *FONT_EXAMPLE_JSON = "\n{\n"
+                                "  \"name\": \"asset\",\n"
+                                "  \"files\": [\"file1.ttf\", \"file2.otf\", ...]\n"
+                                "}";
+
+static void _oct_ParseFonts(Oct_AssetBundle bundle, cJSON *fonts) {
     if (!fonts) return;
-    // TODO: This
+    for (int i = 0; i < cJSON_GetArraySize(fonts); i++) {
+        if (!cJSON_IsObject(cJSON_GetArrayItem(fonts, i))) {
+            _oct_LogError("Font index [%i] is not an object, make sure fonts are an array of objects where each object is of the format %s\n", i, FONT_EXAMPLE_JSON);
+            _oct_FailLoad(OCT_NO_ASSET);
+            continue;
+        }
+        cJSON *name = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(fonts, i), "name"), type_string);
+        cJSON *files = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(fonts, i), "files"), type_array);
+
+        if (name && files) {
+            const char *filenames[5] = {0};
+            const char *assetName = cJSON_GetStringValue(name);
+
+            // Find each filename
+            int namePointer = 0;
+            for (int j = 0; j < cJSON_GetArraySize(files) && namePointer < 5; j++) {
+                cJSON *filename = jsonGetWithType(cJSON_GetArrayItem(files, j), type_string);
+                if (filename)
+                    filenames[namePointer++] = cJSON_GetStringValue(filename);
+            }
+
+            // We now have at least 1 "valid" (maybe its shit idk) filename, we can create the font
+            if (filenames[0]) {
+                Oct_LoadCommand l = {0};
+                // Parse each file for fallback fonts
+                for (int j = 0; j < namePointer; j++) {
+                    uint32_t size;
+                    uint8_t *buffer = _oct_PhysFSGetFile(filenames[j], &size);
+                    l.Font.fileHandles[j].type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
+                    l.Font.fileHandles[j].buffer = buffer;
+                    l.Font.fileHandles[j].size = size;
+                    l.Font.fileHandles[j].name = filenames[j];
+                    l.Font.fileHandles[j].callback = _oct_FileHandleCallback;
+                }
+
+                // Load the font and place it in the bucket
+                l._assetID = _oct_AssetReserveSpace();
+                _oct_PlaceAssetInBucket(bundle, l._assetID, assetName);
+                _oct_AssetCreateFont(&l);
+            } else {
+                _oct_LogError("Font \"%s\" has no valid fonts. Make sure fonts are an array of objects where each object is of the format %s\n", assetName, FONT_EXAMPLE_JSON);
+                _oct_FailLoad(OCT_NO_ASSET);
+                continue;
+            }
+        } else {
+            _oct_LogError("Font index [%i] is not valid, make sure fonts are an array of objects where each object is of the format %s\n", i, FONT_EXAMPLE_JSON);
+            _oct_FailLoad(OCT_NO_ASSET);
+            continue;
+        }
+    }
 }
 
-void _oct_ParseSprites(Oct_AssetBundle bundle, cJSON *sprites) {
+const char *BITMAP_FONT_EXAMPLE_JSON =  "\n{\n"
+                                        "  \"name\": \"name\",\n"
+                                        "  \"image\": \"font.png\",\n"
+                                        "  \"cell size\": [6, 12],\n"
+                                        "  \"unicode range\": [32, 128]\n"
+                                        "}";
+
+static void _oct_ParseBitmapFonts(Oct_AssetBundle bundle, cJSON *fonts) {
+    if (!fonts) return;
+    for (int i = 0; i < cJSON_GetArraySize(fonts); i++) {
+        if (!cJSON_IsObject(cJSON_GetArrayItem(fonts, i))) {
+            _oct_LogError("Bitmap font index [%i] is not an object, make sure fonts are an array of objects where each object is of the format %s\n", i, BITMAP_FONT_EXAMPLE_JSON);
+            _oct_FailLoad(OCT_NO_ASSET);
+            continue;
+        }
+
+        cJSON *jsonName = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(fonts, i), "name"), type_string);
+        cJSON *jsonImage = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(fonts, i), "image"), type_string);
+        cJSON *jsonCellSize = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(fonts, i), "cell size"), type_array);
+        cJSON *jsonUnicodeRange = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(fonts, i), "unicode range"), type_array);
+
+        // We have all the necessary pieces
+        if (jsonName && jsonImage && jsonCellSize && jsonUnicodeRange) {
+            // Get values
+            const char *assetName = cJSON_GetStringValue(jsonName);
+            const char *filename = cJSON_GetStringValue(jsonImage);
+            Oct_Vec2 cellSize, unicode;
+            _oct_ParseTwoArray(jsonCellSize, cellSize);
+            _oct_ParseTwoArray(jsonUnicodeRange, unicode);
+
+            // Make load command
+            Oct_LoadCommand l = {0};
+            uint32_t size;
+            uint8_t *buffer = _oct_PhysFSGetFile(filename, &size);
+            l.BitmapFont.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
+            l.BitmapFont.fileHandle.buffer = buffer;
+            l.BitmapFont.fileHandle.size = size;
+            l.BitmapFont.fileHandle.name = filename;
+            l.BitmapFont.fileHandle.callback = _oct_FileHandleCallback;
+            l.BitmapFont.cellSize[0] = cellSize[0];
+            l.BitmapFont.cellSize[1] = cellSize[1];
+            l.BitmapFont.unicodeStart = unicode[0];
+            l.BitmapFont.unicodeEnd = unicode[1];
+            l._assetID = _oct_AssetReserveSpace();
+            _oct_PlaceAssetInBucket(bundle, l._assetID, assetName);
+            _oct_AssetCreateBitmapFont(&l);
+        } else {
+            _oct_LogError("Bitmap font index [%i] is not a valid object, make sure fonts are an array of objects where each object is of the format %s\n", i, BITMAP_FONT_EXAMPLE_JSON);
+            _oct_FailLoad(OCT_NO_ASSET);
+            continue;
+        }
+    }
+}
+
+const char *SPRITE_EXAMPLE_JSON = "\n{\n"
+                                  "  \"name\": \"name\",\n"
+                                  "  \"texture\":  \"filename.png\",\n"
+                                  "  \"frame count\": 3,\n"
+                                  "  \"repeat\": true,\n"
+                                  "  \"fps\": 10,\n"
+                                  "  \"start position\":  [0, 0],\n"
+                                  "  \"frame size\": [32, 32],\n"
+                                  "  \"padding\":  [0, 0],\n"
+                                  "  \"x stop\": 0\n"
+                                  "}";
+
+static void _oct_ParseSprites(Oct_AssetBundle bundle, cJSON *sprites) {
     if (!sprites) return;
-    // TODO: This
+    for (int i = 0; i < cJSON_GetArraySize(sprites); i++) {
+        if (!cJSON_IsObject(cJSON_GetArrayItem(sprites, i))) {
+            _oct_LogError("Sprite index [%i] is not an object, make sure sprites are an array of objects where each object is of the format %s\n", i, SPRITE_EXAMPLE_JSON);
+            _oct_FailLoad(OCT_NO_ASSET);
+            continue;
+        }
+
+        cJSON *jsonName = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "name"), type_string);
+        cJSON *jsonTexture = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "texture"), type_string);
+        cJSON *jsonFrameCount = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "frame count"), type_num);
+        cJSON *jsonRepeat = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "repeat"), type_bool);
+        cJSON *jsonFPS = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "fps"), type_num);
+        cJSON *jsonStartPosition = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "start position"), type_array);
+        cJSON *jsonFrameSize = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "frame size"), type_array);
+        cJSON *jsonPadding = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "padding"), type_array);
+        cJSON *jsonXStop = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(sprites, i), "x stop"), type_num);
+
+        // We have all the necessary pieces (not everything is required for sprites)
+        if (jsonName && jsonTexture && jsonFrameCount && jsonFrameSize) {
+            // Get values
+            const char *assetName = cJSON_GetStringValue(jsonName);
+            const char *textureName = cJSON_GetStringValue(jsonTexture);
+            const double xStop = jsonGetNum(jsonXStop, 0);
+            const double fps = jsonGetNum(jsonFPS, 0);
+            const double frameCount = jsonGetNum(jsonFrameCount, 0);
+            const Oct_Bool repeat = !repeat || cJSON_IsTrue(jsonRepeat);
+
+            // Make sure we have that texture
+            Oct_Texture tex = _oct_GetAssetUnblocking(bundle, textureName);
+            if (tex == OCT_NO_ASSET) {
+                _oct_LogError("Sprite \"%s\" references a texture \"%s\" that is not loaded by the asset bundle. Make sure that you have the right filename and the file is not in the exclude list.", assetName, textureName);
+                _oct_FailLoad(OCT_NO_ASSET);
+                continue;
+            }
+
+            // Make load command
+            Oct_LoadCommand l = {0};
+            l.Sprite.texture = tex;
+            l.Sprite.frameCount = frameCount;
+            l.Sprite.repeat = repeat;
+            l.Sprite.fps = fps;
+            l.Sprite.xStop = xStop;
+            _oct_ParseTwoArray(jsonStartPosition, l.Sprite.startPos);
+            _oct_ParseTwoArray(jsonFrameSize, l.Sprite.frameSize);
+            _oct_ParseTwoArray(jsonPadding, l.Sprite.padding);
+            l._assetID = _oct_AssetReserveSpace();
+            _oct_PlaceAssetInBucket(bundle, l._assetID, assetName);
+            _oct_AssetCreateSprite(&l);
+        } else {
+            _oct_LogError("Sprite index [%i] is not a valid object, make sure sprites are an array of objects where each object is of the format %s\n", i, SPRITE_EXAMPLE_JSON);
+            _oct_FailLoad(OCT_NO_ASSET);
+            continue;
+        }
+    }
 }
+
+//////////////////////////////// TOP-LEVEL ASSET PARSER ////////////////////////////////
 
 void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
     // 1. Go through each file in the bundle and load the primitive types by their filenames
@@ -436,7 +622,7 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
     // 4. Set the ready atomic to 1
     if (PHYSFS_mount(load->AssetBundle.filename, NULL, 0)) {
         if (!PHYSFS_exists("manifest.json")) {
-            _oct_LogError("Failed to load asset bundle from \"%s\", no manifest\n", load->AssetBundle.filename);
+            _oct_LogError("Failed to load asset bundle from \"%s\", no manifest present.\n", load->AssetBundle.filename);
             _oct_FailLoad(OCT_NO_ASSET);
             SDL_SetAtomicInt(&load->AssetBundle.bundle->bundleReady, 1);
             return;
