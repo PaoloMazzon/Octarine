@@ -13,8 +13,8 @@ int main(int argc, const char **argv) {
 
             // Change these to what you want
             .windowTitle = "Octarine",
-            .windowWidth = 640,
-            .windowHeight = 480,
+            .windowWidth = 800,
+            .windowHeight = 600,
             .debug = true,
     };
 

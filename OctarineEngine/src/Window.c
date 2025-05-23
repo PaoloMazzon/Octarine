@@ -1,3 +1,4 @@
+#include <VK2D/VK2D.h>
 #include "oct/Window.h"
 #include "oct/Opaque.h"
 #include "oct/Validation.h"
@@ -90,7 +91,9 @@ void _oct_WindowUpdateBegin() {
     Oct_Context ctx = _oct_GetCtx();
 
     SDL_Event e;
+    vk2dGuiStartInput();
     while (SDL_PollEvent(&e)) {
+        vk2dGuiProcessEvent(&e);
         if (e.type == SDL_EVENT_QUIT) {
             SDL_SetAtomicInt(&ctx->quit, 1);
         } else if (e.type == SDL_EVENT_KEY_DOWN || e.type == SDL_EVENT_KEY_UP) {
@@ -138,6 +141,7 @@ void _oct_WindowUpdateBegin() {
             _oct_WindowPush(&event);
         }
     }
+    vk2dGuiEndInput();
 
     // Update window variables
     int w, h;

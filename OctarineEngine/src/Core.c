@@ -30,6 +30,56 @@ inline static double _oct_GoofyTime(uint64_t start) {
     return (current - start) / freq;
 }
 
+void _oct_DebugInit() {
+
+}
+
+void _oct_DebugUpdate() {
+    Oct_Context ctx = _oct_GetCtx();
+    if (!ctx->initInfo->debug) return;
+
+    // Draw nuklear debug thing
+    if (nk_begin(vk2dGuiContext(), "Performance", nk_rect(10, 10, 300, 200),
+                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
+
+        // Host info
+        nk_layout_row_dynamic(vk2dGuiContext(), 20, 1);
+
+        // Performance metrics
+        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Render: %0.2ffps, %0.2fms", oct_GetRenderFPS(), (1.0 / oct_GetRenderFPS()) * 1000);
+        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Logic: %0.2fHz, %0.2fms", oct_GetLogicHz(), (1.0 / oct_GetLogicHz()) * 1000);
+        float inUse, total;
+        vk2dRendererGetVRAMUsage(&inUse, &total);
+        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "VRAM: %.2fmb/%.2fmb", inUse, total);
+    }
+    nk_end(vk2dGuiContext());
+
+    if (nk_begin(vk2dGuiContext(), "Assets", nk_rect(10, 220, 300, 350),
+                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+                 NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
+
+        // Assets
+        nk_layout_row_dynamic(vk2dGuiContext(), 20, 3);
+        nk_label(vk2dGuiContext(), "Index", NK_TEXT_CENTERED);
+        nk_label(vk2dGuiContext(), "Gen.", NK_TEXT_CENTERED);
+        nk_label(vk2dGuiContext(), "Type", NK_TEXT_CENTERED);
+
+        for (int i = 0; i < OCT_MAX_ASSETS; i++) {
+            if (_oct_AssetType(i) == OCT_ASSET_TYPE_NONE) continue;
+            nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%i", i);
+            nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%i", _oct_AssetGeneration(i));
+            nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%s", _oct_AssetTypeString(i));
+        }
+    }
+    nk_end(vk2dGuiContext());
+
+
+}
+
+void _oct_DebugEnd() {
+
+}
+
 OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     // Initialization
     Oct_Context ctx = mi_zalloc(sizeof(struct Oct_Context_t));
@@ -43,6 +93,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     _oct_AudioInit();
     _oct_CommandBufferInit();
     _oct_AssetsInit();
+    _oct_DebugInit();
 
     // Debug settings
     if (ctx->initInfo->debug) {
@@ -76,6 +127,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
         _oct_WindowUpdateEnd();
         _oct_AudioUpdateEnd();
         _oct_DrawingUpdateEnd();
+        _oct_DebugUpdate();
 
         // Timekeeping
         const int target = SDL_GetAtomicInt(&ctx->renderHz);
@@ -101,6 +153,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
 
     // Cleanup
     vk2dRendererWait();
+    _oct_DebugEnd();
     _oct_UnstrapBoots();
     _oct_AssetsEnd();
     _oct_CommandBufferEnd();

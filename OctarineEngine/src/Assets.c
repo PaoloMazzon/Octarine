@@ -571,6 +571,33 @@ Oct_AssetType _oct_AssetType(Oct_Asset asset) {
     return SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded) ? gAssets[ASSET_INDEX(asset)].type : OCT_ASSET_TYPE_NONE;
 }
 
+int _oct_AssetGeneration(Oct_Asset asset) {
+    return SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].generation);
+}
+
+const char *_oct_AssetTypeString(Oct_Asset asset) {
+    Oct_AssetType type = SDL_GetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded) ? gAssets[ASSET_INDEX(asset)].type : OCT_ASSET_TYPE_NONE;
+    if (type == OCT_ASSET_TYPE_NONE)
+        return "None";
+    if (type == OCT_ASSET_TYPE_TEXTURE)
+        return "Texture";
+    if (type == OCT_ASSET_TYPE_MODEL)
+        return "Model";
+    if (type == OCT_ASSET_TYPE_FONT)
+        return "Font";
+    if (type == OCT_ASSET_TYPE_FONT_ATLAS)
+        return "Font Atlas";
+    if (type == OCT_ASSET_TYPE_AUDIO)
+        return "Audio";
+    if (type == OCT_ASSET_TYPE_SPRITE)
+        return "Sprite";
+    if (type == OCT_ASSET_TYPE_CAMERA)
+        return "Camera";
+    if (type == OCT_ASSET_TYPE_ANY)
+        return "Any";
+    return "";
+}
+
 Oct_AssetData *_oct_AssetGet(Oct_Asset asset) {
     return &gAssets[ASSET_INDEX(asset)];
 }

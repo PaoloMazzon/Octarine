@@ -54,7 +54,8 @@ void _oct_DrawingInit() {
             .errorFile = "octarinedump.log",
             .quitOnError = true,
             .stdoutLogging = false,
-            .enableDebug = false
+            .enableDebug = false,
+            .enableNuklear = ctx->initInfo->debug
     };
     VK2DResult result = vk2dRendererInit(ctx->window, config, &options);
 

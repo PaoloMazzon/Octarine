@@ -56,17 +56,9 @@ void *update(void *ptr) {
             (Oct_Vec2){OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE}
     );
 
-    oct_DrawDebugText(
-            (Oct_Vec2){0, 0},
-            1,
-            "Render: %.2fFPS\nLogic: %.2fHz",
-            oct_GetRenderFPS(),
-            oct_GetLogicHz()
-    );
-
     oct_DrawText(
             gPixelFontAtlas,
-            (Oct_Vec2){100, 100},
+            (Oct_Vec2){320, 100},
             1,
             "The quick brown fox jumps over the lazy dog.\n!@#$%^&*()_+-={}[]"
     );

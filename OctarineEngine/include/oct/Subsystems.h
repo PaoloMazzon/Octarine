@@ -57,6 +57,8 @@ typedef struct Oct_AssetData_t Oct_AssetData;
 void _oct_AssetsInit();
 void _oct_AssetsProcessCommand(Oct_Command *cmd);
 Oct_AssetType _oct_AssetType(Oct_Asset asset);
+int _oct_AssetGeneration(Oct_Asset asset);
+const char *_oct_AssetTypeString(Oct_Asset asset);
 Oct_AssetData *_oct_AssetGet(Oct_Asset asset);
 Oct_AssetData *_oct_AssetGetSafe(Oct_Asset asset, Oct_AssetType type); // returns null if the type is wrong, generation is wrong, or the asset isn't loaded yet
 Oct_Asset _oct_AssetReserveSpace(); // used from logic thread to reserve a space in the asset list
