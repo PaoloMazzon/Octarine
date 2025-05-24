@@ -9,11 +9,28 @@
 #include "oct/Assets.h"
 #include "oct/Blobs.h"
 
+// Thing in the draw command hash bucket
+typedef struct DrawCommandLink_t DrawCommandLink;
+struct DrawCommandLink_t {
+    Oct_DrawCommand *command; // Pointer to a command in the main draw command link in the frame command buffer thing
+    uint64_t id;              // Id for collision checking
+    uint64_t frame;           // Frame this is associated with so we don't need to clear the bucket each frame
+    DrawCommandLink *next;    // Next in the chain for collision checking
+};
+
+const int BUCKET_SIZE = 10000;
+
 // Commands are tied to the frame they came from for interpolation and triple buffering
 typedef struct FrameCommandBuffer_t {
     Oct_DrawCommand *commands; ///< Internal command list
     int size;                  ///< Size of the internal buffer
     int count;                 ///< Number of commands
+
+    // Draw command hash bucket for interpolated draws
+    DrawCommandLink *bucket;
+    DrawCommandLink *backupBucket;
+    int backupBucketSize;
+    int backupBucketCount; // Set to 0 each time this starts working to make room for new links
 } FrameCommandBuffer;
 
 // Wraps an index (0 = 1, 1 = 2, 2 = 0)
@@ -26,6 +43,8 @@ typedef struct FrameCommandBuffer_t {
 static FrameCommandBuffer gFrameBuffers[3]; // Triple buffer
 static int gCurrentFrame; // Current frame is the one not being interpolated
 static VK2DTexture gDebugFont; // Bitmap font of the debug texture
+static uint64_t gFrame = 2; // Total number of frames, in general
+
 // For keeping track of average interpolation time
 static double gTotalInterpolationTime; // Total time spent finding interpolated draw commands
 static double gTotalInterpolationCalls; // Total amount of draws that were interpolated
@@ -33,6 +52,68 @@ static double gTotalFrames;
 static double gLastInterpolationStatsUpdate; // Last time the interpolation stats were updated
 static double gAverageInterpolationTime;
 static double gAverageInterpolationCalls;
+
+///////////////////// Hash bucket functions /////////////////////
+uint64_t hash(uint64_t x) {
+    x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
+    x = x ^ (x >> 31);
+    return x;
+}
+
+// Puts a command into the hash bucket of a given frame
+static void addCommandToBucket(int index) {
+    Oct_DrawCommand *cmd = &gFrameBuffers[gCurrentFrame].commands[index];
+    uint64_t bucketLocation = hash(cmd->id) % BUCKET_SIZE;
+
+    if (gFrameBuffers[gCurrentFrame].bucket[bucketLocation].frame != gFrame) {
+        // This spot is empty
+        gFrameBuffers[gCurrentFrame].bucket[bucketLocation].command = cmd;
+        gFrameBuffers[gCurrentFrame].bucket[bucketLocation].id = cmd->id;
+        gFrameBuffers[gCurrentFrame].bucket[bucketLocation].frame = gFrame;
+        gFrameBuffers[gCurrentFrame].bucket[bucketLocation].next = null;
+    } else {
+        // This spot is taken, find the end of the linked list
+        DrawCommandLink *current = &gFrameBuffers[gCurrentFrame].bucket[bucketLocation];
+        while (current->next)
+            current = current->next;
+
+        // Find a spot in the extended bucket list
+        if (gFrameBuffers[gCurrentFrame].backupBucketCount == gFrameBuffers[gCurrentFrame].backupBucketSize) {
+            void *temp = mi_realloc(gFrameBuffers[gCurrentFrame].backupBucket,
+                                    sizeof(struct DrawCommandLink_t) * (gFrameBuffers[gCurrentFrame].backupBucketSize + 10));
+            if (!temp)
+                oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to reallocate backup bucket.");
+            gFrameBuffers[gCurrentFrame].backupBucket = temp;
+            gFrameBuffers[gCurrentFrame].backupBucketSize += 10;
+        }
+        const int32_t extendedBucketSpot = gFrameBuffers[gCurrentFrame].backupBucketCount++;
+
+        current->next = &gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot];
+        gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].command = cmd;
+        gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].id = cmd->id;
+        gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].frame = gFrame;
+        gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].next = null;
+    }
+}
+
+// Pulls a command from the previous frame's hash bucket or null if there is no match
+static Oct_DrawCommand *getCommandFromBucket(uint64_t id) {
+    // Get expected location
+    uint64_t bucketLocation = hash(id) % BUCKET_SIZE;
+
+    // Traverse linked list till we find it
+    DrawCommandLink *link = &gFrameBuffers[PREVIOUS_DRAW_FRAME].bucket[bucketLocation];
+    while (link) {
+        if (link->frame == gFrame - 1 && link->id == id)
+            return link->command;
+        else if (link->frame != gFrame - 1)
+            break;
+        link = link->next;
+    }
+
+    return null;
+}
 
 ///////////////////// Internal functions /////////////////////
 // Adds a command to the current frame buffer, expanding if necessary
@@ -46,6 +127,8 @@ void addCommand(Oct_DrawCommand *cmd) {
         }
     }
     memcpy(&gFrameBuffers[gCurrentFrame].commands[gFrameBuffers[gCurrentFrame].count++], cmd, sizeof(struct Oct_DrawCommand_t));
+    if (cmd->interpolate != 0)
+        addCommandToBucket(gFrameBuffers[gCurrentFrame].count - 1);
 }
 
 ///////////////////// Subsystem /////////////////////
@@ -73,6 +156,7 @@ void _oct_DrawingInit() {
     for (int i = 0; i < 3; i++) {
         gFrameBuffers[i].size = ctx->initInfo->ringBufferSize;
         gFrameBuffers[i].commands = mi_malloc(gFrameBuffers[i].size * sizeof(struct Oct_DrawCommand_t));
+        gFrameBuffers[i].bucket = mi_zalloc(sizeof(struct DrawCommandLink_t) * BUCKET_SIZE);
     }
 
     // Allocate debug font
@@ -95,6 +179,8 @@ void _oct_DrawingEnd() {
     // Free frame buffers
     for (int i = 0; i < 3; i++) {
         mi_free(gFrameBuffers[i].commands);
+        mi_free(gFrameBuffers[i].bucket);
+        mi_free(gFrameBuffers[i].backupBucket);
     }
 
     vk2dRendererQuit();
@@ -117,6 +203,9 @@ void _oct_DrawingProcessCommand(Oct_Command *cmd) {
         if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_END_FRAME) {
             gCurrentFrame = NEXT_INDEX(gCurrentFrame);
             gFrameBuffers[gCurrentFrame].count = 0;
+            gFrameBuffers[gCurrentFrame].backupBucketCount = 0;
+        } else if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_START_FRAME) {
+            gFrame++;
         }
     } else {
         addCommand(&cmd->drawCommand);
@@ -529,9 +618,7 @@ void _oct_DrawingUpdateEnd() {
             const double startTime = oct_Time();
 
             // Find the interpolated command
-            for (int j = 0; prevCmd == null && j < gFrameBuffers[PREVIOUS_DRAW_FRAME].count; j++)
-                if (gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j].id == cmd->id && cmd->type == gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j].type)
-                    prevCmd = &gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j];
+            prevCmd = getCommandFromBucket(cmd->id);
 
             // Performance metrics
             gTotalInterpolationTime += oct_Time() - startTime;

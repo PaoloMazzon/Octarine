@@ -5,6 +5,9 @@
 #include "oct/Constants.h"
 
 Oct_Colour _OCT_WHITE = {1, 1, 1, 1};
+Oct_Vec2 _OCT_ONE2 = {1, 1};
+Oct_Vec3 _OCT_ONE3 = {1, 1, 1};
+Oct_Vec4 _OCT_ONE4 = {1, 1, 1, 1};
 Oct_Vec2 _OCT_ZERO2 = {0, 0};
 Oct_Vec3 _OCT_ZERO3 = {0, 0, 0};
 Oct_Vec4 _OCT_ZERO4 = {0, 0, 0, 0};
@@ -102,11 +105,11 @@ OCTARINE_API void oct_DrawCircleColour(Oct_Circle *circle, Oct_Colour *colour, O
 
 /////////////////////////////////////// TEXTURE ///////////////////////////////////////
 OCTARINE_API void oct_DrawTextureInt(Oct_InterpolationType interp, uint64_t id, Oct_Texture texture, Oct_Vec2 position) {
-    oct_DrawTextureIntColourExt(interp, id, texture, &_OCT_WHITE, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawTextureIntColourExt(interp, id, texture, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawTextureIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position) {
-    oct_DrawTextureIntColourExt(interp, id, texture, colour, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawTextureIntColourExt(interp, id, texture, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawTextureIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Texture texture, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
@@ -133,11 +136,11 @@ OCTARINE_API void oct_DrawTextureIntColourExt(Oct_InterpolationType interp, uint
 }
 
 OCTARINE_API void oct_DrawTexture(Oct_Texture texture, Oct_Vec2 position) {
-    oct_DrawTextureIntColourExt(0, 0, texture, &_OCT_WHITE, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawTextureIntColourExt(0, 0, texture, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawTextureColour(Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position) {
-    oct_DrawTextureIntColourExt(0, 0, texture, colour, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawTextureIntColourExt(0, 0, texture, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawTextureExt(Oct_Texture texture, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
@@ -150,11 +153,11 @@ OCTARINE_API void oct_DrawTextureColourExt(Oct_Texture texture, Oct_Colour *colo
 
 /////////////////////////////////////// SPRITE ///////////////////////////////////////
 OCTARINE_API void oct_DrawSpriteInt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, OCT_SPRITE_CURRENT_FRAME, &_OCT_WHITE, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, OCT_SPRITE_CURRENT_FRAME, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawSpriteIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, OCT_SPRITE_CURRENT_FRAME, colour, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, OCT_SPRITE_CURRENT_FRAME, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawSpriteIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
@@ -166,11 +169,11 @@ OCTARINE_API void oct_DrawSpriteIntColourExt(Oct_InterpolationType interp, uint6
 }
 
 OCTARINE_API void oct_DrawSprite(Oct_Sprite sprite, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, OCT_SPRITE_CURRENT_FRAME, &_OCT_WHITE, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, OCT_SPRITE_CURRENT_FRAME, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawSpriteColour(Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, OCT_SPRITE_CURRENT_FRAME, colour, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, OCT_SPRITE_CURRENT_FRAME, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawSpriteExt(Oct_Sprite sprite, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
@@ -183,11 +186,11 @@ OCTARINE_API void oct_DrawSpriteColourExt(Oct_Sprite sprite, Oct_Colour *colour,
 
 /////////////////////////////////////// SPRITE FRAME ///////////////////////////////////////
 OCTARINE_API void oct_DrawSpriteFrameInt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, int32_t frame, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, frame, &_OCT_WHITE, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, frame, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawSpriteFrameIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, int32_t frame, Oct_Colour *colour, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, frame, colour, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, frame, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawSpriteFrameIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, int32_t frame, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
@@ -215,11 +218,11 @@ OCTARINE_API void oct_DrawSpriteFrameIntColourExt(Oct_InterpolationType interp, 
 }
 
 OCTARINE_API void oct_DrawSpriteFrame(Oct_Sprite sprite, int32_t frame, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, frame, &_OCT_WHITE, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, frame, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawSpriteFrameColour(Oct_Sprite sprite, int32_t frame, Oct_Colour *colour, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, frame, colour, position, _OCT_ZERO2, 0, _OCT_ZERO2);
+    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, frame, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
 OCTARINE_API void oct_DrawSpriteFrameExt(Oct_Sprite sprite, int32_t frame, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {

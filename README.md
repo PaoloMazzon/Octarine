@@ -12,7 +12,7 @@ still receive breaking changes in the near future.
  + Logic is done on its own thread, drawing must be done by queueing draws for the main thread
  + Fixed-timestep logic with interpolation makes physics incredibly simple without sacrificing visuals
  + Performant and safe(r) allocators are provided for the user
- + Fixed time-step with interpolation is the default and incredibly simple to use
+ + Fixed time-step with interpolation is the default and incredibly simple to use (and quite fast!)
  + Robust [asset bundle system](docs/AssetBundle.md) that works with directories or archives (Thanks PhysFS!)
 
 ## Example

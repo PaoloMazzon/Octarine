@@ -10,6 +10,18 @@ Oct_FontAtlas gPixelFontAtlas;
 Oct_FontAtlas gBitmapFontAtlas;
 Oct_AssetBundle gAssetBundle;
 
+typedef struct Warrior_t {
+    Oct_Vec2 position;
+    Oct_Vec2 velocity;
+    uint64_t id;
+} Warrior;
+Warrior *warriorList;
+const int WARRIOR_COUNT = 1000;
+const Oct_Rectangle roomBounds = {
+        .position = {0, 0},
+        .size = {1280, 720}
+};
+
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup() {
     gAllocator = oct_CreateHeapAllocator();
@@ -23,6 +35,16 @@ void *startup() {
     gPixelFontAtlas = oct_CreateFontAtlas(gPixelFont, OCT_NO_ASSET, 20, 32, 128);
     oct_CreateFontAtlas(gPixelFont, gPixelFontAtlas, 20, 0x400, 0x4ff);
 
+    // Create some test characters
+    warriorList = oct_Malloc(gAllocator, sizeof(struct Warrior_t) * WARRIOR_COUNT);
+    for (int i = 0; i < WARRIOR_COUNT; i++) {
+        warriorList[i].id = 1000 + i;
+        warriorList[i].position[0] = oct_Random(roomBounds.position[0], roomBounds.size[0]);
+        warriorList[i].position[1] = oct_Random(roomBounds.position[1], roomBounds.size[1]);
+        warriorList[i].velocity[0] = oct_Random(-3, 3);
+        warriorList[i].velocity[1] = oct_Random(-3, 3);
+    }
+
     return null;
 }
 
@@ -30,23 +52,19 @@ void *startup() {
 void *update(void *ptr) {
     oct_DrawClear(&(Oct_Colour){0, 0.6, 1, 1});
 
-    oct_DrawTextureIntExt(
-            OCT_INTERPOLATE_ALL, 2,
-            gTexMarble,
-            (Oct_Vec2){oct_MouseX() + 100, oct_MouseY() + 100},
-            (Oct_Vec2){1, 1},
-            oct_Time(),
-            (Oct_Vec2){OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE}
-    );
+    // Update and draw warriors
+    for (int i = 0; i < WARRIOR_COUNT; i++) {
+        // Update warrior
+        warriorList[i].position[0] += warriorList[i].velocity[0];
+        warriorList[i].position[1] += warriorList[i].velocity[1];
+        if (warriorList[i].position[0] < roomBounds.position[0] || warriorList[i].position[0] > roomBounds.position[0] + roomBounds.size[0])
+            warriorList[i].velocity[0] *= -1;
+        if (warriorList[i].position[1] < roomBounds.position[1] || warriorList[i].position[1] > roomBounds.position[1] + roomBounds.size[1])
+            warriorList[i].velocity[1] *= -1;
 
-    oct_DrawSpriteIntExt(
-            OCT_INTERPOLATE_ALL, 3,
-            gSprPaladinWalkRight,
-            (Oct_Vec2){oct_MouseX(), oct_MouseY()},
-            (Oct_Vec2){4, 4},
-            oct_Time(),
-            (Oct_Vec2){OCT_ORIGIN_MIDDLE, OCT_ORIGIN_MIDDLE}
-    );
+        // Draw warrior
+        oct_DrawSpriteInt(OCT_INTERPOLATE_ALL, warriorList[i].id, gSprPaladinWalkRight, warriorList[i].position);
+    }
 
     oct_DrawText(
             gPixelFontAtlas,

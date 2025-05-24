@@ -72,7 +72,7 @@ OCTARINE_API void oct_ResetAllocator(Oct_Allocator allocator) {
 OCTARINE_API void oct_FreeAllocator(Oct_Allocator allocator) {
     if (allocator) {
         if (allocator->type == OCT_ALLOCATOR_TYPE_HEAP) {
-            mi_heap_delete(allocator->heapAllocator);
+            mi_heap_destroy(allocator->heapAllocator);
         } else if (allocator->type == OCT_ALLOCATOR_TYPE_ARENA) {
             mi_free(allocator->arenaAllocator.buffer);
         } else if (allocator->type == OCT_ALLOCATOR_TYPE_VIRTUAL_PAGE) {
