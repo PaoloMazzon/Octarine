@@ -51,6 +51,8 @@ void _oct_DebugUpdate() {
         float inUse, total;
         vk2dRendererGetVRAMUsage(&inUse, &total);
         nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "VRAM: %.2fmb/%.2fmb", inUse, total);
+        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Interpolations/frame: %0.2f", _oct_DrawingGetAverageInterpolationCalls());
+        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Interpolation time: %0.2fµs", _oct_DrawingGetAverageInterpolationTime() * 1000000);
     }
     nk_end(vk2dGuiContext());
 

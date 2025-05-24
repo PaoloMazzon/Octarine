@@ -193,6 +193,7 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
         int32_t newSize;
         uint8_t *newSamples = _oct_AudioConvertFormat(data, dataSize, &newSize, &spec);
         if (newSamples) {
+            gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_AUDIO;
             gAssets[ASSET_INDEX(load->_assetID)].audio.size = newSize;
             gAssets[ASSET_INDEX(load->_assetID)].audio.data = newSamples;
             SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);

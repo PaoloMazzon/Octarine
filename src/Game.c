@@ -28,15 +28,7 @@ void *startup() {
 
 // Called each logical frame, whatever you return is passed to either the next update or shutdown
 void *update(void *ptr) {
-    oct_DrawRectangleIntColour(
-            OCT_INTERPOLATE_ALL, 1,
-            &(Oct_Colour){0, 0.6, 1, 1},
-            &(Oct_Rectangle){
-                .position = {320 + (cosf(oct_Time()) * 200), 240 + (sinf(oct_Time()) * 200)},
-                .size = {40, 40}
-            },
-            true, 0
-    );
+    oct_DrawClear(&(Oct_Colour){0, 0.6, 1, 1});
 
     oct_DrawTextureIntExt(
             OCT_INTERPOLATE_ALL, 2,

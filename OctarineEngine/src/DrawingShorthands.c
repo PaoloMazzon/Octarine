@@ -9,6 +9,15 @@ Oct_Vec2 _OCT_ZERO2 = {0, 0};
 Oct_Vec3 _OCT_ZERO3 = {0, 0, 0};
 Oct_Vec4 _OCT_ZERO4 = {0, 0, 0, 0};
 
+OCTARINE_API void oct_DrawClear(Oct_Colour *colour) {
+    Oct_DrawCommand cmd = {
+            .sType = OCT_STRUCTURE_TYPE_DRAW_COMMAND,
+            .type = OCT_DRAW_COMMAND_TYPE_CLEAR,
+            .colour = *colour
+    };
+    oct_Draw(&cmd);
+}
+
 /////////////////////////////////////// RECTANGLE ///////////////////////////////////////
 OCTARINE_API void oct_DrawRectangleInt(Oct_InterpolationType interp, uint64_t id, Oct_Rectangle *rectangle, Oct_Bool filled, float lineWidth) {
     oct_DrawRectangleIntColourExt(interp, id, &_OCT_WHITE, rectangle, filled, lineWidth, 0, _OCT_ZERO2);

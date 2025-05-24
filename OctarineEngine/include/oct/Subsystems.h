@@ -30,6 +30,8 @@ void _oct_DrawingInit();
 void _oct_DrawingUpdateBegin();
 void _oct_DrawingUpdateEnd();
 void _oct_DrawingProcessCommand(Oct_Command *cmd);
+double _oct_DrawingGetAverageInterpolationCalls();
+double _oct_DrawingGetAverageInterpolationTime();
 void _oct_DrawingEnd();
 
 // Window subsystem manages window events like resizing and input

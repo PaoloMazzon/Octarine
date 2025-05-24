@@ -16,6 +16,9 @@
 extern "C" {
 #endif
 
+/// \breif Clears the render target with a specified colour
+OCTARINE_API void oct_DrawClear(Oct_Colour *colour);
+
 /// \brief Draws a rectangle
 OCTARINE_API void oct_DrawRectangleInt(Oct_InterpolationType interp, uint64_t id, Oct_Rectangle *rectangle, Oct_Bool filled, float lineWidth);
 

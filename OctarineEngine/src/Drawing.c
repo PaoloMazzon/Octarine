@@ -26,6 +26,13 @@ typedef struct FrameCommandBuffer_t {
 static FrameCommandBuffer gFrameBuffers[3]; // Triple buffer
 static int gCurrentFrame; // Current frame is the one not being interpolated
 static VK2DTexture gDebugFont; // Bitmap font of the debug texture
+// For keeping track of average interpolation time
+static double gTotalInterpolationTime; // Total time spent finding interpolated draw commands
+static double gTotalInterpolationCalls; // Total amount of draws that were interpolated
+static double gTotalFrames;
+static double gLastInterpolationStatsUpdate; // Last time the interpolation stats were updated
+static double gAverageInterpolationTime;
+static double gAverageInterpolationCalls;
 
 ///////////////////// Internal functions /////////////////////
 // Adds a command to the current frame buffer, expanding if necessary
@@ -91,6 +98,14 @@ void _oct_DrawingEnd() {
     }
 
     vk2dRendererQuit();
+}
+
+double _oct_DrawingGetAverageInterpolationCalls() {
+    return gAverageInterpolationCalls;
+}
+
+double _oct_DrawingGetAverageInterpolationTime() {
+    return gAverageInterpolationTime;
 }
 
 void _oct_DrawingUpdateBegin() {
@@ -240,6 +255,10 @@ static void _oct_DrawCircle(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, floa
                 cmd->Circle.lineSize
         );
     }
+}
+
+static void _oct_ClearTarget(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    vk2dRendererClear();
 }
 
 static void _oct_DrawTexture(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
@@ -505,9 +524,17 @@ void _oct_DrawingUpdateEnd() {
         // If its interpolated, find the corresponding command
         Oct_DrawCommand *prevCmd = null;
         if (cmd->interpolate) {
+            // Performance metrics
+            gTotalInterpolationCalls += 1;
+            const double startTime = oct_Time();
+
+            // Find the interpolated command
             for (int j = 0; prevCmd == null && j < gFrameBuffers[PREVIOUS_DRAW_FRAME].count; j++)
                 if (gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j].id == cmd->id && cmd->type == gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j].type)
                     prevCmd = &gFrameBuffers[PREVIOUS_DRAW_FRAME].commands[j];
+
+            // Performance metrics
+            gTotalInterpolationTime += oct_Time() - startTime;
         }
 
         if (cmd->type == OCT_DRAW_COMMAND_TYPE_RECTANGLE) {
@@ -526,8 +553,21 @@ void _oct_DrawingUpdateEnd() {
             _oct_DrawDebugFont(cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_FONT_ATLAS) {
             _oct_DrawFontAtlas(cmd, prevCmd, interpolatedTime);
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CLEAR) {
+            _oct_ClearTarget(cmd, prevCmd, interpolatedTime);
         } // TODO: Implement other command types
     }
 
     vk2dRendererEndFrame();
+
+    // Deal with interpolation times
+    gTotalFrames += 1;
+    if (oct_Time() - gLastInterpolationStatsUpdate >= 1) {
+        gAverageInterpolationTime = gTotalInterpolationTime / gTotalInterpolationCalls;
+        gAverageInterpolationCalls = gTotalInterpolationCalls / gTotalFrames;
+        gTotalInterpolationTime = 0;
+        gTotalInterpolationCalls = 0;
+        gTotalFrames = 0;
+        gLastInterpolationStatsUpdate = oct_Time();
+    }
 }

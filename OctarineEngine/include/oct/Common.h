@@ -99,6 +99,7 @@ typedef enum {
     OCT_DRAW_COMMAND_TYPE_CIRCLE     = 5,  ///< Circle rendering
     OCT_DRAW_COMMAND_TYPE_LINE       = 6,  ///< Line rendering
     OCT_DRAW_COMMAND_TYPE_POLYGON    = 7,  ///< Arbitrary polygon rendering
+    OCT_DRAW_COMMAND_TYPE_CLEAR      = 8,  ///< Clear render target
     OCT_DRAW_COMMAND_TYPE_CAMERA     = 9,  ///< Some sort of camera update
     OCT_DRAW_COMMAND_TYPE_TARGET     = 10, ///< Changing render target
     OCT_DRAW_COMMAND_TYPE_FONT_ATLAS = 11, ///< Render bitmap fonts from an atlas
