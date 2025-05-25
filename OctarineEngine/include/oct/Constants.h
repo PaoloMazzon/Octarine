@@ -21,6 +21,7 @@ extern int32_t OCT_RING_BUFFER_SIZE;   ///< Size of the command/event ring buffe
 extern int32_t OCT_STANDARD_PAGE_SIZE; ///< Size of a page in a virtual page allocator
 extern int32_t OCT_PAGE_SCALE_FACTOR;  ///< How much bigger a page should be to accommodate large memory
 extern int32_t OCT_BUCKET_SIZE;        ///< Bucket size for hash maps
+#define OCT_ASSET_NAME_SIZE 512        ///< Size of names for debugging purposes
 
 // Drawing
 extern int32_t OCT_SPRITE_LAST_FRAME;    ///< Draw the last frame of the animation

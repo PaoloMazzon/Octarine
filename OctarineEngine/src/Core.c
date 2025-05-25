@@ -97,15 +97,25 @@ void _oct_DebugInit() {
 void _oct_DebugUpdate() {
     Oct_Context ctx = _oct_GetCtx();
     if (!ctx->initInfo->debug) return;
+    static nk_bool showFullAssets = true;
+    static const char *typeStrings[OCT_ASSET_TYPE_MAX] = {
+            "Texture",
+            "Font",
+            "Font Atlas",
+            "Audio",
+            "Sprite",
+            "Camera",
+    };
 
     // Draw nuklear debug thing
-    if (nk_begin(vk2dGuiContext(), "Performance", nk_rect(10, 10, 300, 200),
+    if (nk_begin(vk2dGuiContext(), "Performance", nk_rect(10, 10, 300, 220),
                  NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
 
         // Host info
         nk_layout_row_dynamic(vk2dGuiContext(), 20, 1);
 
         // Performance metrics
+        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "=======Octarine=======");
         nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Render: %0.2ffps, %0.2fms", oct_GetRenderFPS(), (1.0 / oct_GetRenderFPS()) * 1000);
         nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Logic: %0.2fHz, %0.2fms", oct_GetLogicHz(), (1.0 / oct_GetLogicHz()) * 1000);
         float inUse, total;
@@ -117,21 +127,41 @@ void _oct_DebugUpdate() {
     }
     nk_end(vk2dGuiContext());
 
-    if (nk_begin(vk2dGuiContext(), "Assets", nk_rect(10, 220, 300, 350),
+    if (nk_begin(vk2dGuiContext(), "Assets", nk_rect(10, 240, 300, 350),
                  NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
                  NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
 
-        // Assets
-        nk_layout_row_dynamic(vk2dGuiContext(), 20, 3);
-        nk_label(vk2dGuiContext(), "Index", NK_TEXT_CENTERED);
-        nk_label(vk2dGuiContext(), "Gen.", NK_TEXT_CENTERED);
-        nk_label(vk2dGuiContext(), "Type", NK_TEXT_CENTERED);
+        nk_layout_row_dynamic(vk2dGuiContext(), 20, 1);
+        nk_checkbox_label(vk2dGuiContext(), "Show Asset Detail", &showFullAssets);
 
-        for (int i = 0; i < OCT_MAX_ASSETS; i++) {
-            if (_oct_AssetType(i) == OCT_ASSET_TYPE_NONE) continue;
-            nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%i", i);
-            nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%i", _oct_AssetGeneration(i));
-            nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%s", _oct_AssetTypeString(i));
+        // Assets
+        if (showFullAssets) {
+            nk_layout_row_template_begin(vk2dGuiContext(), 20);
+            nk_layout_row_template_push_static(vk2dGuiContext(), 80);
+            nk_layout_row_template_push_static(vk2dGuiContext(), 100);
+            nk_layout_row_template_push_static(vk2dGuiContext(), 600);
+            nk_layout_row_template_end(vk2dGuiContext());
+            nk_label(vk2dGuiContext(), "Index, Gen", NK_TEXT_CENTERED);
+            nk_label(vk2dGuiContext(), "Type", NK_TEXT_CENTERED);
+            nk_label(vk2dGuiContext(), "Info", NK_TEXT_LEFT);
+
+            for (int i = 0; i < OCT_MAX_ASSETS; i++) {
+                if (_oct_AssetType(i) == OCT_ASSET_TYPE_NONE) continue;
+                nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%i, %i", i, _oct_AssetGeneration(i));
+                nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%s", _oct_AssetTypeString(i));
+                nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "%s", _oct_AssetName(i));
+            }
+        } else {
+            int assetTypeCounts[OCT_ASSET_TYPE_MAX] = {0};
+            for (int i = 0; i < OCT_MAX_ASSETS; i++) {
+                if (_oct_AssetType(i) < OCT_ASSET_TYPE_MAX && _oct_AssetType(i) >= 0)
+                    assetTypeCounts[_oct_AssetType(i)] += 1;
+            }
+            nk_layout_row_dynamic(vk2dGuiContext(), 20, 1);
+            nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Type: Count");
+            for (int i = 1; i < OCT_ASSET_TYPE_MAX; i++) {
+                nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "%s: %i", typeStrings[i - 1], assetTypeCounts[i]);
+            }
         }
     }
     nk_end(vk2dGuiContext());

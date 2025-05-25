@@ -166,12 +166,12 @@ typedef enum {
 typedef enum {
     OCT_ASSET_TYPE_NONE = 0,       ///< None
     OCT_ASSET_TYPE_TEXTURE = 1,    ///< A texture
-    OCT_ASSET_TYPE_MODEL = 2,      ///< Model
-    OCT_ASSET_TYPE_FONT = 3,       ///< Font
-    OCT_ASSET_TYPE_FONT_ATLAS = 4, ///< Font
-    OCT_ASSET_TYPE_AUDIO = 5,      ///< Audio
-    OCT_ASSET_TYPE_SPRITE = 6,     ///< Sprite
-    OCT_ASSET_TYPE_CAMERA = 7,     ///< Camera
+    OCT_ASSET_TYPE_FONT = 2,       ///< Font
+    OCT_ASSET_TYPE_FONT_ATLAS = 3, ///< Font
+    OCT_ASSET_TYPE_AUDIO = 4,      ///< Audio
+    OCT_ASSET_TYPE_SPRITE = 5,     ///< Sprite
+    OCT_ASSET_TYPE_CAMERA = 6,     ///< Camera
+    OCT_ASSET_TYPE_MAX = 7,        ///< For iteration
     OCT_ASSET_TYPE_ANY = 100       ///< Any type
 } Oct_AssetType;
 

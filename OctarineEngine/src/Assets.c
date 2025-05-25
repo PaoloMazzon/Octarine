@@ -110,6 +110,10 @@ static const char *_oct_FileHandleName(Oct_FileHandle *handle) {
     return buffer;
 }
 
+void _oct_RegisterAssetName(Oct_Asset asset, Oct_FileHandle *handle) {
+    strncpy(gAssets[ASSET_INDEX(asset)].name, _oct_FileHandleName(handle), OCT_ASSET_NAME_SIZE - 1);
+}
+
 ///////////////////////////////// ASSET CREATION /////////////////////////////////
 void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
     uint32_t size;
@@ -119,6 +123,7 @@ void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
     if (tex) {
         gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
+        _oct_RegisterAssetName(load->_assetID, &load->Texture.fileHandle);
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
     } else {
         _oct_FailLoad(load->_assetID);
@@ -132,6 +137,7 @@ static void _oct_AssetCreateSurface(Oct_LoadCommand *load) {
         gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+        snprintf(gAssets[ASSET_INDEX(load->_assetID)].name, OCT_ASSET_NAME_SIZE - 1, "Size: %.2fx%.2f", load->Surface.dimensions[0], load->Surface.dimensions[1]);
     } else {
         _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
@@ -144,6 +150,7 @@ static void _oct_AssetCreateCamera(Oct_LoadCommand *load) {
         gAssets[ASSET_INDEX(load->_assetID)].camera = camIndex;
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_CAMERA;
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+        snprintf(gAssets[ASSET_INDEX(load->_assetID)].name, OCT_ASSET_NAME_SIZE - 1, "<Camera>");
     } else {
         _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to create camera\n");
@@ -197,6 +204,7 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
             gAssets[ASSET_INDEX(load->_assetID)].audio.size = newSize;
             gAssets[ASSET_INDEX(load->_assetID)].audio.data = newSamples;
             SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+            _oct_RegisterAssetName(load->_assetID, &load->Audio.fileHandle);
         } else {
             _oct_FailLoad(load->_assetID);
             _oct_LogError("Failed to load audio sample %s, failed to convert format, SDL Error %s.\n", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
@@ -245,6 +253,7 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
     }
 
     SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+    snprintf(gAssets[ASSET_INDEX(load->_assetID)].name, OCT_ASSET_NAME_SIZE - 1, "%ix%i, %i frames", (int)load->Sprite.frameSize[0], (int)load->Sprite.frameSize[1], load->Sprite.frameCount);
 }
 
 void _oct_AssetCreateFont(Oct_LoadCommand *load) {
@@ -277,6 +286,7 @@ void _oct_AssetCreateFont(Oct_LoadCommand *load) {
 
     if (!error) {
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+        _oct_RegisterAssetName(load->_assetID, &load->Font.fileHandles[0]);
     } else {
         _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to create font %s, TTF error %s\n", _oct_FileHandleName(&load->Font.fileHandles[0]), SDL_GetError());
@@ -415,6 +425,7 @@ void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load) {
     atlas->img = vk2dImageFromPixels(vk2dRendererGetDevice(), tempSurface->pixels, imgWidth, imgHeight, true);
     atlas->atlas = vk2dTextureLoadFromImage(atlas->img);
     SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded, 1);
+    snprintf(gAssets[ASSET_INDEX(load->_assetID)].name, OCT_ASSET_NAME_SIZE - 1, "Font %" PRIu64 ", size %.2f, U+%04X - U+%04X", load->FontAtlas.font, load->FontAtlas.size, load->FontAtlas.unicodeStart, load->FontAtlas.unicodeEnd);
     SDL_DestroySurface(tempSurface);
 }
 
@@ -467,6 +478,7 @@ void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load) {
         glyph->minBB[1] = 0;
     }
     SDL_SetAtomicInt(&asset->loaded, 1);
+    _oct_RegisterAssetName(load->_assetID, &load->BitmapFont.fileHandle);
 }
 
 void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load);
@@ -582,8 +594,6 @@ const char *_oct_AssetTypeString(Oct_Asset asset) {
         return "None";
     if (type == OCT_ASSET_TYPE_TEXTURE)
         return "Texture";
-    if (type == OCT_ASSET_TYPE_MODEL)
-        return "Model";
     if (type == OCT_ASSET_TYPE_FONT)
         return "Font";
     if (type == OCT_ASSET_TYPE_FONT_ATLAS)
@@ -597,6 +607,10 @@ const char *_oct_AssetTypeString(Oct_Asset asset) {
     if (type == OCT_ASSET_TYPE_ANY)
         return "Any";
     return "";
+}
+
+const char *_oct_AssetName(Oct_Asset asset) {
+    return gAssets[ASSET_INDEX(asset)].name;
 }
 
 Oct_AssetData *_oct_AssetGet(Oct_Asset asset) {

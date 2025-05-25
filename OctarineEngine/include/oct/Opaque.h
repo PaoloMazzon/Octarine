@@ -5,6 +5,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <VK2D/Structs.h>
 #include "oct/Common.h"
+#include "oct/Constants.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,6 +95,7 @@ struct Oct_AssetData_t {
     SDL_AtomicInt failed;     ///< This will be true if the load on this asset failed
     SDL_AtomicInt loaded;     ///< True when the asset is loaded
     SDL_AtomicInt generation; ///< Generation for unique ID purposes
+    char name[OCT_ASSET_NAME_SIZE]; ///< Name of the asset for debugging
     union {
         VK2DTexture texture;
         VK2DCameraIndex camera;

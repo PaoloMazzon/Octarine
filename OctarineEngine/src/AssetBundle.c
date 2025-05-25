@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <physfs.h>
+#include <stdio.h>
 
 #include "oct/Core.h"
 #include "oct/cJSON.h"
@@ -140,6 +141,7 @@ void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load);
 void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load);
 void _oct_LogError(const char *fmt, ...);
 void _oct_DestroyAssetMetadata(Oct_Asset asset);
+void _oct_RegisterAssetName(Oct_Asset asset, Oct_FileHandle *handle);
 void _oct_FailLoad(Oct_Asset asset);
 typedef enum {
     type_array,
@@ -320,6 +322,7 @@ static void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *
 
         // Make sprite ready
         SDL_SetAtomicInt(&_oct_AssetGet(asset)->loaded, 1);
+        snprintf(_oct_AssetGet(asset)->name, OCT_ASSET_NAME_SIZE - 1, "%s", jsonFilename);
         _oct_PlaceAssetInBucket(bundle, asset, jsonFilename);
     }
 
