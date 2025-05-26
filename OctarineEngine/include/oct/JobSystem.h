@@ -6,12 +6,12 @@
 extern "C" {
 #endif
 
-/// \brief Queues a job to be completed at some point somewhere
+/// \brief Queues a job to be completed
 ///
-/// This queues a job to be done by a worker thread. There are no guarantees when or on what thread the job
-/// will be done on, it may even execute the job in this function depending on whats going on. In general,
-/// the job system will do its best to keep work distributed across CPU cores.
-OCTARINE_API void oct_QueueJob(const Oct_JobFunction job);
+/// Jobs are functions that will be completed (usually) on a job thread. There is no guarantee when the queued job
+/// will be completed/started or on what thread, as they go into a job queue (mostly, if the job queue is full, this
+/// function will just execute the job right away).
+OCTARINE_API void oct_QueueJob(Oct_JobFunction job, void *data);
 
 /// \brief Returns true if there are any jobs currently executing/in queue
 OCTARINE_API Oct_Bool oct_JobsBusy();

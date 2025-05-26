@@ -187,6 +187,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     _oct_CommandBufferInit();
     _oct_AssetsInit();
     _oct_DebugInit();
+    _oct_JobsInit();
 
     // Debug settings
     if (ctx->initInfo->debug) {
@@ -221,6 +222,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
         _oct_AudioUpdateEnd();
         _oct_DrawingUpdateEnd();
         _oct_DebugUpdate();
+        _oct_JobsUpdate();
 
         // Timekeeping
         const int target = SDL_GetAtomicInt(&ctx->renderHz);
@@ -246,8 +248,9 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
 
     // Cleanup
     vk2dRendererWait();
-    _oct_DebugEnd();
     _oct_UnstrapBoots();
+    _oct_DebugEnd();
+    _oct_JobsEnd();
     _oct_AssetsEnd();
     _oct_CommandBufferEnd();
     _oct_AudioEnd();

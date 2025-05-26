@@ -22,6 +22,19 @@ const Oct_Rectangle roomBounds = {
         .size = {1280, 720}
 };
 
+typedef struct JobInfo_t {
+    int32_t *array;
+    int startIndex;
+    int len;
+} JobInfo;
+
+void job(void *ptr) {
+    JobInfo *jobInfo = ptr;
+    for (int i = jobInfo->startIndex; i < jobInfo->startIndex + jobInfo->len; i++) {
+        jobInfo->array[i] = pow(i, 2);
+    }
+}
+
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup() {
     gAllocator = oct_CreateHeapAllocator();
