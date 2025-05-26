@@ -20,13 +20,14 @@ add_subdirectory(physfs)
 file(GLOB OCT_C_FILES src/*.c)
 file(GLOB C_FILES Vulkan2D/VK2D/*.c)
 file(GLOB H_FILES Vulkan2D/VK2D/*.h)
+file(GLOB SDL_SOUND_C SDL_sound/src/*.c)
 set(VMA_FILES Vulkan2D/VulkanMemoryAllocator/src/VmaUsage.cpp)
 if (${CMAKE_C_COMPILER_ID} STREQUAL "GNU" AND WIN32)
     set(MINGW_LIBRARIES mingw32 m)
 endif()
 
 # Include directories
-include_directories(Vulkan2D/ physfs/src/ SDL_ttf/include Vulkan2D/VulkanMemoryAllocator/include include/ Vulkan2D/SDL/include ${Vulkan_INCLUDE_DIRS})
+include_directories(Vulkan2D/ SDL_sound/include physfs/src/ SDL_ttf/include Vulkan2D/VulkanMemoryAllocator/include include/ Vulkan2D/SDL/include ${Vulkan_INCLUDE_DIRS})
 
 # Build dll for engine
 add_library(${PROJECT_NAME} STATIC ${VMA_FILES} ${OCT_C_FILES} ${C_FILES} ${H_FILES})

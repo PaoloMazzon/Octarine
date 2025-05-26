@@ -75,6 +75,7 @@ typedef float Oct_Vec4[4];       ///< Array of 4 floats
 typedef float Oct_Vec3[3];       ///< Array of 3 floats
 typedef float Oct_Vec2[2];       ///< Array of 2 floats
 typedef void (*Oct_FileHandleCallback)(void*,uint32_t); ///< Callback for a file handle
+typedef void (*Oct_JobFunction)(void*); ///< Function pointer for a job in the job system
 
 ////////////////////// Enums //////////////////////
 /// \brief Structure types

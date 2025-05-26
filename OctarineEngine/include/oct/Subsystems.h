@@ -68,6 +68,11 @@ Oct_Asset _oct_AssetReserveSpace(); // used from logic thread to reserve a space
 void _oct_PlaceAssetInBucket(Oct_AssetBundle bundle, Oct_Asset asset, const char *name); // name will be copied
 void _oct_AssetsEnd();
 
+// Job system
+void _oct_JobsInit();
+void _oct_JobsUpdate();
+void _oct_JobsEnd();
+
 // Handles input processing on the logical thread
 void _oct_InputInit();
 void _oct_InputUpdate();

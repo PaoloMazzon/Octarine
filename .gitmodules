@@ -7,3 +7,6 @@
 [submodule "OctarineEngine/SDL_ttf"]
 	path = OctarineEngine/SDL_ttf
 	url = https://github.com/libsdl-org/SDL_ttf
+[submodule "OctarineEngine/SDL_sound"]
+	path = OctarineEngine/SDL_sound
+	url = https://github.com/icculus/SDL_sound

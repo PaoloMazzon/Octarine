@@ -68,18 +68,17 @@ int main(int argc, const char **argv) {
 | Library | Purpose | License |
 |---------|---------|---------|
 | [Vulkan2D](https://github.com/PaoloMazzon/Vulkan2D) | Rendering | zlib |
+| [SDL3](https://www.libsdl.org/) | Windowing/input/threads/audio | zlib |
+| [SDL3_ttf](https://github.com/libsdl-org/SDL_ttf) | Font rendering | zlib |
+| [mi-malloc](https://github.com/microsoft/mimalloc) | Memory management | MIT |
+| [flecs](https://github.com/SanderMertens/flecs?tab=readme-ov-file) | ECS | MIT |
+| [PhysicsFS](https://github.com/icculus/physfs) | Asset system | zlib |
+| [SDL_sound](https://github.com/icculus/SDL_sound) | Parsing sound | zlib |
+| [cJSON](https://github.com/DaveGamble/cJSON) | Parsing JSONs | MIT |
 | [VulkanMemoryAllocator (VMA)](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator) | Vulkan2D uses it | MIT |
 | [tinyobjloader-c](https://github.com/syoyo/tinyobjloader-c) | Vulkan2D uses it | MIT |
 | [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h) | Vulkan2D uses it | MIT |
-| [SDL3](https://www.libsdl.org/) | Windowing/input/threads/audio | zlib |
-| [SDL3_ttf](https://github.com/libsdl-org/SDL_ttf) | Font rendering | zlib |
 | [FreeType](https://gitlab.freedesktop.org/freetype/freetype/-/blob/master/docs/FTL.TXT) | SDL3_ttf uses it | FTL |
 | [HarfBuzz](https://github.com/harfbuzz/harfbuzz/blob/main/COPYING) | SDL3_ttf uses it | MIT |
 | [PlutoSVG](https://github.com/sammycage/plutosvg/blob/master/LICENSE) | SDL3_ttf uses it | MIT |
 | [PlutoVG](https://github.com/sammycage/plutovg/blob/master/LICENSE) | SDL3_ttf uses it | MIT |
-| [mi-malloc](https://github.com/microsoft/mimalloc) | Memory management | MIT |
-| [flecs](https://github.com/SanderMertens/flecs?tab=readme-ov-file) | ECS | MIT |
-| [PhysicsFS](https://github.com/icculus/physfs) | Asset system | zlib |
-| [minivorbis](https://github.com/edubart/minivorbis) | Parsing OGGs | BSD 3-Clause |
-| [minimp3](https://github.com/lieff/minimp3) | Parsing MP3s | CC0 |
-| [cJSON](https://github.com/DaveGamble/cJSON) | Parsing JSONs | MIT |

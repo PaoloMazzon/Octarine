@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <VK2D/VK2D.h>
 #include <stdio.h>
+#include <SDL3_sound/SDL_sound.h>
 
 #include "oct/Common.h"
 #include "oct/Allocators.h"
@@ -174,7 +175,7 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
 
     const uint16_t MP3_SIG = 0xFFFB;
     if (memcmp(fileBuffer, "OggS", 4) == 0) {
-        // TODO: Implement ogg loading
+        // TODO: Use sdl sound
         _oct_FailLoad(load->_assetID);
         _oct_LogError("Failed to load audio sample %s, ogg is not yet supported.\n", _oct_FileHandleName(&load->Audio.fileHandle));
     } else if (memcmp(fileBuffer, "RIFF", 4) == 0 && fileBufferSize >= 12 && memcmp(fileBuffer + 8, "WAVE", 4) == 0) {
