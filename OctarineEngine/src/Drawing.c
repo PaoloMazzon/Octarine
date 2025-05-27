@@ -15,7 +15,7 @@ struct DrawCommandLink_t {
     Oct_DrawCommand *command; // Pointer to a command in the main draw command link in the frame command buffer thing
     uint64_t id;              // Id for collision checking
     uint64_t frame;           // Frame this is associated with so we don't need to clear the bucket each frame
-    DrawCommandLink *next;    // Next in the chain for collision checking
+    int32_t next;             // Next in the chain for collision checking (this is an index to the backup bucket)
 };
 
 const int BUCKET_SIZE = 10000;
@@ -71,12 +71,12 @@ static void addCommandToBucket(int index) {
         gFrameBuffers[gCurrentFrame].bucket[bucketLocation].command = cmd;
         gFrameBuffers[gCurrentFrame].bucket[bucketLocation].id = cmd->id;
         gFrameBuffers[gCurrentFrame].bucket[bucketLocation].frame = gFrame;
-        gFrameBuffers[gCurrentFrame].bucket[bucketLocation].next = null;
+        gFrameBuffers[gCurrentFrame].bucket[bucketLocation].next = -1;
     } else {
         // This spot is taken, find the end of the linked list
         DrawCommandLink *current = &gFrameBuffers[gCurrentFrame].bucket[bucketLocation];
-        while (current->next)
-            current = current->next;
+        while (current->next != -1)
+            current = &gFrameBuffers[gCurrentFrame].backupBucket[current->next];
 
         // Find a spot in the extended bucket list
         if (gFrameBuffers[gCurrentFrame].backupBucketCount == gFrameBuffers[gCurrentFrame].backupBucketSize) {
@@ -89,11 +89,11 @@ static void addCommandToBucket(int index) {
         }
         const int32_t extendedBucketSpot = gFrameBuffers[gCurrentFrame].backupBucketCount++;
 
-        current->next = &gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot];
+        current->next = extendedBucketSpot;
         gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].command = cmd;
         gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].id = cmd->id;
         gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].frame = gFrame;
-        gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].next = null;
+        gFrameBuffers[gCurrentFrame].backupBucket[extendedBucketSpot].next = -1;
     }
 }
 
@@ -109,7 +109,10 @@ static Oct_DrawCommand *getCommandFromBucket(uint64_t id) {
             return link->command;
         else if (link->frame != gFrame - 1)
             break;
-        link = link->next;
+        if (link->next != -1)
+            link = &gFrameBuffers[PREVIOUS_DRAW_FRAME].backupBucket[link->next];
+        else
+            link = null;
     }
 
     return null;

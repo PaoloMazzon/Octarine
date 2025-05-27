@@ -34,7 +34,9 @@ void _oct_PlaceAssetInBucket(Oct_AssetBundle bundle, Oct_Asset asset, const char
         // This spot is taken, find the end of the linked list
         Oct_AssetLink *current = &bundle->bucket[bucketLocation];
         while (current->next) {
-            current = current->next;
+            if (current->next == -1)
+                break;
+            current = &bundle->backupBucket[current->next];
 
             // In case the same name is just deep in the linked list
             if (strcmp(current->name, copy) == 0) {
@@ -57,7 +59,7 @@ void _oct_PlaceAssetInBucket(Oct_AssetBundle bundle, Oct_Asset asset, const char
             }
             const int32_t extendedBucketSpot = bundle->backupBucketCount++;
 
-            current->next = &bundle->backupBucket[extendedBucketSpot];
+            current->next = extendedBucketSpot;
             bundle->backupBucket[extendedBucketSpot].asset = asset;
             bundle->backupBucket[extendedBucketSpot].name = copy;
         }
@@ -74,7 +76,9 @@ static Oct_Asset _oct_GetAssetUnblocking(Oct_AssetBundle bundle, const char *nam
     while (link) {
         if (link->name && strcmp(name, link->name) == 0)
             return link->asset;
-        link = link->next;
+        if (link->next == -1)
+            break;
+        link = &bundle->backupBucket[link->next];
     }
 
     return OCT_NO_ASSET;
@@ -125,7 +129,9 @@ OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name, 
     while (link) {
         if (strcmp(name, link->name) == 0)
             return true;
-        link = link->next;
+        if (link->next == -1)
+            break;
+        link = &bundle->backupBucket[link->next];
     }
 
     return false;
@@ -585,7 +591,7 @@ static void _oct_ParseSprites(Oct_AssetBundle bundle, cJSON *sprites) {
             const double xStop = jsonGetNum(jsonXStop, 0);
             const double fps = jsonGetNum(jsonFPS, 0);
             const double frameCount = jsonGetNum(jsonFrameCount, 0);
-            const Oct_Bool repeat = !repeat || cJSON_IsTrue(jsonRepeat);
+            const Oct_Bool repeat = !jsonRepeat || cJSON_IsTrue(jsonRepeat);
 
             // Make sure we have that texture
             Oct_Texture tex = _oct_GetAssetUnblocking(bundle, textureName);
