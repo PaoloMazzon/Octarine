@@ -90,6 +90,9 @@ void *update(void *ptr) {
     if (oct_KeyPressed(OCT_KEY_F11)) {
         oct_ToggleFullscreen();
     }
+    if (oct_KeyPressed(OCT_KEY_SPACE)) {
+        oct_PlaySound(oct_GetAsset(gAssetBundle, "test.wav"), (Oct_Vec2){1, 1}, false);
+    }
 
     return null;
 }

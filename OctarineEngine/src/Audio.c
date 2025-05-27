@@ -26,12 +26,12 @@ typedef struct Oct_PlayingSound_t {
 static const int AUDIO_FREQUENCY_HZ = 44100;
 static const double AUDIO_REFRESH_RATE_HZ = 100;
 static const double AUDIO_VOLUME_NORMALIZED_FACTOR = 10000;
-static const int32_t AUDIO_SAMPLE_SIZE = 4;
+static const int32_t AUDIO_SAMPLE_SIZE = 2;
 static const int32_t AUDIO_CHANNELS = 2;
 static SDL_Thread *gMixerThread;
 static SDL_AudioSpec gDeviceSpec = {
         .channels = AUDIO_CHANNELS,
-        .format = SDL_AUDIO_F32,
+        .format = SDL_AUDIO_S16,
         .freq = AUDIO_FREQUENCY_HZ
 };
 #define MAX_PLAYING_SOUNDS 100
@@ -59,19 +59,25 @@ inline static double _oct_GoofyTime(uint64_t start) {
     return (current - start) / freq;
 }
 
+SDL_AudioSpec *_oct_GetDeviceAudioSpec() {
+    return &gDeviceSpec;
+}
+
 // Adds a certain number of samples from a playing sound to an audio sample, dealing with the playing sound should
 // it run out of new audio
-inline static void _oct_AddPlayingSound(float *buffer, int32_t samples, int32_t playingSound) {
+inline static void _oct_AddPlayingSound(int16_t *buffer, int32_t samples, int32_t playingSound) {
     Oct_PlayingSound *snd = &gPlayingSounds[playingSound];
-    Oct_AssetData *data = _oct_AssetGet(snd->sound);
-    float *soundBuffer = (void*)data->audio.data; // the audio that is queued
+    Oct_AssetData *data = _oct_AssetGetSafe(snd->sound, OCT_ASSET_TYPE_AUDIO);
+    if (!data) return;
+    int16_t *soundBuffer = (void*)data->audio.data; // the audio that is queued
     Oct_Vec2 vol = {
             (float)SDL_GetAtomicInt(&snd->volumeLeft) / AUDIO_VOLUME_NORMALIZED_FACTOR,
             (float)SDL_GetAtomicInt(&snd->volumeRight) / AUDIO_VOLUME_NORMALIZED_FACTOR
     };
     for (int i = 0; i < samples; i++) {
         // Add sample to the mix
-        buffer[i] += soundBuffer[snd->pointer] * vol[i % 2];
+        const float sample = ((float)soundBuffer[snd->pointer] / (float)INT16_MAX) * vol[i % 2];
+        buffer[i] += (int16_t)(sample * INT16_MAX);
 
         // Remove this sound if the audio sample is done
         if (++snd->pointer >= data->audio.size / (AUDIO_SAMPLE_SIZE)) {
@@ -112,7 +118,7 @@ static int _oct_MixerThread(void *data) {
     const int32_t UPDATE_SAMPLES = ((AUDIO_FREQUENCY_HZ / AUDIO_REFRESH_RATE_HZ) + 1) * AUDIO_CHANNELS;
 
     // Buffer we will mix sound into, must be 1 refresh rate worth of sound long
-    float *writeBuffer = mi_malloc(UPDATE_SAMPLES * AUDIO_SAMPLE_SIZE);
+    int16_t *writeBuffer = mi_malloc(UPDATE_SAMPLES * AUDIO_SAMPLE_SIZE);
 
     while (!SDL_GetAtomicInt(&ctx->quit)) {
         // Mixer
@@ -176,10 +182,6 @@ void _oct_AudioProcessCommand(Oct_Command *cmd) {
     if (OCT_STRUCTURE_TYPE(&cmd->topOfUnion) == OCT_STRUCTURE_TYPE_META_COMMAND) {
         // Meta commands currently do not impact the audio subsystem
     } else {
-        // TODO: Move this all to the logic thread cuz this can cause a weird race condition
-        //       where the mixer thread can theoretically end a sound then the logic thread
-        //       reserve that slot while the render thread updates the details of a sound that
-        //       no longer exists.
         Oct_AudioCommand *audio = &cmd->audioCommand;
         if (audio->type == OCT_AUDIO_COMMAND_TYPE_PLAY_SOUND) {
             int32_t index = SOUND_INDEX(audio->Play._soundID);

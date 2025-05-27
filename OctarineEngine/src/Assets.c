@@ -1,11 +1,8 @@
-#include <stdarg.h>
 #include <SDL3/SDL.h>
 #include <VK2D/VK2D.h>
 #include <stdio.h>
-#include <SDL3_sound/SDL_sound.h>
 
 #include "oct/Common.h"
-#include "oct/Allocators.h"
 #include "oct/Opaque.h"
 #include "oct/Core.h"
 #include "oct/Validation.h"
@@ -503,7 +500,7 @@ static void _oct_AssetDestroySprite(Oct_Asset asset) {
 }
 
 static void _oct_AssetDestroyAudio(Oct_Asset asset) {
-    SDL_free(gAssets[ASSET_INDEX(asset)].audio.data);
+    mi_free(gAssets[ASSET_INDEX(asset)].audio.data);
     _oct_DestroyAssetMetadata(asset);
 }
 
