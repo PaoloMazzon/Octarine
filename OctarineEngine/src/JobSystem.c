@@ -78,13 +78,13 @@ void _oct_JobsInit() {
     // if there are 16 cores we would have 12 job threads. If there are less cores than minimum threads + 4 we
     // will just use the minimum.
     int availableCoreCount = SDL_GetNumLogicalCPUCores() - 4;
-    gJobThreadCount = 1;//availableCoreCount > OCT_MINIMUM_JOB_THREADS ? availableCoreCount : OCT_MINIMUM_JOB_THREADS;
+    gJobThreadCount = availableCoreCount > OCT_MINIMUM_JOB_THREADS ? availableCoreCount : OCT_MINIMUM_JOB_THREADS;
     gJobThreads = mi_malloc(sizeof(SDL_Thread *) * gJobThreadCount);
-    /*for (int i = 0; i < gJobThreadCount; i++) {
+    for (int i = 0; i < gJobThreadCount; i++) {
         gJobThreads[i] = SDL_CreateThread(jobThread, "Job thread", null);
         if (!gJobThreads[i])
             oct_Raise(OCT_STATUS_SDL_ERROR, true, "Failed to create job thread, SDL error %s", SDL_GetError());
-    }*/
+    }
 }
 
 void _oct_JobsUpdate() {
@@ -107,8 +107,10 @@ OCTARINE_API void oct_QueueJob(Oct_JobFunction job, void *data) {
 
     // If the job queue is full, the job will just be executed right away lmao
     Job jobStruct = {.job = job, .ptr = data};
-    if (!ringBufferPush(&jobStruct))
+    if (!ringBufferPush(&jobStruct)) {
         job(data);
+        SDL_AddAtomicInt(&gThreadsWorking, -1);
+    }
 }
 
 OCTARINE_API Oct_Bool oct_JobsBusy() {
