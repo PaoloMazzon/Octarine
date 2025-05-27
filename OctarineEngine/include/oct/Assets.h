@@ -87,27 +87,13 @@ OCTARINE_API Oct_Bool oct_AssetLoaded(Oct_Asset asset);
 /// \warning If this returns true that asset ID is invalidated
 OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset);
 
-/// \brief Returns an error message or null if there is none (or the allocation fails)
-/// \param allocator Allocator to get memory from in order to copy the error and return it
-/// \return Returns the error string or null, you must free that string yourself with the allocator provided.
-/// \warning This will return any and all error strings should multiple errors happen in a short period
-/// \warning This will clear the error message and load failed status
-OCTARINE_API const char *oct_AssetErrorMessage(Oct_Allocator allocator);
-
-/// \brief Same as oct_AssetErrorMessage but the result in your own provided buffer
-/// \param size Pointer to an int that will be filled with the required size of the buffer
-/// \param buffer Buffer of at least *size where the error message contents will be copied to (this may be null to get the size first)
-/// \return Returns buffer, if buffer was provided
-/// \warning This will clear the error message and load failed status
-OCTARINE_API const char *oct_AssetGetErrorMessage(int *size, char *buffer);
-
 /// \brief Frees any asset
 ///
 /// You don't need to use this, the engine will free everything automatically
 /// on exit. This is more for memory management in bigger projects.
 OCTARINE_API void oct_FreeAsset(Oct_Asset asset);
 
-/// \brief Returns true if any load as failed, can be used as an indication to get the error message
+/// \brief Returns true if any load as failed, failed loads will show up in the log
 OCTARINE_API Oct_Bool oct_AssetLoadHasFailed();
 
 /// \brief Loads an asset bundle from a file

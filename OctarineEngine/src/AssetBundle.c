@@ -145,7 +145,6 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load);
 void _oct_AssetCreateFont(Oct_LoadCommand *load);
 void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load);
 void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load);
-void _oct_LogError(const char *fmt, ...);
 void _oct_DestroyAssetMetadata(Oct_Asset asset);
 void _oct_RegisterAssetName(Oct_Asset asset, Oct_FileHandle *handle);
 void _oct_FailLoad(Oct_Asset asset);
@@ -288,7 +287,7 @@ static void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *
         tex = _oct_GetAssetUnblocking(bundle, imageFilename);
 
         if (tex == OCT_NO_ASSET) {
-            _oct_LogError("\"s\" is an invalid json for loading sprites, as the texture \"%s\" does not exist. Make sure the spritesheet texture is in the same directory as the json.\n", jsonFilename, cJSON_GetStringValue(image));
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "\"s\" is an invalid json for loading sprites, as the texture \"%s\" does not exist. Make sure the spritesheet texture is in the same directory as the json.", jsonFilename, cJSON_GetStringValue(image));
             cJSON_Delete(json);
             mi_free(jsonBuffer);
             return;
@@ -298,7 +297,7 @@ static void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *
         // This is a valid spritesheet and we have the corresponding texture
         cJSON *frames = jsonGetWithType(cJSON_GetObjectItem(json, "frames"), type_array);
         if (!frames) {
-            _oct_LogError("\"%s\" is an invalid json for loading sprites, make sure you are exporting a \"Array.\"\n", jsonFilename);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "\"%s\" is an invalid json for loading sprites, make sure you are exporting a \"Array.\"", jsonFilename);
             cJSON_Delete(json);
             mi_free(jsonBuffer);
             return;
@@ -448,7 +447,7 @@ static void _oct_ParseFonts(Oct_AssetBundle bundle, cJSON *fonts) {
     if (!fonts) return;
     for (int i = 0; i < cJSON_GetArraySize(fonts); i++) {
         if (!cJSON_IsObject(cJSON_GetArrayItem(fonts, i))) {
-            _oct_LogError("Font index [%i] is not an object, make sure fonts are an array of objects where each object is of the format %s\n", i, FONT_EXAMPLE_JSON);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Font index [%i] is not an object, make sure fonts are an array of objects where each object is of the format %s", i, FONT_EXAMPLE_JSON);
             _oct_FailLoad(OCT_NO_ASSET);
             continue;
         }
@@ -486,12 +485,12 @@ static void _oct_ParseFonts(Oct_AssetBundle bundle, cJSON *fonts) {
                 _oct_PlaceAssetInBucket(bundle, l._assetID, assetName);
                 _oct_AssetCreateFont(&l);
             } else {
-                _oct_LogError("Font \"%s\" has no valid fonts. Make sure fonts are an array of objects where each object is of the format %s\n", assetName, FONT_EXAMPLE_JSON);
+                oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Font \"%s\" has no valid fonts. Make sure fonts are an array of objects where each object is of the format %s", assetName, FONT_EXAMPLE_JSON);
                 _oct_FailLoad(OCT_NO_ASSET);
                 continue;
             }
         } else {
-            _oct_LogError("Font index [%i] is not valid, make sure fonts are an array of objects where each object is of the format %s\n", i, FONT_EXAMPLE_JSON);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Font index [%i] is not valid, make sure fonts are an array of objects where each object is of the format %s", i, FONT_EXAMPLE_JSON);
             _oct_FailLoad(OCT_NO_ASSET);
             continue;
         }
@@ -509,7 +508,7 @@ static void _oct_ParseBitmapFonts(Oct_AssetBundle bundle, cJSON *fonts) {
     if (!fonts) return;
     for (int i = 0; i < cJSON_GetArraySize(fonts); i++) {
         if (!cJSON_IsObject(cJSON_GetArrayItem(fonts, i))) {
-            _oct_LogError("Bitmap font index [%i] is not an object, make sure fonts are an array of objects where each object is of the format %s\n", i, BITMAP_FONT_EXAMPLE_JSON);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Bitmap font index [%i] is not an object, make sure fonts are an array of objects where each object is of the format %s", i, BITMAP_FONT_EXAMPLE_JSON);
             _oct_FailLoad(OCT_NO_ASSET);
             continue;
         }
@@ -545,7 +544,7 @@ static void _oct_ParseBitmapFonts(Oct_AssetBundle bundle, cJSON *fonts) {
             _oct_PlaceAssetInBucket(bundle, l._assetID, assetName);
             _oct_AssetCreateBitmapFont(&l);
         } else {
-            _oct_LogError("Bitmap font index [%i] is not a valid object, make sure fonts are an array of objects where each object is of the format %s\n", i, BITMAP_FONT_EXAMPLE_JSON);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Bitmap font index [%i] is not a valid object, make sure fonts are an array of objects where each object is of the format %s", i, BITMAP_FONT_EXAMPLE_JSON);
             _oct_FailLoad(OCT_NO_ASSET);
             continue;
         }
@@ -568,7 +567,7 @@ static void _oct_ParseSprites(Oct_AssetBundle bundle, cJSON *sprites) {
     if (!sprites) return;
     for (int i = 0; i < cJSON_GetArraySize(sprites); i++) {
         if (!cJSON_IsObject(cJSON_GetArrayItem(sprites, i))) {
-            _oct_LogError("Sprite index [%i] is not an object, make sure sprites are an array of objects where each object is of the format %s\n", i, SPRITE_EXAMPLE_JSON);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Sprite index [%i] is not an object, make sure sprites are an array of objects where each object is of the format %s", i, SPRITE_EXAMPLE_JSON);
             _oct_FailLoad(OCT_NO_ASSET);
             continue;
         }
@@ -596,7 +595,7 @@ static void _oct_ParseSprites(Oct_AssetBundle bundle, cJSON *sprites) {
             // Make sure we have that texture
             Oct_Texture tex = _oct_GetAssetUnblocking(bundle, textureName);
             if (tex == OCT_NO_ASSET) {
-                _oct_LogError("Sprite \"%s\" references a texture \"%s\" that is not loaded by the asset bundle. Make sure that you have the right filename and the file is not in the exclude list.", assetName, textureName);
+                oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Sprite \"%s\" references a texture \"%s\" that is not loaded by the asset bundle. Make sure that you have the right filename and the file is not in the exclude list.", assetName, textureName);
                 _oct_FailLoad(OCT_NO_ASSET);
                 continue;
             }
@@ -615,7 +614,7 @@ static void _oct_ParseSprites(Oct_AssetBundle bundle, cJSON *sprites) {
             _oct_PlaceAssetInBucket(bundle, l._assetID, assetName);
             _oct_AssetCreateSprite(&l);
         } else {
-            _oct_LogError("Sprite index [%i] is not a valid object, make sure sprites are an array of objects where each object is of the format %s\n", i, SPRITE_EXAMPLE_JSON);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Sprite index [%i] is not a valid object, make sure sprites are an array of objects where each object is of the format %s", i, SPRITE_EXAMPLE_JSON);
             _oct_FailLoad(OCT_NO_ASSET);
             continue;
         }
@@ -631,7 +630,7 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
     // 4. Set the ready atomic to 1
     if (PHYSFS_mount(load->AssetBundle.filename, NULL, 0)) {
         if (!PHYSFS_exists("manifest.json")) {
-            _oct_LogError("Failed to load asset bundle from \"%s\", no manifest present.\n", load->AssetBundle.filename);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load asset bundle from \"%s\", no manifest present.", load->AssetBundle.filename);
             _oct_FailLoad(OCT_NO_ASSET);
             SDL_SetAtomicInt(&load->AssetBundle.bundle->bundleReady, 1);
             return;
@@ -659,7 +658,7 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
         SDL_SetAtomicInt(&load->AssetBundle.bundle->bundleReady, 1);
     } else {
         SDL_SetAtomicInt(&load->AssetBundle.bundle->bundleReady, 1);
-        _oct_LogError("Failed to load asset bundle from \"%s\"\n", load->AssetBundle.filename);
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load asset bundle from \"%s\"", load->AssetBundle.filename);
         _oct_FailLoad(OCT_NO_ASSET);
     }
 }

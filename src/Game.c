@@ -86,13 +86,6 @@ void *update(void *ptr) {
             "The quick brown fox jumps over the lazy dog.\n!@#$%^&*()_+-={}[]"
     );
 
-    // Check for errors
-    if (oct_AssetLoadHasFailed()) {
-        const char *s = oct_AssetErrorMessage(gAllocator);
-        oct_Raise(OCT_STATUS_ERROR, false, "%s", s);
-        oct_Free(gAllocator, (void*)s);
-    }
-
     // Allow toggling fullscreen
     if (oct_KeyPressed(OCT_KEY_F11)) {
         oct_ToggleFullscreen();

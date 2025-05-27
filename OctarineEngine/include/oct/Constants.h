@@ -15,6 +15,7 @@ extern Oct_Status OCT_STATUS_VULKAN_ERROR;        ///< Something went wrong in V
 extern Oct_Status OCT_STATUS_VK2D_ERROR;          ///< Something went wrong in VK2D
 extern Oct_Status OCT_STATUS_FILE_DOES_NOT_EXIST; ///< A file does not exist
 extern Oct_Status OCT_STATUS_BAD_PARAMETER;       ///< A parameter given was not allowed
+extern Oct_Status OCT_STATUS_FAILED_ASSET;        ///< Asset load failed
 
 // Memory
 extern int32_t OCT_RING_BUFFER_SIZE;   ///< Size of the command/event ring buffer

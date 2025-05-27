@@ -19,20 +19,11 @@ static Oct_AssetData gAssets[OCT_MAX_ASSETS];
 #define ASSET_GENERATION(asset) (asset >> 32)
 
 // Error message in case an asset load fails
-#define ERROR_BUFFER_SIZE 1024
-static char gErrorMessage[ERROR_BUFFER_SIZE];
 static SDL_Mutex *gErrorMessageMutex;
 static SDL_AtomicInt gErrorHasOccurred;
 static TTF_TextEngine *gTextEngine;
 
 ///////////////////////////////// ASSET CREATION HELP /////////////////////////////////
-void _oct_LogError(const char *fmt, ...) {
-    va_list l;
-    va_start(l, fmt);
-    const int len = strlen(gErrorMessage);
-    vsnprintf(&gErrorMessage[len], ERROR_BUFFER_SIZE - len - 1, fmt, l);
-    va_end(l);
-}
 
 // Destroys metadata for an asset when its being freed
 void _oct_DestroyAssetMetadata(Oct_Asset asset) {
@@ -67,7 +58,7 @@ static uint8_t* _oct_ReadFile(const char *filename, uint32_t *size) {
             // Fill the buffer
             fread(buffer, 1, *size, file);
         } else {
-            oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Unable to allocate buffer for file \"%s\".\n", filename);
+            oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Unable to allocate buffer for file \"%s\".", filename);
         }
         fclose(file);
     }
@@ -128,7 +119,7 @@ void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
     } else {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load texture %s\n", _oct_FileHandleName(&load->Texture.fileHandle));
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load texture %s", _oct_FileHandleName(&load->Texture.fileHandle));
     }
 }
 
@@ -141,7 +132,7 @@ static void _oct_AssetCreateSurface(Oct_LoadCommand *load) {
         snprintf(gAssets[ASSET_INDEX(load->_assetID)].name, OCT_ASSET_NAME_SIZE - 1, "Size: %.2fx%.2f", load->Surface.dimensions[0], load->Surface.dimensions[1]);
     } else {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to create surface of dimensions %.2f/%.2f\n", load->Surface.dimensions[0], load->Surface.dimensions[1]);
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to create surface of dimensions %.2f/%.2f", load->Surface.dimensions[0], load->Surface.dimensions[1]);
     }
 }
 
@@ -154,7 +145,7 @@ static void _oct_AssetCreateCamera(Oct_LoadCommand *load) {
         snprintf(gAssets[ASSET_INDEX(load->_assetID)].name, OCT_ASSET_NAME_SIZE - 1, "<Camera>");
     } else {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to create camera\n");
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to create camera");
     }
 }
 
@@ -169,7 +160,7 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     if (fileBufferSize < 4) {
         _oct_CleanupBufferFromHandle(&load->Audio.fileHandle, fileBuffer);
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load audio sample %s, ogg is not yet supported.\n", _oct_FileHandleName(&load->Audio.fileHandle));
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, ogg is not yet supported.", _oct_FileHandleName(&load->Audio.fileHandle));
         return;
     }
 
@@ -177,21 +168,21 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     if (memcmp(fileBuffer, "OggS", 4) == 0) {
         // TODO: Use sdl sound
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load audio sample %s, ogg is not yet supported.\n", _oct_FileHandleName(&load->Audio.fileHandle));
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, ogg is not yet supported.", _oct_FileHandleName(&load->Audio.fileHandle));
     } else if (memcmp(fileBuffer, "RIFF", 4) == 0 && fileBufferSize >= 12 && memcmp(fileBuffer + 8, "WAVE", 4) == 0) {
         // Use SDL to load wavs
         SDL_IOStream *io = SDL_IOFromConstMem(fileBuffer, fileBufferSize);
         if (!SDL_LoadWAV_IO(io, true, &spec, &data, &dataSize)) {
             _oct_FailLoad(load->_assetID);
-            _oct_LogError("Failed to load audio sample %s, SDL Error: %s.\n", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, SDL Error: %s.", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
         }
     } else if (memcmp(fileBuffer, "ID3", 4) == 0 || memcmp(fileBuffer, &MP3_SIG, 2) == 0) {
         // TODO: Implement mp3 loading
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load audio sample %s, mp3 is not yet supported.\n", _oct_FileHandleName(&load->Audio.fileHandle));
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, mp3 is not yet supported.", _oct_FileHandleName(&load->Audio.fileHandle));
     } else {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to load audio sample %s, unrecognized extension.\n", _oct_FileHandleName(&load->Audio.fileHandle));
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, unrecognized extension.", _oct_FileHandleName(&load->Audio.fileHandle));
     }
 
     _oct_CleanupBufferFromHandle(&load->Audio.fileHandle, fileBuffer);
@@ -208,7 +199,7 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
             _oct_RegisterAssetName(load->_assetID, &load->Audio.fileHandle);
         } else {
             _oct_FailLoad(load->_assetID);
-            _oct_LogError("Failed to load audio sample %s, failed to convert format, SDL Error %s.\n", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, failed to convert format, SDL Error %s.", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
         }
         SDL_free(data);
     }
@@ -234,7 +225,7 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
     Oct_AssetData *texData = _oct_AssetGetSafe(load->Sprite.texture, OCT_ASSET_TYPE_TEXTURE);
     if (!texData) {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Sprite cannot be created with invalid texture (%" PRIu64 ")", load->Sprite.texture);
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Sprite cannot be created with invalid texture (%" PRIu64 ")", load->Sprite.texture);
     }
 
     // Fill frame data
@@ -297,7 +288,7 @@ void _oct_AssetCreateFont(Oct_LoadCommand *load) {
         _oct_RegisterAssetName(load->_assetID, &load->Font.fileHandles[0]);
     } else {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to create font %s, TTF error %s\n", _oct_FileHandleName(&load->Font.fileHandles[0]), SDL_GetError());
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to create font %s, TTF error %s", _oct_FileHandleName(&load->Font.fileHandles[0]), SDL_GetError());
     }
 }
 
@@ -329,7 +320,7 @@ void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load) {
     // Check if the passed font exists
     Oct_AssetData *fontAsset = _oct_AssetGetSafe(load->FontAtlas.font, OCT_ASSET_TYPE_FONT);
     if (!fontAsset) {
-        _oct_LogError("Atlas cannot be created without a font.\n");
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Atlas cannot be created without a font.");
         _oct_FailLoad(asset);
         return;
     }
@@ -467,7 +458,7 @@ void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load) {
 
     if (!asset->fontAtlas.atlases[0].atlas) {
         _oct_FailLoad(load->_assetID);
-        _oct_LogError("Failed to create bitmap font %s, VK2D error: %s\n", _oct_FileHandleName(&load->BitmapFont.fileHandle), vk2dStatusMessage());
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to create bitmap font %s, VK2D error: %s", _oct_FileHandleName(&load->BitmapFont.fileHandle), vk2dStatusMessage());
         mi_free(asset->fontAtlas.atlases[0].glyphs);
         mi_free(asset->fontAtlas.atlases);
         return;
@@ -676,46 +667,6 @@ OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset) {
         _oct_DestroyAssetMetadata(asset);
     }
     return failed;
-}
-
-OCTARINE_API const char *oct_AssetErrorMessage(Oct_Allocator allocator) {
-    char *out = null;
-    SDL_LockMutex(gErrorMessageMutex);
-    const int slen = strlen(gErrorMessage);
-    const int len = slen >= ERROR_BUFFER_SIZE ? ERROR_BUFFER_SIZE - 1 : slen;
-
-    // Allocate new string and copy it
-    out = oct_Malloc(allocator, len + 1);
-    if (out) {
-        strncpy(out, gErrorMessage, len);
-        out[len] = 0;
-        SDL_SetAtomicInt(&gErrorHasOccurred, 0);
-        gErrorMessage[0] = 0;
-    }
-
-    SDL_UnlockMutex(gErrorMessageMutex);
-    return out;
-}
-
-OCTARINE_API const char *oct_AssetGetErrorMessage(int *size, char *buffer) {
-    if (buffer) {
-        const int slen = strlen(gErrorMessage);
-        const int len = slen >= ERROR_BUFFER_SIZE ? ERROR_BUFFER_SIZE - 1 : slen;
-
-        // Allocate new string and copy it
-        strncpy(buffer, gErrorMessage, len);
-        buffer[len] = 0;
-
-        gErrorMessage[0] = 0;
-        SDL_SetAtomicInt(&gErrorHasOccurred, 0);
-        SDL_UnlockMutex(gErrorMessageMutex);
-    } else if (size) {
-        SDL_LockMutex(gErrorMessageMutex);
-        const int slen = strlen(gErrorMessage);
-        const int len = slen >= ERROR_BUFFER_SIZE ? ERROR_BUFFER_SIZE - 1 : slen;
-        *size = len + 1;
-    }
-    return buffer;
 }
 
 OCTARINE_API Oct_Bool oct_AssetLoadHasFailed() {

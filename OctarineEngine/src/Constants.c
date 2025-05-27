@@ -9,6 +9,7 @@ Oct_Status OCT_STATUS_VK2D_ERROR          = 1<<5;
 Oct_Status OCT_STATUS_FILE_DOES_NOT_EXIST = 1<<6;
 Oct_Status OCT_STATUS_BAD_PARAMETER       = 1<<7;
 Oct_Status OCT_STATUS_OUT_OF_MEMORY       = 1<<8;
+Oct_Status OCT_STATUS_FAILED_ASSET        = 1<<9;
 
 // Memory-related
 int32_t OCT_RING_BUFFER_SIZE = 1000;
