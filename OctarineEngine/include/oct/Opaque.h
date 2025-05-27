@@ -86,6 +86,7 @@ typedef struct Oct_BitmapFontData_t {
 /// \brief Info for fonts
 typedef struct Oct_FontData_t {
     TTF_Font *font[OCT_FALLBACK_FONT_MAX]; ///< TTF fonts, plus extras if fallbacks are present
+    void *buffers[OCT_FALLBACK_FONT_MAX];  ///< Copies of the buffers of each loaded fallback font
 } Oct_FontData;
 
 /// \brief An asset for the engine

@@ -55,13 +55,13 @@ void _oct_PlaceAssetInBucket(Oct_AssetBundle bundle, Oct_Asset asset, const char
                     oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to reallocate backup bucket.");
                 bundle->backupBucket = temp;
                 bundle->backupBucketSize += 10;
-                bundle->backupBucketCount++;
             }
             const int32_t extendedBucketSpot = bundle->backupBucketCount++;
 
             current->next = extendedBucketSpot;
             bundle->backupBucket[extendedBucketSpot].asset = asset;
             bundle->backupBucket[extendedBucketSpot].name = copy;
+            bundle->backupBucket[extendedBucketSpot].next = -1;
         }
     }
 }
@@ -117,7 +117,7 @@ OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name) {
     return _oct_GetAssetUnblocking(bundle, name);
 }
 
-OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name, Oct_AssetType type) {
+OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name) {
     // Wait till the bundle is loaded
     while (!SDL_GetAtomicInt(&bundle->bundleReady));
 
@@ -203,11 +203,11 @@ static Oct_Bool _oct_TextEqual(const char *s1, const char *s2) {
     return true;
 }
 
-static uint8_t *_oct_PhysFSGetFile(const char *filename, uint32_t *size) {
+static uint8_t *_oct_PhysFSGetFile(const char *filename, int32_t *size) {
     PHYSFS_File *file = PHYSFS_openRead(filename);
     *size = PHYSFS_fileLength(file);
     uint8_t *buffer = mi_malloc(*size);
-    if (!buffer)
+    if (!buffer || *size == -1)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate buffer");
     PHYSFS_readBytes(file, buffer, *size);
     PHYSFS_close(file);
@@ -272,7 +272,7 @@ static void _oct_AddFrameData(Oct_SpriteFrame *frame, cJSON *frameJSON) {
 // bundle under the json's name.
 static void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *jsonFilename) {
     // Get json
-    uint32_t size;
+    int32_t size;
     uint8_t *jsonBuffer = _oct_PhysFSGetFile(jsonFilename, &size);
     cJSON *json = cJSON_ParseWithLength((void*)jsonBuffer, size);
 
@@ -383,7 +383,7 @@ static void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, 
         const char *extension = strrchr(completeFilename, '.');
         if (_oct_TextEqual(extension, ".mp3") || _oct_TextEqual(extension, ".wav") || _oct_TextEqual(extension, ".ogg")) {
             // Audio
-            uint32_t size;
+            int32_t size;
             uint8_t *buffer = _oct_PhysFSGetFile(completeFilename, &size);
             Oct_LoadCommand l;
             l.Audio.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
@@ -396,7 +396,7 @@ static void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, 
             _oct_AssetCreateAudio(&l);
         } else if (_oct_TextEqual(extension, ".jpg") || _oct_TextEqual(extension, ".jpeg") || _oct_TextEqual(extension, ".png") || _oct_TextEqual(extension, ".bmp")) {
             // Texture
-            uint32_t size;
+            int32_t size;
             uint8_t *buffer = _oct_PhysFSGetFile(completeFilename, &size);
             Oct_LoadCommand l;
             l.Texture.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
@@ -472,7 +472,7 @@ static void _oct_ParseFonts(Oct_AssetBundle bundle, cJSON *fonts) {
                 Oct_LoadCommand l = {0};
                 // Parse each file for fallback fonts
                 for (int j = 0; j < namePointer; j++) {
-                    uint32_t size;
+                    int32_t size;
                     uint8_t *buffer = _oct_PhysFSGetFile(filenames[j], &size);
                     l.Font.fileHandles[j].type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
                     l.Font.fileHandles[j].buffer = buffer;
@@ -530,7 +530,7 @@ static void _oct_ParseBitmapFonts(Oct_AssetBundle bundle, cJSON *fonts) {
 
             // Make load command
             Oct_LoadCommand l = {0};
-            uint32_t size;
+            int32_t size;
             uint8_t *buffer = _oct_PhysFSGetFile(filename, &size);
             l.BitmapFont.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
             l.BitmapFont.fileHandle.buffer = buffer;
@@ -638,7 +638,7 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
         }
 
         // Grab json for parsing as we go along
-        uint32_t manifestBufferSize;
+        int32_t manifestBufferSize;
         uint8_t *manifestBuffer = _oct_PhysFSGetFile("manifest.json", &manifestBufferSize);
         cJSON *manifestJSON = cJSON_ParseWithLength((void*)manifestBuffer, manifestBufferSize);
 

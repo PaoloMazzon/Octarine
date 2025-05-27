@@ -137,9 +137,9 @@ OCTARINE_API Oct_Bool oct_IsAssetBundleReady(Oct_AssetBundle bundle);
 /// \warning If the asset bundle is not yet loaded completely, this will be blocking
 OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name);
 
-/// \brief Returns true if a given asset exists and matches a specific asset type
+/// \brief Returns true if a given asset exists
 /// \warning If the asset bundle is not yet loaded completely, this will be blocking
-OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name, Oct_AssetType type);
+OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name);
 
 #ifdef __cplusplus
 };

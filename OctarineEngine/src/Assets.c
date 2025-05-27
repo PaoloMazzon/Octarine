@@ -266,10 +266,17 @@ void _oct_AssetCreateFont(Oct_LoadCommand *load) {
     // Load all fonts
     for (int i = 0; i < OCT_FALLBACK_FONT_MAX; i++) {
         if (load->Font.fileHandles[i].type != OCT_FILE_HANDLE_TYPE_NONE) {
+            // Fonts expect the io stream to live with the font so we gotta copy it
             uint32_t size;
             uint8_t *buffer = _oct_GetBufferFromHandle(&load->Font.fileHandles[i], &size);
-            SDL_IOStream *io = SDL_IOFromConstMem(buffer, size);
+            fnt->buffers[i] = mi_malloc(size);
+            memcpy(fnt->buffers[i], buffer, size);
+            SDL_IOStream *io = SDL_IOFromConstMem(fnt->buffers[i], size);
+
+            // Load font[i]
             fnt->font[i] = TTF_OpenFontIO(io, true, 10);
+
+            // We ditch the original cuz we don't know if we can have it lingering
             _oct_CleanupBufferFromHandle(&load->Font.fileHandles[i], buffer);
 
             // Make sure font didn't explode
@@ -374,7 +381,9 @@ void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load) {
         char string[5] = {0};
         int w, h;
         SDL_UCS4ToUTF8(atlas->unicodeStart + i, (void*)string);
-        TTF_GetStringSize(fntData->font[0], string, 0, &w, &h);
+        if (!TTF_GetStringSize(fntData->font[0], string, 0, &w, &h)) {
+            oct_Raise(OCT_STATUS_SDL_ERROR, false, "Failed to get character size, SDL error: %s", SDL_GetError());
+        }
         TTF_GetGlyphMetrics(
                 fntData->font[0],
                 *((uint32_t*)string),
@@ -423,6 +432,7 @@ void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load) {
 
     // Copy the atlas surface to a VK2D texture/cleanup
     // TODO: Possible memory problem here, SDL_SaveBMP reports incorrect surfaces sometimes
+    SDL_SaveBMP(tempSurface, "surf.bmp");
     atlas->img = vk2dImageFromPixels(vk2dRendererGetDevice(), tempSurface->pixels, imgWidth, imgHeight, true);
     atlas->atlas = vk2dTextureLoadFromImage(atlas->img);
     SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded, 1);
@@ -508,8 +518,11 @@ static void _oct_AssetDestroyAudio(Oct_Asset asset) {
 
 void _oct_AssetDestroyFont(Oct_Asset asset) {
     for (int i = 0; i < OCT_FALLBACK_FONT_MAX; i++) {
-        if (gAssets[ASSET_INDEX(asset)].font.font[i])
+        if (gAssets[ASSET_INDEX(asset)].font.font[i]) {
             TTF_CloseFont(gAssets[ASSET_INDEX(asset)].font.font[i]);
+            if (gAssets[ASSET_INDEX(asset)].font.buffers[i])
+                mi_free(gAssets[ASSET_INDEX(asset)].font.buffers[i]);
+        }
     }
     _oct_DestroyAssetMetadata(asset);
 }

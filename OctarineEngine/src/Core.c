@@ -193,6 +193,8 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     if (ctx->initInfo->debug) {
         mi_option_enable(mi_option_show_stats);
         mi_option_enable(mi_option_show_errors);
+        mi_option_enable(mi_option_show_stats);
+        mi_option_enable(mi_option_verbose);
     }
 
     // Bootstrap thread
