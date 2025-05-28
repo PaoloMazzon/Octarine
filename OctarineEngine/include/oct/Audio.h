@@ -35,6 +35,12 @@ OCTARINE_API void oct_UnpauseAllSounds();
 /// \brief Updates an audio sample, if the sound has stopped playing nothing will happen
 OCTARINE_API Oct_Sound oct_UpdateSound(Oct_Sound sound, Oct_Vec2 volume, Oct_Bool repeat, Oct_Bool paused);
 
+/// \brief Returns the global volume modifier from 0 - 1
+OCTARINE_API float oct_GetGlobalVolume();
+
+/// \brief Sets the global volume modifier (its from 0 - 1)
+OCTARINE_API void oct_SetGlobalVolume(float volume);
+
 #ifdef __cplusplus
 };
 #endif

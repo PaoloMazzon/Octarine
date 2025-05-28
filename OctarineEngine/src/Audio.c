@@ -36,6 +36,7 @@ static SDL_AudioSpec gDeviceSpec = {
 };
 #define MAX_PLAYING_SOUNDS 100
 static Oct_PlayingSound gPlayingSounds[MAX_PLAYING_SOUNDS];
+static SDL_AtomicInt gGlobalAudioVolume = {.value = AUDIO_VOLUME_NORMALIZED_FACTOR};
 
 /////////////////////////// FUNCTIONS ///////////////////////////
 // Reserves space in the playing sound list, returning OCT_SOUND_FAILED if it fails (too many concurrent noises)
@@ -63,6 +64,22 @@ SDL_AudioSpec *_oct_GetDeviceAudioSpec() {
     return &gDeviceSpec;
 }
 
+float _oct_GetGlobalVolume() {
+    return (float)SDL_GetAtomicInt(&gGlobalAudioVolume) / AUDIO_VOLUME_NORMALIZED_FACTOR;
+}
+
+void _oct_SetGlobalVolume(float vol) {
+    SDL_SetAtomicInt(&gGlobalAudioVolume, vol * AUDIO_VOLUME_NORMALIZED_FACTOR);
+}
+
+int _oct_CountPlayingSounds() {
+    int total = 0;
+    for (int i = 0; i < MAX_PLAYING_SOUNDS; i++)
+        if (SDL_GetAtomicInt(&gPlayingSounds[i].alive))
+            total++;
+    return total;
+}
+
 // Adds a certain number of samples from a playing sound to an audio sample, dealing with the playing sound should
 // it run out of new audio
 inline static void _oct_AddPlayingSound(int16_t *buffer, int32_t samples, int32_t playingSound) {
@@ -74,9 +91,10 @@ inline static void _oct_AddPlayingSound(int16_t *buffer, int32_t samples, int32_
             (float)SDL_GetAtomicInt(&snd->volumeLeft) / AUDIO_VOLUME_NORMALIZED_FACTOR,
             (float)SDL_GetAtomicInt(&snd->volumeRight) / AUDIO_VOLUME_NORMALIZED_FACTOR
     };
+    float globalVol = (float)SDL_GetAtomicInt(&gGlobalAudioVolume) / AUDIO_VOLUME_NORMALIZED_FACTOR;
     for (int i = 0; i < samples; i++) {
         // Add sample to the mix
-        const float sample = ((float)soundBuffer[snd->pointer] / (float)INT16_MAX) * vol[i % 2];
+        const float sample = ((float)soundBuffer[snd->pointer] / (float)INT16_MAX) * vol[i % 2] * globalVol;
         buffer[i] += (int16_t)(sample * INT16_MAX);
 
         // Remove this sound if the audio sample is done
@@ -176,6 +194,21 @@ void _oct_AudioUpdateBegin() {
 
 void _oct_AudioUpdateEnd() {
     // All the work is done in the mixer thread
+}
+
+// Plays a sound without going through sound queue (NOT THREAD SAFE)
+void _oct_PlaySoundInternal(Oct_Audio id) {
+    Oct_Sound snd = _oct_ReserveSound();
+    int32_t index = SOUND_INDEX(snd);
+    if (index < MAX_PLAYING_SOUNDS) {
+        gPlayingSounds[index].sound = id;
+        gPlayingSounds[index].pointer = 0;
+        SDL_SetAtomicInt(&gPlayingSounds[index].repeat, 0);
+        SDL_SetAtomicInt(&gPlayingSounds[index].volumeLeft, AUDIO_VOLUME_NORMALIZED_FACTOR);
+        SDL_SetAtomicInt(&gPlayingSounds[index].volumeRight, AUDIO_VOLUME_NORMALIZED_FACTOR);
+        SDL_SetAtomicInt(&gPlayingSounds[index].paused, 0);
+        SDL_SetAtomicInt(&gPlayingSounds[index].alive, 1);
+    }
 }
 
 void _oct_AudioProcessCommand(Oct_Command *cmd) {
@@ -309,4 +342,12 @@ OCTARINE_API void oct_UnpauseAllSounds() {
             .type = OCT_AUDIO_COMMAND_TYPE_UNPAUSE_ALL_SOUNDS,
     };
     oct_AudioUpdate(&command);
+}
+
+OCTARINE_API float oct_GetGlobalVolume() {
+    return _oct_GetGlobalVolume();
+}
+
+OCTARINE_API void oct_SetGlobalVolume(float volume) {
+    _oct_SetGlobalVolume(volume);
 }

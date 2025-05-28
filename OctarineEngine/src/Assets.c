@@ -2,6 +2,7 @@
 #include <VK2D/VK2D.h>
 #include <stdio.h>
 
+#include "oct/stb_vorbis.h"
 #include "oct/Common.h"
 #include "oct/Opaque.h"
 #include "oct/Core.h"
@@ -153,6 +154,7 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     uint8_t *data = null;
     uint32_t dataSize = 0;
     SDL_AudioSpec spec;
+    Oct_Bool sdlFree = false;
 
     if (fileBufferSize < 4) {
         _oct_CleanupBufferFromHandle(&load->Audio.fileHandle, fileBuffer);
@@ -163,23 +165,35 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
 
     const uint16_t MP3_SIG = 0xFFFB;
     if (memcmp(fileBuffer, "OggS", 4) == 0) {
-        // TODO: Use sdl sound
-        _oct_FailLoad(load->_assetID);
-        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, ogg is not yet supported.", _oct_FileHandleName(&load->Audio.fileHandle));
+        int channels, sampleRate;
+        int samples = stb_vorbis_decode_memory(fileBuffer, fileBufferSize, &channels, &sampleRate, &data);
+        if (samples < 0) {
+            _oct_FailLoad(load->_assetID);
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s with vorbis", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
+            return;
+        }
+        spec.freq = sampleRate;
+        spec.channels = channels;
+        spec.format = SDL_AUDIO_S16;
+        dataSize = samples * channels * 2;
     } else if (memcmp(fileBuffer, "RIFF", 4) == 0 && fileBufferSize >= 12 && memcmp(fileBuffer + 8, "WAVE", 4) == 0) {
         // Use SDL to load wavs
         SDL_IOStream *io = SDL_IOFromConstMem(fileBuffer, fileBufferSize);
         if (!SDL_LoadWAV_IO(io, true, &spec, &data, &dataSize)) {
             _oct_FailLoad(load->_assetID);
             oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, SDL Error: %s.", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
+            return;
         }
+        sdlFree = true;
     } else if (memcmp(fileBuffer, "ID3", 4) == 0 || memcmp(fileBuffer, &MP3_SIG, 2) == 0) {
         // TODO: Implement mp3 loading
         _oct_FailLoad(load->_assetID);
+        return;
         oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, mp3 is not yet supported.", _oct_FileHandleName(&load->Audio.fileHandle));
     } else {
         _oct_FailLoad(load->_assetID);
         oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, unrecognized extension.", _oct_FileHandleName(&load->Audio.fileHandle));
+        return;
     }
 
     _oct_CleanupBufferFromHandle(&load->Audio.fileHandle, fileBuffer);
@@ -198,7 +212,10 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
             _oct_FailLoad(load->_assetID);
             oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s, failed to convert format, SDL Error %s.", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());
         }
-        SDL_free(data);
+        if (sdlFree)
+            SDL_free(data);
+        else
+            free(data);
     }
 }
 
@@ -500,7 +517,7 @@ static void _oct_AssetDestroySprite(Oct_Asset asset) {
 }
 
 static void _oct_AssetDestroyAudio(Oct_Asset asset) {
-    mi_free(gAssets[ASSET_INDEX(asset)].audio.data);
+    SDL_free(gAssets[ASSET_INDEX(asset)].audio.data);
     _oct_DestroyAssetMetadata(asset);
 }
 

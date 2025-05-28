@@ -166,7 +166,37 @@ void _oct_DebugUpdate() {
     }
     nk_end(vk2dGuiContext());
 
+    // Audio interface
+    if (nk_begin(vk2dGuiContext(), "Audio", nk_rect(320, 10, 330, 220),
+                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+                 NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
+        // Top-level audio information/settings
+        nk_layout_row_dynamic(vk2dGuiContext(), 20, 2);
+        nk_label(vk2dGuiContext(), "Volume: ", NK_TEXT_LEFT);
+        _oct_SetGlobalVolume(nk_slide_float(vk2dGuiContext(), 0, _oct_GetGlobalVolume(), 1, 0.05));
+        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Sounds: %i", _oct_CountPlayingSounds());
+        if (nk_button_label(vk2dGuiContext(), "Stop all"))
+            oct_StopAllSounds();
 
+        // Each loaded audio sample
+        nk_layout_row_template_begin(vk2dGuiContext(), 20);
+        nk_layout_row_template_push_static(vk2dGuiContext(), 80);
+        nk_layout_row_template_push_static(vk2dGuiContext(), 100);
+        nk_layout_row_template_push_static(vk2dGuiContext(), 600);
+        nk_layout_row_template_end(vk2dGuiContext());
+        nk_label(vk2dGuiContext(), "Index, Gen", NK_TEXT_CENTERED);
+        nk_label(vk2dGuiContext(), "Play", NK_TEXT_CENTERED);
+        nk_label(vk2dGuiContext(), "Info", NK_TEXT_LEFT);
+
+        for (int i = 0; i < OCT_MAX_ASSETS; i++) {
+            if (_oct_AssetType(i) != OCT_ASSET_TYPE_AUDIO) continue;
+            nk_labelf(vk2dGuiContext(), NK_TEXT_CENTERED, "%i, %i", i, _oct_AssetGeneration(i));
+            if (nk_button_label(vk2dGuiContext(), "Play"))
+                _oct_PlaySoundInternal(((uint64_t)_oct_AssetGeneration(i) << 32) + i);
+            nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "%s", _oct_AssetName(i));
+        }
+    }
+    nk_end(vk2dGuiContext());
 }
 
 void _oct_DebugEnd() {

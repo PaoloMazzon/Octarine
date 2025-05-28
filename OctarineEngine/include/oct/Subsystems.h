@@ -51,6 +51,10 @@ void _oct_AudioUpdateEnd();
 void _oct_AudioProcessCommand(Oct_Command *cmd);
 Oct_Sound _oct_ReserveSound(); // used from logic thread to reserve a space in the sound list
 SDL_AudioSpec *_oct_GetDeviceAudioSpec(); // returns the audio device spec
+void _oct_PlaySoundInternal(Oct_Audio id);
+float _oct_GetGlobalVolume();
+void _oct_SetGlobalVolume(float vol);
+int _oct_CountPlayingSounds();
 uint8_t *_oct_AudioConvertFormat(uint8_t *data, int32_t size, int32_t *newSize, SDL_AudioSpec *spec); // Converts audio to the necessary format and returns it, use SDL_free on the output
 void _oct_AudioEnd();
 

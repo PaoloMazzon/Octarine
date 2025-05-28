@@ -73,7 +73,7 @@ int main(int argc, const char **argv) {
 | [mi-malloc](https://github.com/microsoft/mimalloc) | Memory management | MIT |
 | [flecs](https://github.com/SanderMertens/flecs?tab=readme-ov-file) | ECS | MIT |
 | [PhysicsFS](https://github.com/icculus/physfs) | Asset system | zlib |
-| [SDL_sound](https://github.com/icculus/SDL_sound) | Parsing sound | zlib |
+| [stb_vorbis](https://github.com/nothings/stb/tree/master) | Parsing OGGs | MIT |
 | [cJSON](https://github.com/DaveGamble/cJSON) | Parsing JSONs | MIT |
 | [VulkanMemoryAllocator (VMA)](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator) | Vulkan2D uses it | MIT |
 | [tinyobjloader-c](https://github.com/syoyo/tinyobjloader-c) | Vulkan2D uses it | MIT |
