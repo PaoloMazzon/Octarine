@@ -200,7 +200,7 @@ void _oct_AudioUpdateEnd() {
 void _oct_PlaySoundInternal(Oct_Audio id) {
     Oct_Sound snd = _oct_ReserveSound();
     int32_t index = SOUND_INDEX(snd);
-    if (index < MAX_PLAYING_SOUNDS) {
+    if (index < MAX_PLAYING_SOUNDS && index != OCT_SOUND_FAILED) {
         gPlayingSounds[index].sound = id;
         gPlayingSounds[index].pointer = 0;
         SDL_SetAtomicInt(&gPlayingSounds[index].repeat, 0);

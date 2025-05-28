@@ -25,7 +25,7 @@ extern "C" {
 #define OCT_FLOAT_TO_INT(f) (*((int*)&f))
 
 ///< Max combined number of assets that can exist at once
-#define OCT_MAX_ASSETS 3000
+#define OCT_MAX_ASSETS 1000
 
 ///< Tells texture rendering to render the whole width/height
 #define OCT_WHOLE_TEXTURE -1
