@@ -25,8 +25,11 @@ int oct_UserThread(void *ptr) {
     uint64_t between = 0;
     uint64_t frameCount = 0;
     float averageHz = 0;
-    double totalTime = 0;
+    double totalTime = 0; // These are for the whole duration of the program
     double iterations = 0;
+    double totalTimeSmaller = 0; // These are updated each second
+    double iterationsSmaller = 0;
+    double averageProcessTime = 0;
 
     // User-end game loop
     while (SDL_GetAtomicInt(&ctx->quit) == 0) {
@@ -40,11 +43,13 @@ int oct_UserThread(void *ptr) {
             firstLoop = false;
         }
         userData = ctx->initInfo->update(userData);
-        _oct_CommandBufferEndFrame(); // TODO - This may need to be moved to after the wait
+        _oct_CommandBufferEndFrame();
 
         // Keep track of average ticks
         iterations += 1;
         totalTime += _oct_GoofyTime(startTime);
+        iterationsSmaller += 1;
+        totalTimeSmaller += _oct_GoofyTime(startTime);
 
         // Wait until clock thread says we may begin a new frame
         while (SDL_GetAtomicInt(&ctx->frameStart) == 0) {
@@ -57,8 +62,13 @@ int oct_UserThread(void *ptr) {
         frameCount++;
         if (between >= SDL_GetPerformanceFrequency()) {
             averageHz = (float)((double)frameCount / ((double)between / (double)SDL_GetPerformanceFrequency()));
+            averageProcessTime = totalTimeSmaller / iterationsSmaller;
+            totalTimeSmaller = 0;
+            iterationsSmaller = 0;
             between = 0;
             frameCount = 0;
+            float avg = averageProcessTime;
+            SDL_SetAtomicInt(&ctx->logicProcessTime, OCT_FLOAT_TO_INT(avg));
             SDL_SetAtomicInt(&ctx->logicHzActual, OCT_FLOAT_TO_INT(averageHz));
         }
         startTime = SDL_GetPerformanceCounter();

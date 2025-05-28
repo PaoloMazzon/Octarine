@@ -22,6 +22,7 @@ struct Oct_Context_t {
     SDL_AtomicInt renderHz;         ///< Render refresh rate, 0 means unlocked
     SDL_AtomicInt renderHzActual;   ///< True render refresh rate
     SDL_AtomicInt logicHzActual;    ///< Actual refresh rate of the logic thread, use OCT_INT_TO_FLOAT to get the value
+    SDL_AtomicInt logicProcessTime; ///< Time spent processing logic frames - sleep time
     SDL_AtomicInt interpolatedTime; ///< Estimated time it should be in the logic frame cycle, for interpolation, normalized 0-1 (the frame just started would be 0, the frame is just about done is close to 1)
     uint64_t gameStartTime;         ///< Time the logic thread started for the user to query time
 

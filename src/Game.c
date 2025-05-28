@@ -68,7 +68,7 @@ void *update(void *ptr) {
 
     oct_DrawText(
             gPixelFontAtlas,
-            (Oct_Vec2){320, 100},
+            (Oct_Vec2){320, 250},
             1,
             "The quick brown fox jumps over the lazy dog.\n!@#$%^&*()_+-={}[]"
     );

@@ -68,6 +68,12 @@ size_t memory_used(bool resident) {
 
 static Oct_Context gInternalCtx;
 
+double _oct_GetLogicProcessTime() {
+    Oct_Context ctx = _oct_GetCtx();
+    int i = SDL_GetAtomicInt(&ctx->logicProcessTime);
+    return OCT_INT_TO_FLOAT(i);
+}
+
 Oct_Context _oct_GetCtx() {
     return gInternalCtx;
 }
@@ -117,7 +123,7 @@ void _oct_DebugUpdate() {
         // Performance metrics
         nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "=======Octarine=======");
         nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Render: %0.2ffps, %0.2fms", oct_GetRenderFPS(), (1.0 / oct_GetRenderFPS()) * 1000);
-        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Logic: %0.2fHz, %0.2fms", oct_GetLogicHz(), (1.0 / oct_GetLogicHz()) * 1000);
+        nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Logic: %0.2fHz, %0.2fms", oct_GetLogicHz(), _oct_GetLogicProcessTime() * 1000);
         float inUse, total;
         vk2dRendererGetVRAMUsage(&inUse, &total);
         nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "VRAM: %.2fmb/%.2fmb", inUse, total);
@@ -309,3 +315,4 @@ OCTARINE_API double oct_GetLogicHz() {
     int i = SDL_GetAtomicInt(&ctx->logicHzActual);
     return OCT_INT_TO_FLOAT(i);
 }
+

@@ -10,7 +10,7 @@ typedef struct Job_t {
 } Job;
 
 // Globals
-#define JOB_RINGBUFFER_SIZE  250
+#define JOB_RINGBUFFER_SIZE 25
 SDL_Thread **gJobThreads;
 uint32_t gJobThreadCount;
 SDL_AtomicInt gThreadsWorking;
