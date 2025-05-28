@@ -109,7 +109,7 @@ void _oct_DebugUpdate() {
 
     // Draw nuklear debug thing
     if (nk_begin(vk2dGuiContext(), "Performance", nk_rect(10, 10, 300, 220),
-                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
+                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE)) {
 
         // Host info
         nk_layout_row_dynamic(vk2dGuiContext(), 20, 1);
@@ -171,10 +171,14 @@ void _oct_DebugUpdate() {
                  NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
                  NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) {
         // Top-level audio information/settings
-        nk_layout_row_dynamic(vk2dGuiContext(), 20, 2);
+        nk_layout_row_begin(vk2dGuiContext(), NK_STATIC, 20, 2);
+        nk_layout_row_push(vk2dGuiContext(), 75);
         nk_label(vk2dGuiContext(), "Volume: ", NK_TEXT_LEFT);
-        _oct_SetGlobalVolume(nk_slide_float(vk2dGuiContext(), 0, _oct_GetGlobalVolume(), 1, 0.05));
+        nk_layout_row_push(vk2dGuiContext(), 220);
+        _oct_SetGlobalVolume(nk_slide_float(vk2dGuiContext(), 0, _oct_GetGlobalVolume(), 1, 0.01));
+        nk_layout_row_push(vk2dGuiContext(), 95);
         nk_labelf(vk2dGuiContext(), NK_TEXT_LEFT, "Sounds: %i", _oct_CountPlayingSounds());
+        nk_layout_row_push(vk2dGuiContext(), 200);
         if (nk_button_label(vk2dGuiContext(), "Stop all"))
             oct_StopAllSounds();
 
