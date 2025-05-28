@@ -36,19 +36,14 @@ struct Oct_Context_t {
 typedef struct Oct_SpriteFrame_t {
     Oct_Vec2 position; ///< Position of this frame
     Oct_Vec2 size;     ///< Size of this frame
-    double duration;   ///< Duration of the frame in milliseconds
 } Oct_SpriteFrame;
 
 /// \brief Data needed to draw and manage a sprite
 typedef struct Oct_SpriteData_t {
     Oct_Texture texture;     ///< Texture the sprite comes from
     int32_t frameCount;      ///< Number of frames in the animation
-    int32_t frame;           ///< Current frame
-    Oct_Bool repeat;         ///< Whether or not the animation repeats
-    Oct_Bool pause;          ///< Whether or not the animation is currently paused
-    double lastTime;         ///< The last time a frame was changed
-    double accumulator;      ///< Time accumulator for more accurate animation timings
     Oct_SpriteFrame *frames; ///< Each individual animation frame
+    double duration;         ///< Duration of each frame in seconds
 } Oct_SpriteData;
 
 /// \brief Data for audio

@@ -1,8 +1,10 @@
 #include <SDL3/SDL.h>
+#include "oct/Core.h"
 #include "oct/CommandBuffer.h"
 #include "oct/Subsystems.h"
 #include "oct/Drawing.h"
 #include "oct/Constants.h"
+#include "oct/Opaque.h"
 
 Oct_Colour _OCT_WHITE = {1, 1, 1, 1};
 Oct_Vec2 _OCT_ONE2 = {1, 1};
@@ -152,36 +154,84 @@ OCTARINE_API void oct_DrawTextureColourExt(Oct_Texture texture, Oct_Colour *colo
 }
 
 /////////////////////////////////////// SPRITE ///////////////////////////////////////
-OCTARINE_API void oct_DrawSpriteInt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, OCT_SPRITE_CURRENT_FRAME, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
+// Returns the frame to send to the command
+static int _oct_ProcessSpriteUpdate(Oct_SpriteInstance *instance, Oct_Sprite sprite) {
+    // Its possible for the sprite to not be loaded yet, so the first frame will just be displayed until its loaded
+    int32_t frameCount = 0;
+    Oct_AssetData *spr = _oct_AssetGetSafe(sprite, OCT_ASSET_TYPE_SPRITE);
+    double duration = 0;
+    if (spr) {
+        frameCount = spr->sprite.frameCount;
+        duration = spr->sprite.duration;
+    }
+
+    // Process frame update if unpaused and the animation is not ended (if repeat is disabled)
+    if (frameCount > 0 && !instance->pause && (instance->repeat || (instance->repeat && instance->frame % frameCount < frameCount - 1))) {
+        instance->accumulator += oct_Time() - instance->lastTime;
+        if (instance->accumulator > duration) {
+            instance->frame += 1;
+            instance->accumulator -= duration;
+        }
+        instance->lastTime = oct_Time();
+    }
+    return instance->frame;
 }
 
-OCTARINE_API void oct_DrawSpriteIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, OCT_SPRITE_CURRENT_FRAME, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
+OCTARINE_API void oct_InitSpriteInstance(Oct_SpriteInstance *instance, Oct_Sprite sprite, Oct_Bool repeat) {
+    instance->spr = sprite;
+    instance->frame = 0;
+    instance->repeat = repeat;
+    instance->pause = false;
+    instance->lastTime = oct_Time();
+    instance->accumulator = 0;
 }
 
-OCTARINE_API void oct_DrawSpriteIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
-    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, OCT_SPRITE_CURRENT_FRAME, &_OCT_WHITE, position, scale, rotation, origin);
+OCTARINE_API Oct_Bool oct_SpriteIsDone(Oct_SpriteInstance *instance) {
+    int32_t frameCount = 0;
+    Oct_AssetData *spr = _oct_AssetGetSafe(instance->spr, OCT_ASSET_TYPE_SPRITE);
+    if (spr)
+        frameCount = spr->sprite.frameCount;
+    return spr && instance->repeat && (instance->frame % frameCount) == frameCount - 1;
 }
 
-OCTARINE_API void oct_DrawSpriteIntColourExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
-    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, OCT_SPRITE_CURRENT_FRAME, colour, position, scale, rotation, origin);
+OCTARINE_API void oct_DrawSpriteInt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Vec2 position) {
+    int frame = _oct_ProcessSpriteUpdate(instance, sprite);
+    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, frame, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
-OCTARINE_API void oct_DrawSprite(Oct_Sprite sprite, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, OCT_SPRITE_CURRENT_FRAME, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
+OCTARINE_API void oct_DrawSpriteIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Colour *colour, Oct_Vec2 position) {
+    int frame = _oct_ProcessSpriteUpdate(instance, sprite);
+    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, frame, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
 }
 
-OCTARINE_API void oct_DrawSpriteColour(Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position) {
-    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, OCT_SPRITE_CURRENT_FRAME, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
+OCTARINE_API void oct_DrawSpriteIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
+    int frame = _oct_ProcessSpriteUpdate(instance, sprite);
+    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, frame, &_OCT_WHITE, position, scale, rotation, origin);
 }
 
-OCTARINE_API void oct_DrawSpriteExt(Oct_Sprite sprite, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
-    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, OCT_SPRITE_CURRENT_FRAME, &_OCT_WHITE, position, scale, rotation, origin);
+OCTARINE_API void oct_DrawSpriteIntColourExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
+    int frame = _oct_ProcessSpriteUpdate(instance, sprite);
+    oct_DrawSpriteFrameIntColourExt(interp, id, sprite, frame, colour, position, scale, rotation, origin);
 }
 
-OCTARINE_API void oct_DrawSpriteColourExt(Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
-    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, OCT_SPRITE_CURRENT_FRAME, colour, position, scale, rotation, origin);
+OCTARINE_API void oct_DrawSprite(Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Vec2 position) {
+    int frame = _oct_ProcessSpriteUpdate(instance, sprite);
+    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, frame, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
+}
+
+OCTARINE_API void oct_DrawSpriteColour(Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Colour *colour, Oct_Vec2 position) {
+    int frame = _oct_ProcessSpriteUpdate(instance, sprite);
+    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, frame, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
+}
+
+OCTARINE_API void oct_DrawSpriteExt(Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
+    int frame = _oct_ProcessSpriteUpdate(instance, sprite);
+    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, frame, &_OCT_WHITE, position, scale, rotation, origin);
+}
+
+OCTARINE_API void oct_DrawSpriteColourExt(Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
+    int frame = _oct_ProcessSpriteUpdate(instance, sprite);
+    oct_DrawSpriteFrameIntColourExt(0, 0, sprite, frame, colour, position, scale, rotation, origin);
 }
 
 /////////////////////////////////////// SPRITE FRAME ///////////////////////////////////////

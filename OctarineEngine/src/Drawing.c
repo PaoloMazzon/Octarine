@@ -421,21 +421,16 @@ static void _oct_DrawSprite(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, floa
     scale[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->Sprite.scale[1], cmd->Sprite.scale[1]);
     rotation = interpolate(cmd->interpolate & OCT_INTERPOLATE_ROTATION, prevCmd, interpolatedTime, prevCmd->Sprite.rotation, cmd->Sprite.rotation);
 
-    // Find current frame
-    int32_t frame = cmd->Sprite.frame;
-    if (frame == OCT_SPRITE_CURRENT_FRAME) {
-        frame = spr->frame;
-    } else if (frame == OCT_SPRITE_LAST_FRAME) {
-        frame = spr->frameCount - 1;
-    } else {
-        frame -= 1;
-    }
-
     // Locate frame in the texture
-    float x = spr->frames[spr->frame].position[0];
-    float y = spr->frames[spr->frame].position[1];
-    float w = spr->frames[spr->frame].size[0];
-    float h = spr->frames[spr->frame].size[1];
+    int32_t frame = cmd->Sprite.frame;
+    if (frame == OCT_SPRITE_LAST_FRAME)
+        frame = spr->frameCount - 1;
+    else
+        frame = frame % spr->frameCount;
+    float x = spr->frames[frame].position[0];
+    float y = spr->frames[frame].position[1];
+    float w = spr->frames[frame].size[0];
+    float h = spr->frames[frame].size[1];
 
     // Process the viewport for the sprite
     if (cmd->Sprite.viewport.size[0] != OCT_WHOLE_TEXTURE) {
@@ -465,20 +460,6 @@ static void _oct_DrawSprite(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, floa
             w,
             h
     );
-
-    // Process frame update
-    if (!spr->pause && cmd->Sprite.frame == OCT_SPRITE_CURRENT_FRAME) {
-        spr->accumulator += oct_Time() - spr->lastTime;
-        if (spr->accumulator > spr->frames[spr->frame].duration) {
-            if (spr->frame < spr->frameCount - 1) {
-                spr->frame += 1;
-            } else if (spr->frame == spr->frameCount - 1 && spr->repeat) {
-                spr->frame = 0;
-            }
-            spr->accumulator -= spr->frames[spr->frame].duration;
-        }
-        spr->lastTime = oct_Time();
-    }
 }
 
 static void _oct_DrawDebugFont(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {

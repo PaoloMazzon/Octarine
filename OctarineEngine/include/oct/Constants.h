@@ -25,9 +25,8 @@ extern int32_t OCT_BUCKET_SIZE;        ///< Bucket size for hash maps
 #define OCT_ASSET_NAME_SIZE 512        ///< Size of names for debugging purposes
 
 // Drawing
-extern int32_t OCT_SPRITE_LAST_FRAME;    ///< Draw the last frame of the animation
-extern int32_t OCT_SPRITE_FIRST_FRAME;   ///< Draw the first frame of the animation
-extern int32_t OCT_SPRITE_CURRENT_FRAME; ///< Draw the current frame of the animation
+extern int32_t OCT_SPRITE_LAST_FRAME;  ///< Draw the last frame of the animation
+extern int32_t OCT_SPRITE_FIRST_FRAME; ///< Draw the first frame of the animation
 
 // Various
 extern Oct_Asset OCT_TARGET_SWAPCHAIN;  ///< Target the swapchain (window)

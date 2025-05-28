@@ -79,52 +79,86 @@ OCTARINE_API void oct_DrawTextureExt(Oct_Texture texture, Oct_Vec2 position, Oct
 /// \brief Draws a texture
 OCTARINE_API void oct_DrawTextureColourExt(Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
-/// \brief Draws a sprite
-OCTARINE_API void oct_DrawSpriteInt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Vec2 position);
+/// \brief Sets up a sprite instance
+OCTARINE_API void oct_InitSpriteInstance(Oct_SpriteInstance *instance, Oct_Sprite sprite, Oct_Bool repeat);
+
+/// \brief Returns true if a sprite instance is on the last frame of its animation and repeat is disabled
+OCTARINE_API Oct_Bool oct_SpriteIsDone(Oct_SpriteInstance *instance);
 
 /// \brief Draws a sprite
-OCTARINE_API void oct_DrawSpriteIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position);
+OCTARINE_API void oct_DrawSpriteInt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Vec2 position);
 
 /// \brief Draws a sprite
-OCTARINE_API void oct_DrawSpriteIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+///
+/// Keeping track of a sprite's animation is the job of Oct_SpriteInstance. For example, if you had 100 enemies with the
+/// same sprite in your game you would only have that sprite loaded once, then each of those 100 enemies would have
+/// their own Oct_SpriteInstance struct.
+OCTARINE_API void oct_DrawSpriteIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Colour *colour, Oct_Vec2 position);
 
 /// \brief Draws a sprite
-OCTARINE_API void oct_DrawSpriteIntColourExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+///
+/// Keeping track of a sprite's animation is the job of Oct_SpriteInstance. For example, if you had 100 enemies with the
+/// same sprite in your game you would only have that sprite loaded once, then each of those 100 enemies would have
+/// their own Oct_SpriteInstance struct.
+OCTARINE_API void oct_DrawSpriteIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
 /// \brief Draws a sprite
-OCTARINE_API void oct_DrawSprite(Oct_Sprite sprite, Oct_Vec2 position);
+///
+/// Keeping track of a sprite's animation is the job of Oct_SpriteInstance. For example, if you had 100 enemies with the
+/// same sprite in your game you would only have that sprite loaded once, then each of those 100 enemies would have
+/// their own Oct_SpriteInstance struct.
+OCTARINE_API void oct_DrawSpriteIntColourExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
 /// \brief Draws a sprite
-OCTARINE_API void oct_DrawSpriteColour(Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position);
+///
+/// Keeping track of a sprite's animation is the job of Oct_SpriteInstance. For example, if you had 100 enemies with the
+/// same sprite in your game you would only have that sprite loaded once, then each of those 100 enemies would have
+/// their own Oct_SpriteInstance struct.
+OCTARINE_API void oct_DrawSprite(Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Vec2 position);
 
 /// \brief Draws a sprite
-OCTARINE_API void oct_DrawSpriteExt(Oct_Sprite sprite, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+///
+/// Keeping track of a sprite's animation is the job of Oct_SpriteInstance. For example, if you had 100 enemies with the
+/// same sprite in your game you would only have that sprite loaded once, then each of those 100 enemies would have
+/// their own Oct_SpriteInstance struct.
+OCTARINE_API void oct_DrawSpriteColour(Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Colour *colour, Oct_Vec2 position);
 
 /// \brief Draws a sprite
-OCTARINE_API void oct_DrawSpriteColourExt(Oct_Sprite sprite, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+///
+/// Keeping track of a sprite's animation is the job of Oct_SpriteInstance. For example, if you had 100 enemies with the
+/// same sprite in your game you would only have that sprite loaded once, then each of those 100 enemies would have
+/// their own Oct_SpriteInstance struct.
+OCTARINE_API void oct_DrawSpriteExt(Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
-/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 1)
+/// \brief Draws a sprite
+///
+/// Keeping track of a sprite's animation is the job of Oct_SpriteInstance. For example, if you had 100 enemies with the
+/// same sprite in your game you would only have that sprite loaded once, then each of those 100 enemies would have
+/// their own Oct_SpriteInstance struct.
+OCTARINE_API void oct_DrawSpriteColourExt(Oct_Sprite sprite, Oct_SpriteInstance *instance, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+
+/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 0)
 OCTARINE_API void oct_DrawSpriteFrameInt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, int32_t frame, Oct_Vec2 position);
 
-/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 1)
+/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 0)
 OCTARINE_API void oct_DrawSpriteFrameIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, int32_t frame, Oct_Colour *colour, Oct_Vec2 position);
 
-/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 1)
+/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 0)
 OCTARINE_API void oct_DrawSpriteFrameIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, int32_t frame, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
-/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 1)
+/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 0)
 OCTARINE_API void oct_DrawSpriteFrameIntColourExt(Oct_InterpolationType interp, uint64_t id, Oct_Sprite sprite, int32_t frame, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
-/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 1)
+/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 0)
 OCTARINE_API void oct_DrawSpriteFrame(Oct_Sprite sprite, int32_t frame, Oct_Vec2 position);
 
-/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 1)
+/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 0)
 OCTARINE_API void oct_DrawSpriteFrameColour(Oct_Sprite sprite, int32_t frame, Oct_Colour *colour, Oct_Vec2 position);
 
-/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 1)
+/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 0)
 OCTARINE_API void oct_DrawSpriteFrameExt(Oct_Sprite sprite, int32_t frame, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
-/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 1)
+/// \brief Draw a specific sprite frame (use SPRITE_*_FRAME, otherwise index from 0)
 OCTARINE_API void oct_DrawSpriteFrameColourExt(Oct_Sprite sprite, int32_t frame, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
 /// \brief Interpolates a camera update

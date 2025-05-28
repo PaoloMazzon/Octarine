@@ -249,10 +249,10 @@ static const char *_oct_AddRootDir(const char *filename, const char *path) {
 #define jsonGetNum(json, def) cJSON_IsNumber(json) ? cJSON_GetNumberValue(json) : 0
 
 // Parses the json's frame data into a sprite's frame
-static void _oct_AddFrameData(Oct_SpriteFrame *frame, cJSON *frameJSON) {
+static double _oct_AddFrameData(Oct_SpriteFrame *frame, cJSON *frameJSON) {
     memset(frame, 0, sizeof(struct Oct_SpriteFrame_t));
     if (!cJSON_IsObject(frameJSON))
-        return;
+        return 0;
 
     cJSON *frameSize = jsonGetWithType(cJSON_GetObjectItem(frameJSON, "frame"), type_map);
     if (frameSize) {
@@ -262,8 +262,7 @@ static void _oct_AddFrameData(Oct_SpriteFrame *frame, cJSON *frameJSON) {
         frame->size[1] = jsonGetNum(cJSON_GetObjectItem(frameSize, "h"), 0);
     }
 
-    frame->duration = jsonGetNum(jsonGetWithType(cJSON_GetObjectItem(frameJSON, "duration"), type_num), 100);
-    frame->duration = frame->duration / 1000;
+    return (jsonGetNum(jsonGetWithType(cJSON_GetObjectItem(frameJSON, "duration"), type_num), 100)) / 1000.0f;
 }
 
 // This will check a given json to see if it is a json containing a spritesheet (exported by
@@ -309,11 +308,6 @@ static void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *
         _oct_AssetGet(asset)->type = OCT_ASSET_TYPE_SPRITE;
         data->texture = tex;
         data->frameCount = cJSON_GetArraySize(frames);
-        data->frame = 0;
-        data->repeat = true;
-        data->pause = false;
-        data->lastTime = oct_Time();
-        data->accumulator = 0;
 
         // Allocate the frames
         data->frames = mi_malloc(sizeof(struct Oct_SpriteFrame_t) * data->frameCount);
@@ -322,7 +316,7 @@ static void _oct_CheckAndAddJSONSpriteSheet(Oct_AssetBundle bundle, const char *
 
         // Loop each frame
         for (int i = 0; i < cJSON_GetArraySize(frames); i++) {
-            _oct_AddFrameData(&data->frames[i], cJSON_GetArrayItem(frames, i));
+            data->duration = _oct_AddFrameData(&data->frames[i], cJSON_GetArrayItem(frames, i));
         }
 
         // Make sprite ready

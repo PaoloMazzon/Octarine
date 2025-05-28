@@ -358,6 +358,16 @@ struct Oct_Colour_t {
     float a; ///< Alpha component (0 - 1)
 };
 
+/// \brief Instead of having copies of sprites, every unique user of a sprite has a sprite instance
+struct Oct_SpriteInstance_t {
+    int32_t frame;      ///< Current frame
+    Oct_Bool repeat;    ///< Whether or not the animation repeats
+    Oct_Bool pause;     ///< Whether or not the animation is currently paused
+    double lastTime;    ///< The last time a frame was changed
+    double accumulator; ///< Time accumulator for more accurate animation timings
+    Oct_Sprite spr;     ///< Sprite this is associated with
+};
+
 ////////////////////// User structs //////////////////////
 OCT_USER_STRUCT(Oct_InitInfo)
 OCT_USER_STRUCT(Oct_DrawCommand)
@@ -371,6 +381,7 @@ OCT_USER_STRUCT(Oct_CameraUpdate)
 OCT_USER_STRUCT(Oct_Rectangle)
 OCT_USER_STRUCT(Oct_Circle)
 OCT_USER_STRUCT(Oct_Colour)
+OCT_USER_STRUCT(Oct_SpriteInstance)
 
 /// \brief Draw command to draw anything
 struct Oct_DrawCommand_t {

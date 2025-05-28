@@ -224,11 +224,6 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
     gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_SPRITE;
     data->texture = load->Sprite.texture;
     data->frameCount = load->Sprite.frameCount;
-    data->frame = 0;
-    data->repeat = load->Sprite.repeat;
-    data->pause = false;
-    data->lastTime = oct_Time();
-    data->accumulator = 0;
 
     // Allocate the frames
     data->frames = mi_malloc(sizeof(struct Oct_SpriteFrame_t) * data->frameCount);
@@ -241,6 +236,7 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
         _oct_FailLoad(load->_assetID);
         oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Sprite cannot be created with invalid texture (%" PRIu64 ")", load->Sprite.texture);
     }
+    data->duration = 1.0 / load->Sprite.fps;
 
     // Fill frame data
     for (int i = 0; i < data->frameCount; i++) {
@@ -251,7 +247,6 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
             x = (float)((int)(load->Sprite.startPos[0] + (totalHorizontal - (load->Sprite.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(texData->texture) - load->Sprite.xStop));
         else
             x = (float)(load->Sprite.xStop + ((int)(load->Sprite.startPos[0] + (totalHorizontal - (load->Sprite.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(texData->texture) - load->Sprite.xStop)));
-        data->frames[i].duration = 1.0 / load->Sprite.fps;
         data->frames[i].position[0] = x;
         data->frames[i].position[1] = lineBreaks * load->Sprite.frameSize[1];
         data->frames[i].size[0] = load->Sprite.frameSize[0];;

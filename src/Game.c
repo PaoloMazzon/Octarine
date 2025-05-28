@@ -14,6 +14,7 @@ typedef struct Warrior_t {
     Oct_Vec2 position;
     Oct_Vec2 velocity;
     uint64_t id;
+    Oct_SpriteInstance sprite;
 } Warrior;
 Warrior *warriorList;
 const int WARRIOR_COUNT = 1000;
@@ -22,25 +23,9 @@ const Oct_Rectangle roomBounds = {
         .size = {1280, 720}
 };
 
-typedef struct JobInfo_t {
-    int32_t *array;
-    int startIndex;
-    int len;
-} JobInfo;
-
-void job(void *ptr) {
-    JobInfo *jobInfo = ptr;
-    for (int i = jobInfo->startIndex; i < jobInfo->startIndex + jobInfo->len; i++) {
-        jobInfo->array[i] = pow(i, 2);
-    }
-}
-
 // Called at the start of the game after engine initialization, whatever you return is passed to update
 void *startup() {
     gAllocator = oct_CreateHeapAllocator();
-    // TODO: Test bitmap font
-    // TODO: Test spritesheet xstop code
-
     gAssetBundle = oct_LoadAssetBundle("data");
     gTexMarble = oct_GetAsset(gAssetBundle, "marble.jpg");
     gSprPaladinWalkRight = oct_GetAsset(gAssetBundle, "sprites/paladin.json");
@@ -56,6 +41,8 @@ void *startup() {
         warriorList[i].position[1] = oct_Random(roomBounds.position[1], roomBounds.size[1]);
         warriorList[i].velocity[0] = oct_Random(-3, 3);
         warriorList[i].velocity[1] = oct_Random(-3, 3);
+        oct_InitSpriteInstance(&warriorList[i].sprite, gSprPaladinWalkRight, true);
+        warriorList[i].sprite.frame = i;
     }
 
     return null;
@@ -76,7 +63,7 @@ void *update(void *ptr) {
             warriorList[i].velocity[1] *= -1;
 
         // Draw warrior
-        oct_DrawSpriteInt(OCT_INTERPOLATE_ALL, warriorList[i].id, gSprPaladinWalkRight, warriorList[i].position);
+        oct_DrawSpriteInt(OCT_INTERPOLATE_ALL, warriorList[i].id, gSprPaladinWalkRight, &warriorList[i].sprite, warriorList[i].position);
     }
 
     oct_DrawText(
