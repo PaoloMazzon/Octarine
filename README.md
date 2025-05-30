@@ -73,7 +73,6 @@ int main(int argc, const char **argv) {
 | [SDL3](https://www.libsdl.org/) | Windowing/input/threads/audio | zlib |
 | [SDL3_ttf](https://github.com/libsdl-org/SDL_ttf) | Font rendering | zlib |
 | [mi-malloc](https://github.com/microsoft/mimalloc) | Memory management | MIT |
-| [flecs](https://github.com/SanderMertens/flecs?tab=readme-ov-file) | ECS | MIT |
 | [PhysicsFS](https://github.com/icculus/physfs) | Asset system | zlib |
 | [stb_vorbis](https://github.com/nothings/stb/tree/master) | Parsing OGGs | MIT |
 | [cJSON](https://github.com/DaveGamble/cJSON) | Parsing JSONs | MIT |

@@ -11,7 +11,6 @@ find_package(mimalloc 2.1 REQUIRED)
 find_package(Freetype REQUIRED)
 
 # Compile flecs
-add_subdirectory(flecs)
 add_subdirectory(Vulkan2D/SDL)
 add_subdirectory(SDL_ttf)
 add_subdirectory(physfs)
@@ -32,4 +31,4 @@ include_directories(Vulkan2D/ physfs/src/ SDL_ttf/include Vulkan2D/VulkanMemoryA
 add_library(${PROJECT_NAME} STATIC ${VMA_FILES} ${OCT_C_FILES} ${C_FILES} ${H_FILES} ${SDL_SOUND_C})
 
 # Linking
-target_link_libraries(${PROJECT_NAME} PRIVATE physfs SDL3::SDL3 SDL3_ttf::SDL3_ttf ${MINGW_LIBRARIES} ${Vulkan_LIBRARIES} mimalloc-static flecs)
+target_link_libraries(${PROJECT_NAME} PRIVATE physfs SDL3::SDL3 SDL3_ttf::SDL3_ttf ${MINGW_LIBRARIES} ${Vulkan_LIBRARIES} mimalloc-static)

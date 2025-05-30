@@ -218,7 +218,7 @@ void _oct_AudioProcessCommand(Oct_Command *cmd) {
         Oct_AudioCommand *audio = &cmd->audioCommand;
         if (audio->type == OCT_AUDIO_COMMAND_TYPE_PLAY_SOUND) {
             int32_t index = SOUND_INDEX(audio->Play._soundID);
-            if (index < MAX_PLAYING_SOUNDS) {
+            if (index < MAX_PLAYING_SOUNDS && index != OCT_SOUND_FAILED) {
                 gPlayingSounds[index].sound = audio->Play.audio;
                 gPlayingSounds[index].pointer = 0;
                 SDL_SetAtomicInt(&gPlayingSounds[index].repeat, audio->Play.repeat);
