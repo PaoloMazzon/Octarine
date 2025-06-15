@@ -1,13 +1,9 @@
 #include "Game.h"
 #include <math.h>
 
-Oct_Texture gTexMarble;
-Oct_Texture gTexPaladinSheet;
 Oct_Sprite gSprPaladinWalkRight;
 Oct_Allocator gAllocator;
-Oct_Font gPixelFont;
-Oct_FontAtlas gPixelFontAtlas;
-Oct_FontAtlas gBitmapFontAtlas;
+Oct_FontAtlas gKingdomFontAtlas;
 Oct_AssetBundle gAssetBundle;
 
 // Little warrior dude
@@ -53,11 +49,8 @@ void warriorJob(void *ptr) {
 void *startup() {
     gAllocator = oct_CreateHeapAllocator();
     gAssetBundle = oct_LoadAssetBundle("data");
-    gTexMarble = oct_GetAsset(gAssetBundle, "marble.jpg");
     gSprPaladinWalkRight = oct_GetAsset(gAssetBundle, "sprites/paladin.json");
-    gPixelFont = oct_GetAsset(gAssetBundle, "ubuntu");
-    gPixelFontAtlas = oct_CreateFontAtlas(gPixelFont, OCT_NO_ASSET, 20, 32, 128);
-    oct_CreateFontAtlas(gPixelFont, gPixelFontAtlas, 20, 0x400, 0x4ff);
+    gKingdomFontAtlas = oct_GetAsset(gAssetBundle, "fnt_kingdom");
 
     // Create some test characters
     gWarriorList = oct_Malloc(gAllocator, sizeof(struct Warrior_t) * WARRIOR_COUNT);
@@ -95,7 +88,7 @@ void *update(void *ptr) {
     }
 
     oct_DrawText(
-            gPixelFontAtlas,
+            gKingdomFontAtlas,
             (Oct_Vec2){320, 250},
             1,
             "The quick brown fox jumps over the lazy dog.\n!@#$%^&*()_+-={}[]"

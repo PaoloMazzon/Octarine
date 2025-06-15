@@ -36,7 +36,7 @@ fonts, bitmap fonts, and sprites. Here is an example of one:
   "fonts":
           [
             {
-              "name": "ubuntu",
+              "name": "ttf_ubuntu",
               "files": ["Ubuntu-Regular.ttf"]
             }
           ],
@@ -47,6 +47,15 @@ fonts, bitmap fonts, and sprites. Here is an example of one:
               "image": "monogram.png",
               "cell size": [6, 12],
               "unicode range": [32, 128]
+            }
+          ],
+  "font atlases":
+          [
+            {
+              "name": "fnt_ubuntu",
+              "font": "ttf_ubuntu",
+              "size": 20,
+              "unicode ranges": [[32, 128], [1024, 1279]]
             }
           ],
   "sprites":
@@ -68,7 +77,9 @@ fonts, bitmap fonts, and sprites. Here is an example of one:
 
 The json parser is very strict, but it will tell exactly what's wrong if something is incorrect. Sprites do not need
 to specify every field, but name, texture, frame count, and frame size are required, everything else will choose sensible
-defaults.
+defaults. Font atlases may specify any number of Unicode ranges (where as if you create them at runtime without a bundle
+you'd need to load each range separately). In the above example, the font `fnt_ubuntu` will be created with 2 separate
+atlases internally for the two Unicode ranges specified (latin and cyrillic character sets).
 
 ## Importing Sprites
 When you load an asset bundle from a directory or archive, the asset parser will automatically search for jsons that

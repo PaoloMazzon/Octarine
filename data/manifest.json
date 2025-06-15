@@ -6,11 +6,11 @@
   "fonts":
           [
             {
-              "name": "ubuntu",
+              "name": "ttf_ubuntu",
               "files": ["Ubuntu-Regular.ttf"]
             },
             {
-              "name": "kingdom",
+              "name": "ttf_kingdom",
               "files": ["Kingdom.ttf"]
             }
           ],
@@ -21,6 +21,21 @@
               "image": "monogram.png",
               "cell size": [6, 12],
               "unicode range": [32, 128]
+            }
+          ],
+  "font atlases":
+          [
+            {
+              "name": "fnt_kingdom",
+              "font": "ttf_kingdom",
+              "size": 20,
+              "unicode ranges": [[32, 128], [1024, 1279]]
+            },
+            {
+              "name": "fnt_ubuntu",
+              "font": "ttf_ubuntu",
+              "size": 20,
+              "unicode ranges": [[32, 128], [1024, 1279]]
             }
           ],
   "sprites":

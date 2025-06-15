@@ -615,6 +615,77 @@ static void _oct_ParseSprites(Oct_AssetBundle bundle, cJSON *sprites) {
     }
 }
 
+const char *ATLAS_EXAMPLE_JSON = "\n{\n"
+                                  "  \"name\": \"name\",\n"
+                                  "  \"font\":  \"fnt_font\",\n"
+                                  "  \"size\": 16,\n"
+                                  "  \"unicode ranges\": [[32, 128], [1024, 1279]]\n"
+                                 "}";
+
+static void _oct_ParseFontAtlases(Oct_AssetBundle bundle, cJSON *atlases) {
+    if (!atlases) return;
+    for (int i = 0; i < cJSON_GetArraySize(atlases); i++) {
+        if (!cJSON_IsObject(cJSON_GetArrayItem(atlases, i))) {
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Atlas index [%i] is not an object, make sure atlases are an array of objects where each object is of the format %s", i, ATLAS_EXAMPLE_JSON);
+            _oct_FailLoad(OCT_NO_ASSET);
+            continue;
+        }
+
+        cJSON *jsonName = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(atlases, i), "name"), type_string);
+        cJSON *jsonFont = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(atlases, i), "font"), type_string);
+        cJSON *jsonSize = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(atlases, i), "size"), type_num);
+        cJSON *jsonUnicodeRanges = jsonGetWithType(cJSON_GetObjectItem(cJSON_GetArrayItem(atlases, i), "unicode ranges"), type_array);
+
+        // We have all the necessary pieces
+        if (jsonName && jsonFont && jsonSize && jsonUnicodeRanges) {
+            // Make sure we have at least 1 Unicode range
+            const int32_t unicodeRanges = cJSON_GetArraySize(jsonUnicodeRanges);
+            if (unicodeRanges <= 0) {
+                oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Atlas index [%i] is not a valid object, atlases need at least 1 unicode range. Make sure sprites are an array of objects where each object is of the format %s", i, ATLAS_EXAMPLE_JSON);
+                _oct_FailLoad(OCT_NO_ASSET);
+                continue;
+            }
+
+            // Get values
+            const char *assetName = cJSON_GetStringValue(jsonName);
+            const char *fontName = cJSON_GetStringValue(jsonFont);
+            const double size = cJSON_GetNumberValue(jsonSize);
+
+            // Make sure we have a valid backing font
+            Oct_Font font = _oct_GetAssetUnblocking(bundle, fontName);
+            if (font == OCT_NO_ASSET) {
+                oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Atlas \"%s\" references a font \"%s\" that is not loaded by the asset bundle. Make sure that you have the right asset name.", assetName, fontName);
+                _oct_FailLoad(OCT_NO_ASSET);
+                continue;
+            }
+
+            // Make load command per unicode range
+            const Oct_Asset id = _oct_AssetReserveSpace();
+            for (int unicodeRangeIndex = 0; unicodeRangeIndex < unicodeRanges; unicodeRangeIndex++) {
+                Oct_LoadCommand l = {0};
+                l.FontAtlas.size = size;
+                l.FontAtlas.atlas = unicodeRangeIndex == 0 ? OCT_NO_ASSET : id;
+                Oct_Vec2 range;
+                _oct_ParseTwoArray(cJSON_GetArrayItem(jsonUnicodeRanges, unicodeRangeIndex), range);
+                l.FontAtlas.unicodeStart = (uint64_t)range[0];
+                l.FontAtlas.unicodeEnd = (uint64_t)range[1];
+                l.FontAtlas.font = font;
+                l._assetID = unicodeRangeIndex == 0 ? id : _oct_AssetReserveSpace();
+
+                // We only place in bucket on first go
+                if (unicodeRangeIndex == 0)
+                    _oct_PlaceAssetInBucket(bundle, l._assetID, assetName);
+
+                _oct_AssetCreateFontAtlas(&l);
+            }
+        } else {
+            oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Atlas index [%i] is not a valid object, make sure atlases are an array of objects where each object is of the format %s", i, ATLAS_EXAMPLE_JSON);
+            _oct_FailLoad(OCT_NO_ASSET);
+            continue;
+        }
+    }
+}
+
 //////////////////////////////// TOP-LEVEL ASSET PARSER ////////////////////////////////
 
 void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
@@ -643,6 +714,7 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load) {
 
         // Finally, go through the manifest to find other 2nd-order types (bitmap fonts, sprites, etc...)
         _oct_ParseFonts(load->AssetBundle.bundle, jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "fonts"), type_array));
+        _oct_ParseFontAtlases(load->AssetBundle.bundle, jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "font atlases"), type_array));
         _oct_ParseBitmapFonts(load->AssetBundle.bundle, jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "bitmap fonts"), type_array));
         _oct_ParseSprites(load->AssetBundle.bundle, jsonGetWithType(cJSON_GetObjectItem(manifestJSON, "sprites"), type_array));
 
