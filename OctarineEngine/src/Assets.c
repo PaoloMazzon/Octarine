@@ -111,7 +111,9 @@ void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
     VK2DTexture tex = vk2dTextureFrom(buffer, size);
     _oct_CleanupBufferFromHandle(&load->Texture.fileHandle, buffer);
     if (tex) {
-        gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
+        gAssets[ASSET_INDEX(load->_assetID)].texture.tex = tex;
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].texture.width, (float)vk2dTextureWidth(tex));
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].texture.height, (float)vk2dTextureHeight(tex));
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
         _oct_RegisterAssetName(load->_assetID, &load->Texture.fileHandle);
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
@@ -124,7 +126,9 @@ void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
 static void _oct_AssetCreateSurface(Oct_LoadCommand *load) {
     VK2DTexture tex = vk2dTextureCreate(load->Surface.dimensions[0], load->Surface.dimensions[1]);
     if (tex) {
-        gAssets[ASSET_INDEX(load->_assetID)].texture = tex;
+        gAssets[ASSET_INDEX(load->_assetID)].texture.tex = tex;
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].texture.width, (float)vk2dTextureWidth(tex));
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].texture.height, (float)vk2dTextureHeight(tex));
         gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_TEXTURE;
         SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
         snprintf(gAssets[ASSET_INDEX(load->_assetID)].name, OCT_ASSET_NAME_SIZE - 1, "Size: %.2fx%.2f", load->Surface.dimensions[0], load->Surface.dimensions[1]);
@@ -241,12 +245,12 @@ void _oct_AssetCreateSprite(Oct_LoadCommand *load) {
     // Fill frame data
     for (int i = 0; i < data->frameCount; i++) {
         const int totalHorizontal = i * (load->Sprite.frameSize[0] + load->Sprite.padding[0]);
-        const int lineBreaks = (int)(load->Sprite.startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(texData->texture) - load->Sprite.xStop);
+        const int lineBreaks = (int)(load->Sprite.startPos[0] + totalHorizontal) / (int)(vk2dTextureWidth(texData->texture.tex) - load->Sprite.xStop);
         float x;
         if (lineBreaks == 0)
-            x = (float)((int)(load->Sprite.startPos[0] + (totalHorizontal - (load->Sprite.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(texData->texture) - load->Sprite.xStop));
+            x = (float)((int)(load->Sprite.startPos[0] + (totalHorizontal - (load->Sprite.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(texData->texture.tex) - load->Sprite.xStop));
         else
-            x = (float)(load->Sprite.xStop + ((int)(load->Sprite.startPos[0] + (totalHorizontal - (load->Sprite.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(texData->texture) - load->Sprite.xStop)));
+            x = (float)(load->Sprite.xStop + ((int)(load->Sprite.startPos[0] + (totalHorizontal - (load->Sprite.padding[0] * lineBreaks))) % (int)(vk2dTextureWidth(texData->texture.tex) - load->Sprite.xStop)));
         data->frames[i].position[0] = x;
         data->frames[i].position[1] = lineBreaks * load->Sprite.frameSize[1];
         data->frames[i].size[0] = load->Sprite.frameSize[0];;
@@ -497,7 +501,7 @@ void _oct_AssetCreateAssetBundle(Oct_LoadCommand *load);
 ///////////////////////////////// ASSET DESTRUCTION /////////////////////////////////
 static void _oct_AssetDestroyTexture(Oct_Asset asset) {
     vk2dRendererWait();
-    vk2dTextureFree(gAssets[ASSET_INDEX(asset)].texture);
+    vk2dTextureFree(gAssets[ASSET_INDEX(asset)].texture.tex);
     _oct_DestroyAssetMetadata(asset);
 }
 
@@ -680,4 +684,20 @@ OCTARINE_API Oct_Bool oct_AssetLoadFailed(Oct_Asset asset) {
 
 OCTARINE_API Oct_Bool oct_AssetLoadHasFailed() {
     return SDL_GetAtomicInt(&gErrorHasOccurred);
+}
+
+OCTARINE_API float oct_TextureWidth(Oct_Texture tex) {
+    while (SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].reserved) && !(SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].loaded) || SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].failed)));
+    Oct_AssetData *d = _oct_AssetGetSafe(tex, OCT_ASSET_TYPE_TEXTURE);
+    if (d)
+        return (float) SDL_GetAtomicInt(&d->texture.width);
+    return 0;
+}
+
+OCTARINE_API float oct_TextureHeight(Oct_Texture tex) {
+    while (SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].reserved) && !(SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].loaded) || SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].failed)));
+    Oct_AssetData *d = _oct_AssetGetSafe(tex, OCT_ASSET_TYPE_TEXTURE);
+    if (d)
+        return (float) SDL_GetAtomicInt(&d->texture.height);
+    return 0;
 }

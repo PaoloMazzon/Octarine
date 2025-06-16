@@ -24,6 +24,15 @@ OCTARINE_API float oct_Lerp(float min, float max, float val);
 /// \brief Linear interpolation, but over a sin function
 OCTARINE_API float oct_Sirp(float min, float max, float val);
 
+/// \brief Clamps a float between two values
+OCTARINE_API float oct_Clamp(float min, float max, float val);
+
+/// \brief Clamps a double between two values
+OCTARINE_API double oct_Clampd(double min, double max, double val);
+
+/// \brief Clamps an int between two values
+OCTARINE_API int32_t oct_Clampi(int32_t min, int32_t max, int32_t val);
+
 /// \brief Checks if a file exists
 OCTARINE_API Oct_Bool oct_FileExists(const char *filename);
 

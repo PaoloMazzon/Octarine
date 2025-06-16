@@ -42,6 +42,24 @@ OCTARINE_API float oct_Sirp(float min, float max, float val) {
     return ((max - min) * m) + min;
 }
 
+OCTARINE_API float oct_Clamp(float min, float max, float val) {
+    if (val > max) return max;
+    if (val < min) return min;
+    return val;
+}
+
+OCTARINE_API double oct_Clampd(double min, double max, double val) {
+    if (val > max) return max;
+    if (val < min) return min;
+    return val;
+}
+
+OCTARINE_API int32_t oct_Clampi(int32_t min, int32_t max, int32_t val) {
+    if (val > max) return max;
+    if (val < min) return min;
+    return val;
+}
+
 OCTARINE_API Oct_Bool oct_FileExists(const char *filename) {
     FILE *f = fopen(filename, "rw");
     if (f)

@@ -38,7 +38,7 @@ OCTARINE_API void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, 
     va_end(l);
     if (fatal) {
         SDL_LockMutex(gLogMutex);
-        printf(ANSI_COLOUR_RED "ERROR: " ANSI_COLOUR_RESET "%s\n", gErrorBuffer);
+        printf("[" ANSI_COLOUR_RED "ERROR" ANSI_COLOUR_RESET "] " "%s\n", gErrorBuffer);
         fflush(stdout);
         SDL_UnlockMutex(gLogMutex);
         FILE *f = fopen("octarinedump.log", "a");
@@ -51,7 +51,7 @@ OCTARINE_API void oct_Raise(Oct_Status status, Oct_Bool fatal, const char *fmt, 
         abort();
     } else {
         SDL_LockMutex(gLogMutex);
-        printf(ANSI_COLOUR_YELLOW "WARNING: " ANSI_COLOUR_RESET "%s\n", gErrorBuffer);
+        printf("[" ANSI_COLOUR_YELLOW "WARNING" ANSI_COLOUR_RESET "] " "%s\n", gErrorBuffer);
         fflush(stdout);
         SDL_UnlockMutex(gLogMutex);
     }
@@ -74,7 +74,7 @@ OCTARINE_API const char *oct_GetError() {
 OCTARINE_API void oct_Log(const char *fmt, ...) {
     SDL_LockMutex(gLogMutex);
     va_list l;
-    printf(ANSI_COLOUR_GREEN "LOG: " ANSI_COLOUR_RESET);
+    printf("[" ANSI_COLOUR_GREEN "LOG" ANSI_COLOUR_RESET "] ");
     va_start(l, fmt);
     vprintf(fmt, l);
     printf("\n");

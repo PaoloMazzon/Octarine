@@ -202,6 +202,7 @@ typedef enum {
 OCT_OPAQUE_POINTER(Oct_Context)
 OCT_OPAQUE_POINTER(Oct_Allocator)
 OCT_OPAQUE_POINTER(Oct_AssetBundle)
+OCT_OPAQUE_POINTER(Oct_Tilemap)
 
 ////////////////////// Structs //////////////////////
 

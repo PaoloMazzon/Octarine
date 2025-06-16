@@ -357,7 +357,7 @@ static void _oct_DrawTexture(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, flo
     Oct_AssetData *asset = _oct_AssetGetSafe(cmd->Texture.texture, OCT_ASSET_TYPE_TEXTURE);
     if (!asset)
         return;
-    VK2DTexture tex = asset->texture;
+    VK2DTexture tex = asset->texture.tex;
 
     // Process interpolation
     Oct_Vec2 position;
@@ -404,7 +404,7 @@ static void _oct_DrawSprite(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, floa
     VK2DTexture tex = null;
     Oct_AssetData *texData = _oct_AssetGetSafe(spr->texture, OCT_ASSET_TYPE_TEXTURE);
     if (texData) {
-        tex = texData->texture;
+        tex = texData->texture.tex;
     } else {
         oct_Raise(OCT_STATUS_BAD_PARAMETER, true, "Sprite ID %" PRIu64 " uses a texture that does not exist (" PRIu64 ").", cmd->Sprite.sprite, spr->texture);
         return;
@@ -579,7 +579,7 @@ static void _oct_SwitchTarget(Oct_DrawCommand *cmd) {
     Oct_AssetData *tex = _oct_AssetGetSafe(cmd->Target.texture, OCT_ASSET_TYPE_TEXTURE);
     if (cmd->Target.texture != OCT_TARGET_SWAPCHAIN && !tex)
         return;
-    VK2DTexture target = cmd->Target.texture != OCT_TARGET_SWAPCHAIN ? tex->texture : null;
+    VK2DTexture target = cmd->Target.texture != OCT_TARGET_SWAPCHAIN ? tex->texture.tex : null;
 
     vk2dRendererSetTarget(target);
 }

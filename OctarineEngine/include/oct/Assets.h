@@ -59,8 +59,6 @@ OCTARINE_API Oct_Camera oct_CreateCamera();
 /// \return Returns a new asset ID, see oct_Load for more info
 OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
 
-// TODO - Duplicate sprite function
-
 /// \brief Creates or extends an existing font atlas
 /// \param ctx Context
 /// \param font Font to create the atlas from
@@ -126,6 +124,16 @@ OCTARINE_API Oct_Asset oct_GetAsset(Oct_AssetBundle bundle, const char *name);
 /// \brief Returns true if a given asset exists
 /// \warning If the asset bundle is not yet loaded completely, this will be blocking
 OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name);
+
+/// \brief Returns a texture's width
+/// \warning Because loading is asynchronous (from the logic thread's perspective), calling this before the
+///          texture has been loaded will block the thread until it loads or fails to load.
+OCTARINE_API float oct_TextureWidth(Oct_Texture tex);
+
+/// \brief Returns a texture's height
+/// \warning Because loading is asynchronous (from the logic thread's perspective), calling this before the
+///          texture has been loaded will block the thread until it loads or fails to load.
+OCTARINE_API float oct_TextureHeight(Oct_Texture tex);
 
 #ifdef __cplusplus
 };

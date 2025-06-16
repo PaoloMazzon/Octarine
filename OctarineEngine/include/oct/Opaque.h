@@ -85,6 +85,13 @@ typedef struct Oct_FontData_t {
     void *buffers[OCT_FALLBACK_FONT_MAX];  ///< Copies of the buffers of each loaded fallback font
 } Oct_FontData;
 
+/// \brief Data for textures
+typedef struct Oct_TextureData_t {
+    VK2DTexture tex;
+    SDL_AtomicInt width;
+    SDL_AtomicInt height;
+} Oct_TextureData;
+
 /// \brief An asset for the engine
 struct Oct_AssetData_t {
     Oct_AssetType type;       ///< type of asset
@@ -94,7 +101,7 @@ struct Oct_AssetData_t {
     SDL_AtomicInt generation; ///< Generation for unique ID purposes
     char name[OCT_ASSET_NAME_SIZE]; ///< Name of the asset for debugging
     union {
-        VK2DTexture texture;
+        Oct_TextureData texture;
         VK2DCameraIndex camera;
         Oct_SpriteData sprite;
         Oct_AudioData audio;
@@ -164,6 +171,16 @@ struct Oct_AssetBundle_t {
     int backupBucketSize;        ///< Size of the backupBucket list
     int backupBucketCount;       ///< Number of elements actually in use in the backupBucket
     SDL_AtomicInt bundleReady;   ///< Whether or not the bundle is ready to use
+};
+
+/// \brief A tilemap
+struct Oct_Tilemap_t {
+    Oct_Texture tex;   ///< Texture the tilemap uses
+    int32_t *grid;     ///< The actual grid, each cell is an index starting at 1
+    int width;         ///< Width of the grid in cells
+    int height;        ///< Height of the grid in cells
+    Oct_Vec2 cellSize; ///< Size of a cell in pixels
+    Oct_Vec2 texSize;  ///< Size of the texture in pixels
 };
 
 #ifdef __cplusplus
