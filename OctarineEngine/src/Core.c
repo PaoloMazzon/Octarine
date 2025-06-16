@@ -217,6 +217,7 @@ OCTARINE_API Oct_Status oct_Init(Oct_InitInfo *initInfo) {
     // Initialization
     Oct_Context ctx = mi_zalloc(sizeof(struct Oct_Context_t));
     gInternalCtx = ctx;
+    ctx->gameStartTime = SDL_GetPerformanceCounter();
     SDL_Init(SDL_INIT_EVENTS | SDL_INIT_GAMEPAD | SDL_INIT_AUDIO);
     PHYSFS_init(initInfo->argv[0]);
     _oct_SetupInitInfo(initInfo);
