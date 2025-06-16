@@ -16,7 +16,6 @@ int oct_UserThread(void *ptr) {
     Oct_Context ctx = ptr;
 
     _oct_InputInit();
-    ctx->gameStartTime = SDL_GetPerformanceCounter();
     void *userData = null;
     Oct_Bool firstLoop = true;
 
