@@ -15,7 +15,7 @@ OCTARINE_API Oct_Tilemap oct_CreateTilemap(Oct_Texture tex, int32_t width, int32
     if (!map)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate tilemap");
 
-    map->grid = mi_malloc(width * height * sizeof(int32_t));
+    map->grid = mi_zalloc(width * height * sizeof(int32_t));
     if (!map->grid)
         oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate tilemap grid");
 
@@ -96,16 +96,18 @@ OCTARINE_API void oct_TilemapDraw(Oct_Tilemap map) {
 }
 
 OCTARINE_API void oct_TilemapDrawPart(Oct_Tilemap map, int32_t x, int32_t y, int32_t width, int32_t height) {
-    const int32_t minY = oct_Clampi(0, map->height - 1, y);
-    const int32_t maxY = oct_Clampi(0, map->height - 1, y + height);
-    const int32_t minX = oct_Clampi(0, map->width - 1, x);
-    const int32_t maxX = oct_Clampi(0, map->width - 1, x + width);
+    const int32_t minY = oct_Clampi(0, map->height, y);
+    const int32_t maxY = oct_Clampi(0, map->height, y + height);
+    const int32_t minX = oct_Clampi(0, map->width, x);
+    const int32_t maxX = oct_Clampi(0, map->width, x + width);
     for (int32_t yIt = minY; yIt < maxY; yIt++) {
         for (int32_t xIt = minX; xIt < maxX; xIt++) {
-            const int32_t cell = GRID_LOC(map, xIt, yIt);
+            int32_t cell = GRID_LOC(map, xIt, yIt);
             if (cell == 0) continue;
+            cell--;
             Oct_DrawCommand cmd = {
                     .type = OCT_DRAW_COMMAND_TYPE_TEXTURE,
+                    .colour = {1, 1, 1, 1},
                     .Texture = {
                             .texture = map->tex,
                             .viewport = {
