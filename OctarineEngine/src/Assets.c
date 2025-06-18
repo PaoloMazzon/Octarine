@@ -687,6 +687,7 @@ OCTARINE_API Oct_Bool oct_AssetLoadHasFailed() {
 }
 
 OCTARINE_API float oct_TextureWidth(Oct_Texture tex) {
+    if (tex == OCT_NO_ASSET) return 0;
     while (SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].reserved) && !(SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].loaded) || SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].failed)));
     Oct_AssetData *d = _oct_AssetGetSafe(tex, OCT_ASSET_TYPE_TEXTURE);
     if (d)
@@ -695,6 +696,7 @@ OCTARINE_API float oct_TextureWidth(Oct_Texture tex) {
 }
 
 OCTARINE_API float oct_TextureHeight(Oct_Texture tex) {
+    if (tex == OCT_NO_ASSET) return 0;
     while (SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].reserved) && !(SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].loaded) || SDL_GetAtomicInt(&gAssets[ASSET_INDEX(tex)].failed)));
     Oct_AssetData *d = _oct_AssetGetSafe(tex, OCT_ASSET_TYPE_TEXTURE);
     if (d)
