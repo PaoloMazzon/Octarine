@@ -458,9 +458,16 @@ void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load) {
     uint32_t size;
     uint8_t *buffer = _oct_GetBufferFromHandle(&load->BitmapFont.fileHandle, &size);
 
+    VK2DTexture tex = vk2dTextureFrom(buffer, size);
+    if (!tex) {
+        _oct_FailLoad(load->_assetID);
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to create bitmap font for image %s", _oct_FileHandleName(&load->BitmapFont.fileHandle));
+        return;
+    }
+
     const uint32_t glyphCount = load->BitmapFont.unicodeEnd - load->BitmapFont.unicodeStart;
     asset->fontAtlas.atlases[0].img = null;
-    asset->fontAtlas.atlases[0].atlas = vk2dTextureFrom(buffer, size);
+    asset->fontAtlas.atlases[0].atlas = tex;
     asset->fontAtlas.atlases[0].glyphs = mi_malloc(sizeof(struct Oct_FontGlyphData_t) * glyphCount);
     asset->fontAtlas.atlases[0].unicodeStart = load->BitmapFont.unicodeStart;
     asset->fontAtlas.atlases[0].unicodeEnd = load->BitmapFont.unicodeEnd;
@@ -471,7 +478,7 @@ void _oct_AssetCreateBitmapFont(Oct_LoadCommand *load) {
 
     if (!asset->fontAtlas.atlases[0].atlas) {
         _oct_FailLoad(load->_assetID);
-        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to create bitmap font %s, VK2D error: %s", _oct_FileHandleName(&load->BitmapFont.fileHandle), vk2dStatusMessage());
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to create bitmap font %s", _oct_FileHandleName(&load->BitmapFont.fileHandle));
         mi_free(asset->fontAtlas.atlases[0].glyphs);
         mi_free(asset->fontAtlas.atlases);
         return;
