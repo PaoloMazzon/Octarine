@@ -135,6 +135,11 @@ OCTARINE_API float oct_TextureWidth(Oct_Texture tex);
 ///          texture has been loaded will block the thread until it loads or fails to load.
 OCTARINE_API float oct_TextureHeight(Oct_Texture tex);
 
+/// \brief Returns the size of a piece of text in pixels
+/// \warning Because loading is asynchronous (from the logic thread's perspective), calling this before the
+///          texture has been loaded will block the thread until it loads or fails to load.
+OCTARINE_API void oct_GetTextSize(Oct_FontAtlas atlas, Oct_Vec2 outSize, float scale, const char *fmt, ...);
+
 #ifdef __cplusplus
 };
 #endif

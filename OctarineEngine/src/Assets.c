@@ -21,6 +21,10 @@ static SDL_Mutex *gErrorMessageMutex;
 static SDL_AtomicInt gErrorHasOccurred;
 static TTF_TextEngine *gTextEngine;
 
+// For text
+#define TEXT_BUFFER_SIZE 1024
+char gTextBuffer[TEXT_BUFFER_SIZE];
+
 ///////////////////////////////// ASSET CREATION HELP /////////////////////////////////
 
 // Destroys metadata for an asset when its being freed
@@ -700,4 +704,81 @@ OCTARINE_API float oct_TextureHeight(Oct_Texture tex) {
     if (d)
         return (float) SDL_GetAtomicInt(&d->texture.height);
     return 0;
+}
+
+OCTARINE_API void oct_GetTextSize(Oct_FontAtlas atlas, Oct_Vec2 outSize, float scale, const char *fmt, ...) {
+    while (SDL_GetAtomicInt(&gAssets[ASSET_INDEX(atlas)].reserved) && !(SDL_GetAtomicInt(&gAssets[ASSET_INDEX(atlas)].loaded) || SDL_GetAtomicInt(&gAssets[ASSET_INDEX(atlas)].failed)));
+    va_list l;
+    va_start(l, fmt);
+    SDL_vsnprintf(gTextBuffer, TEXT_BUFFER_SIZE - 1, fmt, l);
+    va_end(l);
+    outSize[0] = 0;
+    outSize[1] = 0;
+
+    Oct_AssetData *asset = _oct_AssetGetSafe(atlas, OCT_ASSET_TYPE_FONT_ATLAS);
+    if (!asset)
+        return;
+    Oct_BitmapFontData *atlasData = &asset->fontAtlas;
+
+    Oct_AssetData *fontAsset = atlas != OCT_NO_ASSET ? _oct_AssetGetSafe(atlasData->font, OCT_ASSET_TYPE_FONT) : null;
+    if (!fontAsset)
+        return;
+    Oct_FontData *font = &fontAsset->font;
+
+    const char *t = gTextBuffer;
+    uint32_t codePoint = SDL_StepUTF8(&t, null);
+    float x = 0;
+    float y = 0;
+    uint32_t previousCodePoint = UINT32_MAX;
+    while (codePoint) {
+        if (codePoint == '\n') {
+            x = 0;
+            y += atlasData->newLineSize * scale;
+
+            codePoint = SDL_StepUTF8(&t, null);
+            previousCodePoint = UINT32_MAX;
+            continue;
+        } else if (codePoint == ' ') {
+            x += atlasData->spaceSize * scale;
+            codePoint = SDL_StepUTF8(&t, null);
+            previousCodePoint = UINT32_MAX;
+            continue;
+        }
+
+        // For each character, check each layer in the atlas until we either run out
+        // of layers, or find an atlas that contains the given character
+        int layer = -1;
+        for (int i = 0; i < atlasData->atlasCount; i++) {
+            if (codePoint >= atlasData->atlases[i].unicodeStart && codePoint < atlasData->atlases[i].unicodeEnd) {
+                layer = i;
+                break;
+            }
+        }
+
+        if (layer != -1) {
+            vk2dRendererDrawTexture(
+                    atlasData->atlases[layer].atlas,
+                    x, y,
+                    scale, scale,
+                    0, 0, 0,
+                    atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.position[0],
+                    atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.position[1],
+                    atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.size[0],
+                    atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.size[1]
+            );
+            x += atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].advance * scale;
+            if (outSize[0] < x) outSize[0] = x;
+            if (outSize[1] < y + (atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.size[1] * scale)) outSize[1] = y + (atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.size[1] * scale);
+
+            // Find additional kerning
+            if (previousCodePoint != UINT32_MAX && font) {
+                int kern;
+                TTF_GetGlyphKerning(font->font[0], previousCodePoint, codePoint, &kern);
+                x += kern;
+            }
+            previousCodePoint = codePoint;
+        }
+
+        codePoint = SDL_StepUTF8(&t, null);
+    }
 }
