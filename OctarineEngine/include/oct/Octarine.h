@@ -13,3 +13,4 @@
 #include "oct/InputHandler.h"
 #include "oct/Util.h"
 #include "oct/JobSystem.h"
+#include "oct/Tilemap.h"

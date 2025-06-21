@@ -204,6 +204,11 @@ static Oct_Bool _oct_TextEqual(const char *s1, const char *s2) {
 
 static uint8_t *_oct_PhysFSGetFile(const char *filename, int32_t *size) {
     PHYSFS_File *file = PHYSFS_openRead(filename);
+    if (!file) {
+        *size = 0;
+        oct_Raise(OCT_STATUS_FILE_DOES_NOT_EXIST, false, "Failed to open file \"%s\" from bundle.", filename);
+        return null;
+    }
     *size = PHYSFS_fileLength(file);
     uint8_t *buffer = mi_malloc(*size);
     if (!buffer || *size == -1)
