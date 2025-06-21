@@ -439,8 +439,6 @@ void _oct_AssetCreateFontAtlas(Oct_LoadCommand *load) {
     }
 
     // Copy the atlas surface to a VK2D texture/cleanup
-    // TODO: Possible memory problem here, SDL_SaveBMP reports incorrect surfaces sometimes
-    SDL_SaveBMP(tempSurface, "surf.bmp");
     atlas->img = vk2dImageFromPixels(vk2dRendererGetDevice(), tempSurface->pixels, imgWidth, imgHeight, true);
     atlas->atlas = vk2dTextureLoadFromImage(atlas->img);
     SDL_SetAtomicInt(&gAssets[ASSET_INDEX(asset)].loaded, 1);
