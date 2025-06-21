@@ -765,16 +765,6 @@ OCTARINE_API void oct_GetTextSize(Oct_FontAtlas atlas, Oct_Vec2 outSize, float s
         }
 
         if (layer != -1) {
-            vk2dRendererDrawTexture(
-                    atlasData->atlases[layer].atlas,
-                    x, y,
-                    scale, scale,
-                    0, 0, 0,
-                    atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.position[0],
-                    atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.position[1],
-                    atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.size[0],
-                    atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.size[1]
-            );
             x += atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].advance * scale;
             if (outSize[0] < x) outSize[0] = x;
             if (outSize[1] < y + (atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.size[1] * scale)) outSize[1] = y + (atlasData->atlases[layer].glyphs[codePoint - atlasData->atlases[layer].unicodeStart].location.size[1] * scale);
