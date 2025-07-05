@@ -25,6 +25,8 @@ typedef struct FrameCommandBuffer_t {
     Oct_DrawCommand *commands; ///< Internal command list
     int size;                  ///< Size of the internal buffer
     int count;                 ///< Number of commands
+    Oct_Bool singleBuffer;     ///< If this command buffer is only meant to be ran once
+    Oct_Bool executed;         ///< If this is a single buffer and it has already been run
 
     // Draw command hash bucket for interpolated draws
     DrawCommandLink *bucket;
@@ -197,17 +199,20 @@ double _oct_DrawingGetAverageInterpolationTime() {
     return gAverageInterpolationTime;
 }
 
-void _oct_DrawingUpdateBegin() {
-    vk2dRendererStartFrame(VK2D_BLACK);
-}
+void _oct_DrawingUpdateBegin() { }
 
 void _oct_DrawingProcessCommand(Oct_Command *cmd) {
     if (OCT_STRUCTURE_TYPE(&cmd->topOfUnion) == OCT_STRUCTURE_TYPE_META_COMMAND) {
-        if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_END_FRAME) {
+        if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_END_FRAME || cmd->metaCommand.type == OCT_META_COMMAND_TYPE_END_SINGLE_FRAME) {
             gCurrentFrame = NEXT_INDEX(gCurrentFrame);
             gFrameBuffers[gCurrentFrame].count = 0;
             gFrameBuffers[gCurrentFrame].backupBucketCount = 0;
-        } else if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_START_FRAME) {
+            gFrameBuffers[gCurrentFrame].executed = false;
+            gFrameBuffers[gCurrentFrame].singleBuffer = false;
+
+            if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_END_SINGLE_FRAME)
+                gFrameBuffers[gCurrentFrame].singleBuffer = true;
+        } else if (cmd->metaCommand.type == OCT_META_COMMAND_TYPE_START_FRAME || cmd->metaCommand.type == OCT_META_COMMAND_TYPE_START_SINGLE_FRAME) {
             gFrame++;
         }
     } else {
@@ -586,8 +591,18 @@ static void _oct_SwitchTarget(Oct_DrawCommand *cmd) {
 
 void _oct_DrawingUpdateEnd() {
     Oct_Context ctx = _oct_GetCtx();
+
+    // Handle single frames
+    if (gFrameBuffers[CURRENT_DRAW_FRAME].singleBuffer && gFrameBuffers[CURRENT_DRAW_FRAME].executed) {
+        return;
+    }
+    gFrameBuffers[CURRENT_DRAW_FRAME].executed = true;
+
+    // Get interpolated time
     int atomic = SDL_GetAtomicInt(&ctx->interpolatedTime);
     float interpolatedTime = OCT_INT_TO_FLOAT(atomic);
+
+    vk2dRendererStartFrame(VK2D_BLACK);
 
     // Interpolate/draw current frame's commands
     for (int i = 0; i < gFrameBuffers[CURRENT_DRAW_FRAME].count; i++) {

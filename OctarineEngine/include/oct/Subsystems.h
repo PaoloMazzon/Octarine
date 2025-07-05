@@ -16,6 +16,8 @@ Oct_Context _oct_GetCtx();
 void _oct_CommandBufferInit();
 void _oct_CommandBufferBeginFrame(); // This is for the logical thread
 void _oct_CommandBufferEndFrame(); // This is for the logical thread
+void _oct_CommandBufferBeginSingleFrame(); // This is for the logical thread
+void _oct_CommandBufferEndSingleFrame(); // This is for the logical thread
 void _oct_CommandBufferEnd();
 void _oct_CommandBufferDispatch(); // Handles all currently available commands in the buffer
 void *_oct_CopyIntoFrameMemory(void *data, int32_t size);

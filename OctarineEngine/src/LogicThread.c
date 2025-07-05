@@ -30,6 +30,11 @@ int oct_UserThread(void *ptr) {
     double iterationsSmaller = 0;
     double averageProcessTime = 0;
 
+
+    _oct_CommandBufferBeginSingleFrame();
+    userData = ctx->initInfo->startup();
+    _oct_CommandBufferEndSingleFrame();
+
     // User-end game loop
     while (SDL_GetAtomicInt(&ctx->quit) == 0) {
         // Process input
@@ -37,10 +42,6 @@ int oct_UserThread(void *ptr) {
 
         // Process user frame
         _oct_CommandBufferBeginFrame();
-        if (firstLoop) { // So startup can queue draw commands
-            userData = ctx->initInfo->startup();
-            firstLoop = false;
-        }
         userData = ctx->initInfo->update(userData);
         _oct_CommandBufferEndFrame();
 

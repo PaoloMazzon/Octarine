@@ -102,6 +102,34 @@ void _oct_CommandBufferEndFrame() {
     pushCommand(&cmd);
 }
 
+void _oct_CommandBufferBeginSingleFrame() {
+    // Cycle command buffer allocator
+    gCommandBufferAllocatorCurrent = (gCommandBufferAllocatorCurrent + 1) % 4;
+    oct_ResetAllocator(gCommandBufferAllocators[gCommandBufferAllocatorCurrent]);
+
+    // Tell render thread that new frame is starting
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .metaCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_META_COMMAND,
+                    .type = OCT_META_COMMAND_TYPE_START_SINGLE_FRAME
+            }
+    };
+    pushCommand(&cmd);
+}
+
+void _oct_CommandBufferEndSingleFrame() {
+    // Tell render thread that current frame is done
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .metaCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_META_COMMAND,
+                    .type = OCT_META_COMMAND_TYPE_END_SINGLE_FRAME
+            }
+    };
+    pushCommand(&cmd);
+}
+
 bool _oct_CommandBufferPop(Oct_Command *out) {
     Oct_Context ctx = _oct_GetCtx();
 

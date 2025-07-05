@@ -143,9 +143,11 @@ typedef enum {
 
 /// \brief Types of meta commands
 typedef enum {
-    OCT_META_COMMAND_TYPE_NONE = 0,        ///< None
-    OCT_META_COMMAND_TYPE_START_FRAME = 1, ///< Resize the window
-    OCT_META_COMMAND_TYPE_END_FRAME = 2,   ///< Toggle fullscreen
+    OCT_META_COMMAND_TYPE_NONE = 0,           ///< None
+    OCT_META_COMMAND_TYPE_START_FRAME = 1,    ///< Signifies the start of a frame's worth of draw commands
+    OCT_META_COMMAND_TYPE_END_FRAME = 2,      ///< The end of the frame's draw commands
+    OCT_META_COMMAND_TYPE_START_SINGLE_FRAME, ///< Same as above but these will only be executed once
+    OCT_META_COMMAND_TYPE_END_SINGLE_FRAME,   ///< Same as above but these will only be executed once
 } Oct_MetaCommandType;
 
 /// \brief Types of file handles
