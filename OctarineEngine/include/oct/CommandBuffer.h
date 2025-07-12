@@ -7,15 +7,23 @@ extern "C" {
 #endif
 
 /// \brief Queues a draw command
+///
+/// This is thread safe
 OCTARINE_API void oct_Draw(Oct_DrawCommand *draw);
 
 /// \brief Queues a window update
+///
+/// This is thread safe
 OCTARINE_API void oct_WindowUpdate(Oct_WindowCommand *windowUpdate);
 
 /// \brief Queues an audio command and returns the handle of the new playing sound or whatever sound was updated
+///
+/// This is thread safe
 OCTARINE_API Oct_Sound oct_AudioUpdate(Oct_AudioCommand *audioCommand);
 
 /// \brief Queues an asset load and returns the asset -- todo: make this per asset type and return the proper type
+///
+/// This is thread safe
 OCTARINE_API Oct_Asset oct_Load(Oct_LoadCommand *load);
 
 /// \brief Copies memory into volatile per-frame memory and returns it

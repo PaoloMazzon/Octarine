@@ -30,6 +30,7 @@ struct Oct_Context_t {
         Oct_Command *commands; ///< Internal buffer
         SDL_AtomicInt head;    ///< The reading end of the buffer
         SDL_AtomicInt tail;    ///< The writing end of the buffer
+        SDL_Mutex *tailLock;   ///< To allow for MPSC
     } RingBuffer;              ///< Ring buffer for commands
 };
 

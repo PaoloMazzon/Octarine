@@ -20,6 +20,8 @@ static inline int32_t nextIndex(int32_t index, int32_t len) {
 static inline void pushCommand(Oct_Command *command) {
     Oct_Context ctx = _oct_GetCtx();
 
+    SDL_LockMutex(ctx->RingBuffer.tailLock);
+
     // Busy loop if the buffer is full
     int tail = SDL_GetAtomicInt(&ctx->RingBuffer.tail);
     while (nextIndex(tail, ctx->initInfo->ringBufferSize) == SDL_GetAtomicInt(&ctx->RingBuffer.head)) {
@@ -29,6 +31,8 @@ static inline void pushCommand(Oct_Command *command) {
     // Insert new element
     memcpy(&ctx->RingBuffer.commands[tail], command, sizeof(struct Oct_Command_t));
     SDL_SetAtomicInt(&ctx->RingBuffer.tail, nextIndex(tail, ctx->initInfo->ringBufferSize));
+
+    SDL_UnlockMutex(ctx->RingBuffer.tailLock);
 }
 
 // Allocates some memory into the command buffer allocator for the current frame, returns new memory location
@@ -58,11 +62,12 @@ void _oct_CommandBufferInit() {
 
     // Init ring buffer
     ctx->RingBuffer.commands = mi_malloc(sizeof(struct Oct_Command_t) * OCT_RING_BUFFER_SIZE);
-    if (ctx->RingBuffer.commands) {
+    ctx->RingBuffer.tailLock = SDL_CreateMutex();
+    if (ctx->RingBuffer.commands && ctx->RingBuffer.tailLock) {
         SDL_SetAtomicInt(&ctx->RingBuffer.head, 0);
         SDL_SetAtomicInt(&ctx->RingBuffer.tail, 0);
     } else {
-        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate ringbuffer.");
+        oct_Raise(OCT_STATUS_OUT_OF_MEMORY, true, "Failed to allocate ringbuffer or tail lock, SDL error %s.", SDL_GetError());
     }
 
     // Init memory quad buffer
@@ -144,6 +149,7 @@ bool _oct_CommandBufferPop(Oct_Command *out) {
 void _oct_CommandBufferEnd() {
     Oct_Context ctx = _oct_GetCtx();
     mi_free(ctx->RingBuffer.commands);
+    SDL_DestroyMutex(ctx->RingBuffer.tailLock);
     for (int i = 0; i < 4; i++)
         oct_FreeAllocator(gCommandBufferAllocators[i]);
 }
