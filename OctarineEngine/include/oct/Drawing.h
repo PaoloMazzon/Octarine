@@ -191,6 +191,12 @@ OCTARINE_API void oct_DrawText(Oct_FontAtlas atlas, Oct_Vec2 position, float sca
 /// \brief Draws text from a font atlas with interpolation, format like you would printf
 OCTARINE_API void oct_DrawTextInt(Oct_InterpolationType interp, uint64_t id, Oct_FontAtlas atlas, Oct_Vec2 position, float scale, const char *fmt, ...);
 
+/// \brief Draws with colour
+OCTARINE_API void oct_DrawTextColour(Oct_FontAtlas atlas, Oct_Vec2 position, Oct_Colour *colour, float scale, const char *fmt, ...);
+
+/// \brief Draws text from a font atlas with interpolation, format like you would printf
+OCTARINE_API void oct_DrawTextIntColour(Oct_InterpolationType interp, uint64_t id, Oct_FontAtlas atlas, Oct_Vec2 position, Oct_Colour *colour, float scale, const char *fmt, ...);
+
 #ifdef __cplusplus
 };
 #endif

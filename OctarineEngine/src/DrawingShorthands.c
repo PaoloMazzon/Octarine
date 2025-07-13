@@ -424,6 +424,29 @@ OCTARINE_API void oct_DrawText(Oct_FontAtlas atlas, Oct_Vec2 position, float sca
     }
 }
 
+OCTARINE_API void oct_DrawTextColour(Oct_FontAtlas atlas, Oct_Vec2 position, Oct_Colour *colour, float scale, const char *fmt, ...) {
+    char *tempBuffer = _oct_GetFrameMemory(1024);
+    if (tempBuffer) {
+        tempBuffer[1023] = 0;
+        va_list l;
+        va_start(l, fmt);
+        SDL_vsnprintf(tempBuffer, 1023, fmt, l);
+        va_end(l);
+
+        Oct_DrawCommand cmd = {
+                .type = OCT_DRAW_COMMAND_TYPE_FONT_ATLAS,
+                .colour = {colour->r, colour->g, colour->b, colour->a},
+                .FontAtlas = {
+                        .atlas = atlas,
+                        .scale = scale,
+                        .position = {position[0], position[1]},
+                        .text = tempBuffer
+                }
+        };
+        oct_Draw(&cmd);
+    }
+}
+
 OCTARINE_API void oct_DrawTextInt(Oct_InterpolationType interp, uint64_t id, Oct_FontAtlas atlas, Oct_Vec2 position, float scale, const char *fmt, ...) {
     char *tempBuffer = _oct_GetFrameMemory(1024);
     if (tempBuffer) {
@@ -436,6 +459,31 @@ OCTARINE_API void oct_DrawTextInt(Oct_InterpolationType interp, uint64_t id, Oct
         Oct_DrawCommand cmd = {
                 .type = OCT_DRAW_COMMAND_TYPE_FONT_ATLAS,
                 .colour = {1, 1, 1, 1},
+                .interpolate = interp,
+                .id = id,
+                .FontAtlas = {
+                        .atlas = atlas,
+                        .scale = scale,
+                        .position = {position[0], position[1]},
+                        .text = tempBuffer
+                }
+        };
+        oct_Draw(&cmd);
+    }
+}
+
+OCTARINE_API void oct_DrawTextIntColour(Oct_InterpolationType interp, uint64_t id, Oct_FontAtlas atlas, Oct_Vec2 position, Oct_Colour *colour, float scale, const char *fmt, ...) {
+    char *tempBuffer = _oct_GetFrameMemory(1024);
+    if (tempBuffer) {
+        tempBuffer[1023] = 0;
+        va_list l;
+        va_start(l, fmt);
+        SDL_vsnprintf(tempBuffer, 1023, fmt, l);
+        va_end(l);
+
+        Oct_DrawCommand cmd = {
+                .type = OCT_DRAW_COMMAND_TYPE_FONT_ATLAS,
+                .colour = {colour->r, colour->g, colour->b, colour->a},
                 .interpolate = interp,
                 .id = id,
                 .FontAtlas = {
