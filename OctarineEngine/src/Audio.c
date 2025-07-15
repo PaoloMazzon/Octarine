@@ -140,7 +140,7 @@ static int _oct_MixerThread(void *data) {
 
     while (!SDL_GetAtomicInt(&ctx->quit)) {
         // Mixer
-        if (SDL_GetAudioStreamQueued(audioStream) < UPDATE_SAMPLES * AUDIO_SAMPLE_SIZE) {
+        if (SDL_GetAudioStreamQueued(audioStream) < UPDATE_SAMPLES * AUDIO_SAMPLE_SIZE + 1000) {
             // Zero the current mix
             memset(writeBuffer, 0, UPDATE_SAMPLES * AUDIO_SAMPLE_SIZE);
 
