@@ -602,8 +602,6 @@ void _oct_DrawingUpdateEnd() {
     int atomic = SDL_GetAtomicInt(&ctx->interpolatedTime);
     float interpolatedTime = OCT_INT_TO_FLOAT(atomic);
 
-    vk2dRendererStartFrame(VK2D_BLACK);
-
     // Interpolate/draw current frame's commands
     for (int i = 0; i < gFrameBuffers[CURRENT_DRAW_FRAME].count; i++) {
         Oct_DrawCommand *cmd = &gFrameBuffers[CURRENT_DRAW_FRAME].commands[i];
@@ -644,7 +642,7 @@ void _oct_DrawingUpdateEnd() {
         } // TODO: Implement other command types
     }
 
-    vk2dRendererEndFrame();
+    vk2dRendererPresent();
 
     // Deal with interpolation times
     gTotalFrames += 1;

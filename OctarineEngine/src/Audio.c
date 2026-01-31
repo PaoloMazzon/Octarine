@@ -23,11 +23,11 @@ typedef struct Oct_PlayingSound_t {
 } Oct_PlayingSound;
 
 /////////////////////////// GLOBALS ///////////////////////////
-static const int AUDIO_FREQUENCY_HZ = 44100;
+#define AUDIO_FREQUENCY_HZ 44100
 static const double AUDIO_REFRESH_RATE_HZ = 100;
-static const double AUDIO_VOLUME_NORMALIZED_FACTOR = 10000;
+#define AUDIO_VOLUME_NORMALIZED_FACTOR 10000
 static const int32_t AUDIO_SAMPLE_SIZE = 2;
-static const int32_t AUDIO_CHANNELS = 2;
+#define AUDIO_CHANNELS 2
 static SDL_Thread *gMixerThread;
 static SDL_AudioSpec gDeviceSpec = {
         .channels = AUDIO_CHANNELS,

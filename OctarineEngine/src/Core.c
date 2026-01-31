@@ -20,7 +20,8 @@
 #include <windows.h>
 #include <psapi.h>
 #else
-# include <sys/resource.h>
+#include <windows.h>
+#include <psapi.h>
 #endif
 
 /// The amount of memory currently being used by this process, in bytes.
