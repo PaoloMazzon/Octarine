@@ -15,7 +15,7 @@ jobs:
 
       - name: Get submodule for doxygen-awesome
         run: |
-          https://github.com/jothepro/doxygen-awesome-css 3rd/doxygen-awesome-css
+          git clone https://github.com/jothepro/doxygen-awesome-css 3rd/doxygen-awesome-css
 
       - name: Install Doxygen
         run: sudo apt-get install -y doxygen graphviz
