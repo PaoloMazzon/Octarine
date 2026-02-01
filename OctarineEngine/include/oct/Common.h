@@ -65,6 +65,7 @@ typedef uint64_t Oct_Status;     ///< Status code
 typedef uint32_t Oct_Bool;       ///< Internal bool type
 typedef uint64_t Oct_Asset;      ///< Any asset in the engine
 typedef Oct_Asset Oct_Texture;   ///< A 2D texture in video memory
+typedef Oct_Asset Oct_Shader;    ///< Shader
 typedef Oct_Asset Oct_Audio;     ///< A loaded piece of audio
 typedef Oct_Asset Oct_Sprite;    ///< 2D animation
 typedef Oct_Asset Oct_Font;      ///< TrueType font (just the font itself)
@@ -94,16 +95,17 @@ typedef enum {
 typedef enum {
     OCT_DRAW_COMMAND_TYPE_NONE       = 0,  ///< None
     OCT_DRAW_COMMAND_TYPE_TEXTURE    = 1,  ///< Texture rendering
-    OCT_DRAW_COMMAND_TYPE_SPRITE     = 2,  ///< Sprite rendering
-    OCT_DRAW_COMMAND_TYPE_DEBUG_TEXT = 3,  ///< Model rendering
-    OCT_DRAW_COMMAND_TYPE_RECTANGLE  = 4,  ///< Square rendering
-    OCT_DRAW_COMMAND_TYPE_CIRCLE     = 5,  ///< Circle rendering
-    OCT_DRAW_COMMAND_TYPE_LINE       = 6,  ///< Line rendering
-    OCT_DRAW_COMMAND_TYPE_POLYGON    = 7,  ///< Arbitrary polygon rendering
-    OCT_DRAW_COMMAND_TYPE_CLEAR      = 8,  ///< Clear render target
-    OCT_DRAW_COMMAND_TYPE_CAMERA     = 9,  ///< Some sort of camera update
-    OCT_DRAW_COMMAND_TYPE_TARGET     = 10, ///< Changing render target
-    OCT_DRAW_COMMAND_TYPE_FONT_ATLAS = 11, ///< Render bitmap fonts from an atlas
+    OCT_DRAW_COMMAND_TYPE_SHADER     = 2,  ///< Texture rendering (with a custom shader)
+    OCT_DRAW_COMMAND_TYPE_SPRITE     = 3,  ///< Sprite rendering
+    OCT_DRAW_COMMAND_TYPE_DEBUG_TEXT = 4,  ///< Model rendering
+    OCT_DRAW_COMMAND_TYPE_RECTANGLE  = 5,  ///< Square rendering
+    OCT_DRAW_COMMAND_TYPE_CIRCLE     = 6,  ///< Circle rendering
+    OCT_DRAW_COMMAND_TYPE_LINE       = 7,  ///< Line rendering
+    OCT_DRAW_COMMAND_TYPE_POLYGON    = 8,  ///< Arbitrary polygon rendering
+    OCT_DRAW_COMMAND_TYPE_CLEAR      = 9,  ///< Clear render target
+    OCT_DRAW_COMMAND_TYPE_CAMERA     = 10, ///< Some sort of camera update
+    OCT_DRAW_COMMAND_TYPE_TARGET     = 11, ///< Changing render target
+    OCT_DRAW_COMMAND_TYPE_FONT_ATLAS = 12, ///< Render bitmap fonts from an atlas
 } Oct_DrawCommandType;
 
 /// \brief Types of load commands
@@ -119,7 +121,8 @@ typedef enum {
     OCT_LOAD_COMMAND_TYPE_FREE = 8,               ///< Frees an asset
     OCT_LOAD_COMMAND_TYPE_CREATE_SURFACE = 9,     ///< Creates a surface
     OCT_LOAD_COMMAND_TYPE_CREATE_TEXT = 10,       ///< Creates a texture of properly formatted font TODO: This
-    OCT_LOAD_COMMAND_TYPE_LOAD_ASSET_BUNDLE = 11, ///< Loads an asset bundle
+    OCT_LOAD_COMMAND_TYPE_LOAD_SHADER = 11,       ///< Load a slang shader
+    OCT_LOAD_COMMAND_TYPE_LOAD_ASSET_BUNDLE = 12, ///< Loads an asset bundle
 } Oct_LoadCommandType;
 
 /// \brief Types of window commands
@@ -174,7 +177,8 @@ typedef enum {
     OCT_ASSET_TYPE_AUDIO = 4,      ///< Audio
     OCT_ASSET_TYPE_SPRITE = 5,     ///< Sprite
     OCT_ASSET_TYPE_CAMERA = 6,     ///< Camera
-    OCT_ASSET_TYPE_MAX = 7,        ///< For iteration
+    OCT_ASSET_TYPE_SHADER = 7,     ///< Shader
+    OCT_ASSET_TYPE_MAX = 8,        ///< For iteration
     OCT_ASSET_TYPE_ANY = 100       ///< Any type
 } Oct_AssetType;
 
@@ -295,6 +299,9 @@ struct Oct_LoadCommand_t {
             Oct_Vec2 cellSize;         ///< Size (in pixels) of each font glyph
         } BitmapFont;
         struct {
+            Oct_FileHandle fileHandle; ///< File handle for the slang shader
+        } Shader;
+        struct {
             const char *filename;   ///< Filename of the bundle
             Oct_AssetBundle bundle; ///< Bundle that will be loaded into
         } AssetBundle;              ///< Info to load a bundle
@@ -414,6 +421,16 @@ struct Oct_DrawCommand_t {
             Oct_Vec2 origin;        ///< Origin of rotation and offset
             float rotation;         ///< Rotation in radians
         } Texture;
+        struct {
+            Oct_Shader shader;      ///< Shader to use
+            void *uniformData;      ///< Data passed to the shader
+            Oct_Texture texture;    ///< Texture to draw
+            Oct_Rectangle viewport; ///< Where in the texture to draw (use OCT_WHOLE_TEXTURE)
+            Oct_Vec2 position;      ///< Where on the game world to draw it
+            Oct_Vec2 scale;         ///< Scale of the texture, {1, 1} being normal
+            Oct_Vec2 origin;        ///< Origin of rotation and offset
+            float rotation;         ///< Rotation in radians
+        } Shader;
         struct {
             Oct_Sprite sprite;      ///< Sprite to draw
             Oct_Rectangle viewport; ///< Where in the animation frame to draw (use OCT_WHOLE_TEXTURE)

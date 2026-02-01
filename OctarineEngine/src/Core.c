@@ -112,6 +112,7 @@ void _oct_DebugUpdate() {
             "Audio",
             "Sprite",
             "Camera",
+            "Shader"
     };
 
     // Draw nuklear debug thing

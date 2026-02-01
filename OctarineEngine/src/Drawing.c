@@ -399,6 +399,50 @@ static void _oct_DrawTexture(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, flo
     );
 }
 
+static void _oct_DrawShader(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
+    Oct_AssetData *texture = _oct_AssetGetSafe(cmd->Shader.texture, OCT_ASSET_TYPE_TEXTURE);
+    Oct_AssetData *shader = _oct_AssetGetSafe(cmd->Shader.shader, OCT_ASSET_TYPE_SHADER);
+    if (!texture || !shader)
+        return;
+    VK2DTexture tex = texture->texture.tex;
+
+    // Process interpolation
+    Oct_Vec2 position;
+    Oct_Vec2 scale;
+    Oct_Vec2 origin = {0, 0};
+    float rotation;
+    position[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Shader.position[0], cmd->Shader.position[0]);
+    position[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_POSITION, prevCmd, interpolatedTime, prevCmd->Shader.position[1], cmd->Shader.position[1]);
+    scale[0] = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_X, prevCmd, interpolatedTime, prevCmd->Shader.scale[0], cmd->Shader.scale[0]);
+    scale[1] = interpolate(cmd->interpolate & OCT_INTERPOLATE_SCALE_Y, prevCmd, interpolatedTime, prevCmd->Shader.scale[1], cmd->Shader.scale[1]);
+    rotation = interpolate(cmd->interpolate & OCT_INTERPOLATE_ROTATION, prevCmd, interpolatedTime, prevCmd->Shader.rotation, cmd->Shader.rotation);
+
+    // Find viewport
+    const float w = cmd->Shader.viewport.size[0] == OCT_WHOLE_TEXTURE ? vk2dTextureWidth(tex) : cmd->Shader.viewport.size[0];
+    const float h = cmd->Shader.viewport.size[1] == OCT_WHOLE_TEXTURE ? vk2dTextureHeight(tex) : cmd->Shader.viewport.size[1];
+
+    // Process origin
+    _oct_ProcessOrigin(cmd->Shader.origin, origin, w, h);
+
+    // Draw texture
+    vk2dRendererDrawShader(
+            shader->shader.shader,
+            cmd->Shader.uniformData,
+            tex,
+            position[0] - (origin[0] * cmd->Shader.scale[0]),
+            position[1] - (origin[1] * cmd->Shader.scale[1]),
+            scale[0],
+            scale[1],
+            rotation,
+            origin[0],
+            origin[1],
+            cmd->Shader.viewport.position[0],
+            cmd->Shader.viewport.position[1],
+            w,
+            h
+    );
+}
+
 static void _oct_DrawSprite(Oct_DrawCommand *cmd, Oct_DrawCommand *prevCmd, float interpolatedTime) {
     Oct_AssetData *asset = _oct_AssetGetSafe(cmd->Sprite.sprite, OCT_ASSET_TYPE_SPRITE);
     if (!asset)
@@ -639,7 +683,9 @@ void _oct_DrawingUpdateEnd() {
             _oct_DrawFontAtlas(cmd, prevCmd, interpolatedTime);
         } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_CLEAR) {
             _oct_ClearTarget(cmd, prevCmd, interpolatedTime);
-        } // TODO: Implement other command types
+        } else if (cmd->type == OCT_DRAW_COMMAND_TYPE_SHADER) {
+            _oct_DrawShader(cmd, prevCmd, interpolatedTime);
+        }
     }
 
     vk2dRendererPresent();

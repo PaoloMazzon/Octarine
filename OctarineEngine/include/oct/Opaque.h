@@ -93,6 +93,10 @@ typedef struct Oct_TextureData_t {
     SDL_AtomicInt height;
 } Oct_TextureData;
 
+typedef struct Oct_ShaderData_t {
+    VK2DShader shader;
+} Oct_ShaderData;
+
 /// \brief An asset for the engine
 struct Oct_AssetData_t {
     Oct_AssetType type;       ///< type of asset
@@ -108,6 +112,7 @@ struct Oct_AssetData_t {
         Oct_AudioData audio;
         Oct_FontData font;
         Oct_BitmapFontData fontAtlas; // bitmap fonts are collections of atlases
+        Oct_ShaderData shader;
     };
 };
 typedef struct Oct_AssetData_t Oct_AssetData;

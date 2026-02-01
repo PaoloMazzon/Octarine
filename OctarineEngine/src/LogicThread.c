@@ -120,8 +120,8 @@ void oct_Bootstrap() {
 
 void _oct_UnstrapBoots() {
     Oct_Context ctx = _oct_GetCtx();
-    SDL_WaitThread(ctx->logicThread, null);
     SDL_WaitThread(ctx->clockThread, null);
+    SDL_WaitThread(ctx->logicThread, null);
 }
 
 OCTARINE_API double oct_Time() {

@@ -25,13 +25,16 @@ extern "C" {
 OCTARINE_API Oct_Asset oct_Load(Oct_LoadCommand *load);
 
 /// \brief Shorthand for oct_Load for loading textures
-/// \param ctx Octarine context
 /// \param filename Filename of the texture
 /// \return Returns a new asset ID, see oct_Load for more info
 OCTARINE_API Oct_Texture oct_LoadTexture(const char *filename);
 
+/// \brief Shorthand for oct_Load for loading shaders
+/// \param filename Filename of the slang shader, please see [Vulkan2D docs](https://paolomazzon.github.io/Vulkan2D/md_docs_2Shaders.html) for information on how to properly create shaders for Octarine.
+/// \return Returns a new asset ID, see oct_Load for more info
+OCTARINE_API Oct_Texture oct_LoadShader(const char *filename);
+
 /// \brief Shorthand for oct_Load for loading fonts
-/// \param ctx Octarine context
 /// \param filename Filename of the font
 /// \return Returns a new asset ID, see oct_Load for more info
 ///
@@ -40,7 +43,6 @@ OCTARINE_API Oct_Texture oct_LoadTexture(const char *filename);
 OCTARINE_API Oct_Font oct_LoadFont(const char *filename);
 
 /// \brief Shorthand for oct_Load for creating surfaces
-/// \param ctx Octarine context
 /// \param size Size of the new surface
 /// \return Returns a new asset ID, see oct_Load for more info
 OCTARINE_API Oct_Texture oct_CreateSurface(Oct_Vec2 size);
@@ -50,7 +52,6 @@ OCTARINE_API Oct_Texture oct_CreateSurface(Oct_Vec2 size);
 OCTARINE_API Oct_Camera oct_CreateCamera();
 
 /// \brief Shorthand for oct_Load for loading sprites
-/// \param ctx Context
 /// \param tex Texture for the sprite to use
 /// \param frameCount Number of frames in the animation
 /// \param fps FPS of the animation
@@ -60,7 +61,6 @@ OCTARINE_API Oct_Camera oct_CreateCamera();
 OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Texture tex, int32_t frameCount, double fps, Oct_Vec2 startPos, Oct_Vec2 frameSize);
 
 /// \brief Creates or extends an existing font atlas
-/// \param ctx Context
 /// \param font Font to create the atlas from
 /// \param atlas Atlas to extend, if you use OCT_NO_ASSET a new atlas will be created
 /// \param size Size of the font to use when creating the atlas
@@ -70,7 +70,6 @@ OCTARINE_API Oct_Sprite oct_LoadSprite(Oct_Texture tex, int32_t frameCount, doub
 OCTARINE_API Oct_FontAtlas oct_CreateFontAtlas(Oct_Font font, Oct_FontAtlas atlas, float size, uint32_t unicodeStart, uint32_t unicodeEnd);
 
 /// \brief Loads a font atlas from a bitmap font
-/// \param ctx Context
 /// \param filename Filename of the bitmap to load
 /// \param cellSize Size of each cell in pixels
 /// \param unicodeStart First unicode code point to put in the atlas (inclusive)

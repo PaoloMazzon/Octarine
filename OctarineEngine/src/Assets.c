@@ -127,6 +127,22 @@ void _oct_AssetCreateTexture(Oct_LoadCommand *load) {
     }
 }
 
+void _oct_AssetCreateShader(Oct_LoadCommand *load) {
+    uint32_t size;
+    uint8_t *buffer = _oct_GetBufferFromHandle(&load->Shader.fileHandle, &size);
+    VK2DShader shader = vk2dSlangFrom((void *)buffer, size);
+    _oct_CleanupBufferFromHandle(&load->Texture.fileHandle, buffer);
+    if (shader) {
+        gAssets[ASSET_INDEX(load->_assetID)].shader.shader = shader;
+        gAssets[ASSET_INDEX(load->_assetID)].type = OCT_ASSET_TYPE_SHADER;
+        _oct_RegisterAssetName(load->_assetID, &load->Shader.fileHandle);
+        SDL_SetAtomicInt(&gAssets[ASSET_INDEX(load->_assetID)].loaded, 1);
+    } else {
+        _oct_FailLoad(load->_assetID);
+        oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load shader %s", _oct_FileHandleName(&load->Texture.fileHandle));
+    }
+}
+
 static void _oct_AssetCreateSurface(Oct_LoadCommand *load) {
     VK2DTexture tex = vk2dTextureCreate(load->Surface.dimensions[0], load->Surface.dimensions[1]);
     if (tex) {
@@ -514,6 +530,12 @@ static void _oct_AssetDestroyTexture(Oct_Asset asset) {
     _oct_DestroyAssetMetadata(asset);
 }
 
+static void _oct_AssetDestroyShader(Oct_Asset asset) {
+    vk2dRendererWait();
+    vk2dShaderFree(gAssets[ASSET_INDEX(asset)].shader.shader);
+    _oct_DestroyAssetMetadata(asset);
+}
+
 static void _oct_AssetDestroyCamera(Oct_Asset asset) {
     vk2dCameraSetState(gAssets[ASSET_INDEX(asset)].camera, VK2D_CAMERA_STATE_DELETED);
     _oct_DestroyAssetMetadata(asset);
@@ -554,6 +576,8 @@ void _oct_AssetDestroyFontAtlas(Oct_Asset asset) {
 static void _oct_AssetDestroy(Oct_Asset asset) {
     if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_TEXTURE) {
         _oct_AssetDestroyTexture(asset);
+    } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_SHADER) {
+        _oct_AssetDestroyShader(asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_CAMERA) {
         _oct_AssetDestroyCamera(asset);
     } else if (gAssets[ASSET_INDEX(asset)].type == OCT_ASSET_TYPE_SPRITE) {
@@ -599,6 +623,8 @@ void _oct_AssetsProcessCommand(Oct_Command *cmd) {
         _oct_AssetCreateFontAtlas(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_BITMAP_FONT) {
         _oct_AssetCreateBitmapFont(load);
+    } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_SHADER) {
+        _oct_AssetCreateShader(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_LOAD_ASSET_BUNDLE) {
         _oct_AssetCreateAssetBundle(load);
     } else if (load->type == OCT_LOAD_COMMAND_TYPE_FREE) {
@@ -631,6 +657,8 @@ const char *_oct_AssetTypeString(Oct_Asset asset) {
         return "Sprite";
     if (type == OCT_ASSET_TYPE_CAMERA)
         return "Camera";
+    if (type == OCT_ASSET_TYPE_SHADER)
+        return "Shader";
     if (type == OCT_ASSET_TYPE_ANY)
         return "Any";
     return "";

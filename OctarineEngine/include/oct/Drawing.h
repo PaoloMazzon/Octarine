@@ -79,6 +79,31 @@ OCTARINE_API void oct_DrawTextureExt(Oct_Texture texture, Oct_Vec2 position, Oct
 /// \brief Draws a texture
 OCTARINE_API void oct_DrawTextureColourExt(Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
 
+/// \brief Draws a shader
+OCTARINE_API void oct_DrawShaderInt(Oct_InterpolationType interp, uint64_t id, Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Vec2 position);
+
+/// \brief Draws a shader
+OCTARINE_API void oct_DrawShaderIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position);
+
+/// \brief Draws a shader
+OCTARINE_API void oct_DrawShaderIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+
+/// \brief Draws a shader
+OCTARINE_API void oct_DrawShaderIntColourExt(Oct_InterpolationType interp, uint64_t id, Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+
+/// \brief Draws a shader
+OCTARINE_API void oct_DrawShader(Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Vec2 position);
+
+/// \brief Draws a shader
+OCTARINE_API void oct_DrawShaderColour(Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position);
+
+/// \brief Draws a shader
+OCTARINE_API void oct_DrawShaderExt(Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+
+/// \brief Draws a shader
+OCTARINE_API void oct_DrawShaderColourExt(Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin);
+
+
 /// \brief Sets up a sprite instance
 OCTARINE_API void oct_InitSpriteInstance(Oct_SpriteInstance *instance, Oct_Sprite sprite, Oct_Bool repeat);
 

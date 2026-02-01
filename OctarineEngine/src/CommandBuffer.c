@@ -220,6 +220,25 @@ OCTARINE_API Oct_Texture oct_LoadTexture(const char *filename) {
     return id;
 }
 
+OCTARINE_API Oct_Texture oct_LoadShader(const char *filename) {
+    Oct_Asset id = _oct_AssetReserveSpace();
+    Oct_Command cmd = {
+            .sType = OCT_STRUCTURE_TYPE_COMMAND,
+            .loadCommand = {
+                    .sType = OCT_STRUCTURE_TYPE_LOAD_COMMAND,
+                    .type = OCT_LOAD_COMMAND_TYPE_LOAD_SHADER,
+                    .pNext = null,
+                    ._assetID = id,
+                    .Shader.fileHandle = {
+                            .type = OCT_FILE_HANDLE_TYPE_FILENAME,
+                            .filename = _oct_CopyIntoFrameMemory((void*)filename, strlen(filename) + 1)
+                    }
+            }
+    };
+    pushCommand(&cmd);
+    return id;
+}
+
 OCTARINE_API Oct_Font oct_LoadFont(const char *filename) {
     Oct_Asset id = _oct_AssetReserveSpace();
     Oct_Command cmd = {

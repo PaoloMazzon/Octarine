@@ -1,12 +1,11 @@
 # Asset Bundles
 You may want to load entire collections of assets at once, like if you start a new level and need all the sprites/fonts/
-textures/... associated with that level. In this case you may want to use an asset bundle. An asset bundle is a any
+textures/... associated with that level. In this case you may want to use an asset bundle. An asset bundle is any
 directory or archive that contains a `manifest.json` at the root of that directory/archive (We'll get into the manifest)
-in a moment. The images and audio from that source (recursively) will be loaded automatically and compound types (sprites,
+in a moment. The images, shaders (extension `.slang`/`.shader`), and audio from that source (recursively) will be loaded automatically and compound types (sprites,
 fonts, etc...) will be loaded from either information contained in `manifest.json` or from neighboring files ([scroll
 down](#importing-sprites]) to see how you can automatically load sprites). All of those assets will then be made
-available through the function `oct_GetAsset(Oct_AssetBundle bundle, const char *name)`. It is internally a hashtable,
-so it is quite fast to locate assets by name.
+available through the function `oct_GetAsset(Oct_AssetBundle bundle, const char *name)`.
 
 To load an asset bundle, use
 

@@ -140,6 +140,7 @@ OCTARINE_API Oct_Bool oct_AssetExists(Oct_AssetBundle bundle, const char *name) 
 //////////////////////////////// ASSET PARSER HELPER FUNCTIONS ////////////////////////////////
 
 void _oct_AssetCreateTexture(Oct_LoadCommand *load);
+void _oct_AssetCreateShader(Oct_LoadCommand *load);
 void _oct_AssetCreateAudio(Oct_LoadCommand *load);
 void _oct_AssetCreateSprite(Oct_LoadCommand *load);
 void _oct_AssetCreateFont(Oct_LoadCommand *load);
@@ -405,6 +406,19 @@ static void _oct_EnumerateDirectory(Oct_AssetBundle bundle, cJSON *excludeList, 
             l._assetID = _oct_AssetReserveSpace();
             _oct_PlaceAssetInBucket(bundle, l._assetID, completeFilename);
             _oct_AssetCreateTexture(&l);
+        } else if (_oct_TextEqual(extension, ".slang") || _oct_TextEqual(extension, ".shader")) {
+            // Texture
+            int32_t size;
+            uint8_t *buffer = _oct_PhysFSGetFile(completeFilename, &size);
+            Oct_LoadCommand l;
+            l.Shader.fileHandle.type = OCT_FILE_HANDLE_TYPE_FILE_BUFFER;
+            l.Shader.fileHandle.buffer = buffer;
+            l.Shader.fileHandle.size = size;
+            l.Shader.fileHandle.name = completeFilename;
+            l.Shader.fileHandle.callback = _oct_FileHandleCallback;
+            l._assetID = _oct_AssetReserveSpace();
+            _oct_PlaceAssetInBucket(bundle, l._assetID, completeFilename);
+            _oct_AssetCreateShader(&l);
         }
     }
 

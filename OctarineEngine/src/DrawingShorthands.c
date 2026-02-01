@@ -153,6 +153,58 @@ OCTARINE_API void oct_DrawTextureColourExt(Oct_Texture texture, Oct_Colour *colo
     oct_DrawTextureIntColourExt(0, 0, texture, colour, position, scale, rotation, origin);
 }
 
+/////////////////////////////////////// SHADER ///////////////////////////////////////
+OCTARINE_API void oct_DrawShaderInt(Oct_InterpolationType interp, uint64_t id, Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Vec2 position) {
+    oct_DrawShaderIntColourExt(interp, id, shader, data, size, texture, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
+}
+
+OCTARINE_API void oct_DrawShaderIntColour(Oct_InterpolationType interp, uint64_t id, Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position) {
+    oct_DrawShaderIntColourExt(interp, id, shader, data, size, texture, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
+}
+
+OCTARINE_API void oct_DrawShaderIntExt(Oct_InterpolationType interp, uint64_t id, Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
+    oct_DrawShaderIntColourExt(interp, id, shader, data, size, texture, &_OCT_WHITE, position, scale, rotation, origin);
+}
+
+OCTARINE_API void oct_DrawShaderIntColourExt(Oct_InterpolationType interp, uint64_t id, Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
+    void *shaderData = _oct_GetFrameMemory(size);
+    memcpy(shaderData, data, size);
+    Oct_DrawCommand cmd = {
+            .sType = OCT_STRUCTURE_TYPE_DRAW_COMMAND,
+            .type = OCT_DRAW_COMMAND_TYPE_SHADER,
+            .colour = *colour,
+            .interpolate = interp,
+            .id = id,
+            .Shader = {
+                    .shader = shader,
+                    .uniformData = shaderData,
+                    .texture = texture,
+                    .viewport = {0, 0, OCT_WHOLE_TEXTURE, OCT_WHOLE_TEXTURE},
+                    .position = {position[0], position[1]},
+                    .scale = {scale[0], scale[1]},
+                    .origin = {origin[0], origin[1]},
+                    .rotation = rotation,
+            }
+    };
+    oct_Draw(&cmd);
+}
+
+OCTARINE_API void oct_DrawShader(Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Vec2 position) {
+    oct_DrawShaderIntColourExt(0, 0, shader, data, size, texture, &_OCT_WHITE, position, _OCT_ONE2, 0, _OCT_ZERO2);
+}
+
+OCTARINE_API void oct_DrawShaderColour(Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position) {
+    oct_DrawShaderIntColourExt(0, 0, shader, data, size, texture, colour, position, _OCT_ONE2, 0, _OCT_ZERO2);
+}
+
+OCTARINE_API void oct_DrawShaderExt(Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
+    oct_DrawShaderIntColourExt(0, 0, shader, data, size, texture, &_OCT_WHITE, position, scale, rotation, origin);
+}
+
+OCTARINE_API void oct_DrawShaderColourExt(Oct_Shader shader, void *data, uint32_t size, Oct_Texture texture, Oct_Colour *colour, Oct_Vec2 position, Oct_Vec2 scale, float rotation, Oct_Vec2 origin) {
+    oct_DrawShaderIntColourExt(0, 0, shader, data, size, texture, colour, position, scale, rotation, origin);
+}
+
 /////////////////////////////////////// SPRITE ///////////////////////////////////////
 // Returns the frame to send to the command
 static int _oct_ProcessSpriteUpdate(Oct_SpriteInstance *instance, Oct_Sprite sprite) {
