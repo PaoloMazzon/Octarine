@@ -1,0 +1,5 @@
+<map id="Oct_SpriteData_t" name="Oct_SpriteData_t">
+<area shape="rect" id="Node000001" title="Data needed to draw and manage a sprite." alt="" coords="11,93,143,119"/>
+<area shape="rect" id="Node000002" href="$structOct__SpriteFrame__t.html" title="A frame of a sprite&#39;s animation." alt="" coords="5,5,148,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="79,45,79,93,74,93,74,45"/>
+</map>

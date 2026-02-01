@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['oct_5fbucket_5fsize_0',['OCT_BUCKET_SIZE',['../Constants_8h.html#a4914d6e1647e89a7694e32e5569ee234',1,'Constants.h']]],
+  ['oct_5fminimum_5fjob_5fthreads_1',['OCT_MINIMUM_JOB_THREADS',['../Constants_8h.html#a4c4023bfb3c01f73c92b957e72eb3895',1,'Constants.h']]],
+  ['oct_5fno_5fasset_2',['OCT_NO_ASSET',['../Constants_8h.html#abe9aa084c5f00ebfd1060208a086f9c7',1,'Constants.h']]],
+  ['oct_5fpage_5fscale_5ffactor_3',['OCT_PAGE_SCALE_FACTOR',['../Constants_8h.html#a5a3b0261c24e89247bdc661daa91b393',1,'Constants.h']]],
+  ['oct_5fring_5fbuffer_5fsize_4',['OCT_RING_BUFFER_SIZE',['../Constants_8h.html#a5123074dd0ddb4897f9e4d2fc02284dc',1,'Constants.h']]],
+  ['oct_5fsound_5ffailed_5',['OCT_SOUND_FAILED',['../Constants_8h.html#a6e752ca39ed32bf8f82db02dba5b31cc',1,'Constants.h']]],
+  ['oct_5fsprite_5ffirst_5fframe_6',['OCT_SPRITE_FIRST_FRAME',['../Constants_8h.html#af1f7bfbaefab9f69165b03e892de110b',1,'Constants.h']]],
+  ['oct_5fsprite_5flast_5fframe_7',['OCT_SPRITE_LAST_FRAME',['../Constants_8h.html#aa5a871f98684d0d28d61299ec46f78cc',1,'Constants.h']]],
+  ['oct_5fstandard_5fpage_5fsize_8',['OCT_STANDARD_PAGE_SIZE',['../Constants_8h.html#a8300629b6b5afdbbefdc56ea9c01574e',1,'Constants.h']]],
+  ['oct_5fstatus_5fbad_5fparameter_9',['OCT_STATUS_BAD_PARAMETER',['../Constants_8h.html#ad69b1f945391d10ec49f07930f5e68c7',1,'Constants.h']]],
+  ['oct_5fstatus_5ferror_10',['OCT_STATUS_ERROR',['../Constants_8h.html#afcc2931285e6dfc9b7574d876a4a936e',1,'Constants.h']]],
+  ['oct_5fstatus_5ffailed_5fasset_11',['OCT_STATUS_FAILED_ASSET',['../Constants_8h.html#ad3d9914f0ef3c113c784705d0dbdf95c',1,'Constants.h']]],
+  ['oct_5fstatus_5ffile_5fdoes_5fnot_5fexist_12',['OCT_STATUS_FILE_DOES_NOT_EXIST',['../Constants_8h.html#a8588963ced641cb045bd6d405d5322a3',1,'Constants.h']]],
+  ['oct_5fstatus_5fout_5fof_5fmemory_13',['OCT_STATUS_OUT_OF_MEMORY',['../Constants_8h.html#a75eb3d59b0f63e379fa98f2334a2dbb8',1,'Constants.h']]],
+  ['oct_5fstatus_5fsdl_5ferror_14',['OCT_STATUS_SDL_ERROR',['../Constants_8h.html#a4b17c861c79720e0480be7a79e60952b',1,'Constants.h']]],
+  ['oct_5fstatus_5fsuccess_15',['OCT_STATUS_SUCCESS',['../Constants_8h.html#acbded0c2c32766ec5be7e68ea7a1c1ca',1,'Constants.h']]],
+  ['oct_5fstatus_5fvk2d_5ferror_16',['OCT_STATUS_VK2D_ERROR',['../Constants_8h.html#a4e04a72f3ccf1f686beb6c42be209584',1,'Constants.h']]],
+  ['oct_5fstatus_5fvulkan_5ferror_17',['OCT_STATUS_VULKAN_ERROR',['../Constants_8h.html#af45057807671ca3582b072cc6397bf7e',1,'Constants.h']]],
+  ['oct_5ftarget_5fswapchain_18',['OCT_TARGET_SWAPCHAIN',['../Constants_8h.html#ad859547dd58ec406875d114da373552a',1,'Constants.h']]],
+  ['origin_19',['origin',['../structOct__DrawCommand__t.html#aaa5977ee7acb4e6f7a2e7695c72f62d8',1,'Oct_DrawCommand_t']]]
+];

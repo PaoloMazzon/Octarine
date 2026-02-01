@@ -1,0 +1,5 @@
+<map id="Oct_AssetBundle_t" name="Oct_AssetBundle_t">
+<area shape="rect" id="Node000001" title="A bundle of loaded assets in a hashmap." alt="" coords="5,108,149,133"/>
+<area shape="rect" id="Node000002" href="$structOct__AssetLink__t.html" title="Linked list for asset bundle hash map." alt="" coords="14,5,141,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="80,45,80,108,75,108,75,45"/>
+</map>
