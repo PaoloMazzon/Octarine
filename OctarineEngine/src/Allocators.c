@@ -7,7 +7,7 @@
 static Oct_Allocator _oct_AddExtraPage(Oct_Allocator allocator, int32_t size) {
     void *new = mi_realloc(
             allocator->virtualPageAllocator.pages,
-            sizeof(Oct_Allocator) * allocator->virtualPageAllocator.count + 1);
+            sizeof(Oct_Allocator) * (allocator->virtualPageAllocator.count + 1));
     if (!new)
         return null;
     allocator->virtualPageAllocator.pages = new;
