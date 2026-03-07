@@ -633,6 +633,14 @@ static void _oct_SwitchTarget(Oct_DrawCommand *cmd) {
     vk2dRendererSetTarget(target);
 }
 
+static VK2DBlendMode _oct_BlendToVK2D(Oct_BlendMode octBlendMode) {
+    if (octBlendMode == OCT_BLEND_MODE_BLEND) return VK2D_BLEND_MODE_BLEND;
+    if (octBlendMode == OCT_BLEND_MODE_ADD) return VK2D_BLEND_MODE_ADD;
+    if (octBlendMode == OCT_BLEND_MODE_SUBTRACT) return VK2D_BLEND_MODE_SUBTRACT;
+    if (octBlendMode == OCT_BLEND_MODE_SET) return VK2D_BLEND_MODE_NONE;
+    return VK2D_BLEND_MODE_BLEND;
+}
+
 void _oct_DrawingUpdateEnd() {
     Oct_Context ctx = _oct_GetCtx();
 
@@ -650,6 +658,7 @@ void _oct_DrawingUpdateEnd() {
     for (int i = 0; i < gFrameBuffers[CURRENT_DRAW_FRAME].count; i++) {
         Oct_DrawCommand *cmd = &gFrameBuffers[CURRENT_DRAW_FRAME].commands[i];
         vk2dRendererSetColourMod((float*)&cmd->colour);
+        vk2dRendererSetBlendMode(_oct_BlendToVK2D(cmd->blendMode));
 
         // If its interpolated, find the corresponding command
         Oct_DrawCommand *prevCmd = null;

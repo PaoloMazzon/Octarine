@@ -204,6 +204,14 @@ typedef enum {
     OCT_CAMERA_UPDATE_TYPE_DISABLE_TEX_CAM = 1<<5, ///< Disables the use of cameras on texture targets
 } Oct_CameraUpdateType;
 
+/// \brief Blend modes for alpha blending
+typedef enum {
+    OCT_BLEND_MODE_BLEND    = 0,
+    OCT_BLEND_MODE_ADD      = 1,
+    OCT_BLEND_MODE_SUBTRACT = 2,
+    OCT_BLEND_MODE_SET      = 3,
+} Oct_BlendMode;
+
 ////////////////////// Hidden structs //////////////////////
 OCT_OPAQUE_POINTER(Oct_Context)
 OCT_OPAQUE_POINTER(Oct_Allocator)
@@ -398,6 +406,7 @@ struct Oct_DrawCommand_t {
     Oct_StructureType sType;           ///< Structure type
     Oct_DrawCommandType type;          ///< Type of draw command this is
     Oct_Colour colour;                 ///< Colour modifier
+    Oct_BlendMode blendMode;           ///< Blend mode of this operation
     Oct_InterpolationType interpolate; ///< See Oct_InterpolationType, bitwise OR them together
     uint64_t id;                       ///< ID of this command to match it with a previous command for interpolation
     union {
