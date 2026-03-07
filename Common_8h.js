@@ -70,6 +70,12 @@ var Common_8h =
       [ "OCT_AUDIO_COMMAND_TYPE_UNPAUSE_ALL_SOUNDS", "Common_8h.html#adeef423ccf70e7f268bd4c435b906495aa3f05f2768ab03fac0e39c52b605cc76", null ],
       [ "OCT_AUDIO_COMMAND_TYPE_STOP_ALL_SOUNDS", "Common_8h.html#adeef423ccf70e7f268bd4c435b906495a7e3a7884e57352ca288bc165ff3aff28", null ]
     ] ],
+    [ "Oct_BlendMode", "Common_8h.html#a161b4f1b560f632faa7be11a82716e52", [
+      [ "OCT_BLEND_MODE_BLEND", "Common_8h.html#a161b4f1b560f632faa7be11a82716e52ac82b901adc7bb37a1afd25030367b91a", null ],
+      [ "OCT_BLEND_MODE_ADD", "Common_8h.html#a161b4f1b560f632faa7be11a82716e52a53c49ce99cb5320ab3f5e3b0a5366166", null ],
+      [ "OCT_BLEND_MODE_SUBTRACT", "Common_8h.html#a161b4f1b560f632faa7be11a82716e52a34bfd4782f44de98e7f172c93e294f7c", null ],
+      [ "OCT_BLEND_MODE_SET", "Common_8h.html#a161b4f1b560f632faa7be11a82716e52a1baf494b9a59a6bc01ab09c55576e052", null ]
+    ] ],
     [ "Oct_CameraUpdateType", "Common_8h.html#ab466f0ead27a025ff9eb1eb13d6ae524", [
       [ "OCT_CAMERA_UPDATE_TYPE_UPDATE_CAMERA", "Common_8h.html#ab466f0ead27a025ff9eb1eb13d6ae524aae01e3808bba3055282717553285d484", null ],
       [ "OCT_CAMERA_UPDATE_TYPE_LOCK_CAMERA", "Common_8h.html#ab466f0ead27a025ff9eb1eb13d6ae524ac1d9642d6f79aaa25c333fa969818bdf", null ],

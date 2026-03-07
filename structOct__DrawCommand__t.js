@@ -1,6 +1,7 @@
 var structOct__DrawCommand__t =
 [
     [ "atlas", "structOct__DrawCommand__t.html#acecd46fc79bfaac666fab4bfed1a3103", null ],
+    [ "blendMode", "structOct__DrawCommand__t.html#a32aa2fafea4e7d4712465823713a9bd8", null ],
     [ "camera", "structOct__DrawCommand__t.html#a4d9f33cc34d823e43369653ec085fe2b", null ],
     [ "Camera", "structOct__DrawCommand__t.html#a20a3d98b7bd6421b15e12d980edba774", null ],
     [ "cameraUpdate", "structOct__DrawCommand__t.html#a8d7ae9597602e1cdd3854e0d6a9ad183", null ],
