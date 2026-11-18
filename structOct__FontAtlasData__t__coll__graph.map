@@ -1,5 +1,5 @@
 <map id="Oct_FontAtlasData_t" name="Oct_FontAtlasData_t">
-<area shape="rect" id="Node000001" title="An individual bitmap atlas." alt="" coords="8,93,163,119"/>
-<area shape="rect" id="Node000002" href="$structOct__FontGlyphData__t.html" title="An individual glyph in a bitmap atlas." alt="" coords="5,5,165,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="88,45,88,93,83,93,83,45"/>
+<area shape="rect" id="Node000001" title="An individual bitmap atlas." alt="" coords="8,106,162,134"/>
+<area shape="rect" id="Node000002" href="$structOct__FontGlyphData__t.html" title="An individual glyph in a bitmap atlas." alt="" coords="5,5,165,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="87,47,88,106,82,105,83,50"/>
 </map>

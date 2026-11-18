@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['octarine_0',['Octarine',['../index.html',1,'']]]
+  ['example_0',['Example',['../index.html#autotoc_md2',1,'']]]
 ];

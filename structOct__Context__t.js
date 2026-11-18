@@ -13,7 +13,7 @@ var structOct__Context__t =
     [ "quit", "structOct__Context__t.html#a8c55e5d0c29e7d132158a2b89a576731", null ],
     [ "renderHz", "structOct__Context__t.html#ab35f23ff86f1945f194eccf7a20eb2e6", null ],
     [ "renderHzActual", "structOct__Context__t.html#af75a89b2f215ec8dc18abc39960218d7", null ],
-    [ "RingBuffer", "structOct__Context__t.html#a0eb8b32e8bed8ae1a51b6e48d839f6e5", null ],
+    [ "RingBuffer", "structOct__Context__t.html#a6db8a8ac636c077c185a601d4029e5c2", null ],
     [ "tail", "structOct__Context__t.html#a3a553375c5b1b4fb3d6b157c92c2ec7b", null ],
     [ "tailLock", "structOct__Context__t.html#a20c5aa1491c1569e74738da5285f7617", null ],
     [ "window", "structOct__Context__t.html#af62b1ec80e86f0b4dab9546234faf9ae", null ]

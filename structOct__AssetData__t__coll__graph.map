@@ -1,21 +1,21 @@
 <map id="Oct_AssetData_t" name="Oct_AssetData_t">
-<area shape="rect" id="Node000001" title="An asset for the engine." alt="" coords="797,129,928,155"/>
-<area shape="rect" id="Node000002" href="$structOct__TextureData__t.html" title="Data for textures." alt="" coords="529,5,672,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="675,32,725,48,775,70,817,99,850,127,846,131,814,103,772,75,723,53,673,37"/>
-<area shape="rect" id="Node000003" href="$structOct__SpriteData__t.html" title="Data needed to draw and manage a sprite." alt="" coords="535,55,667,80"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="677,80,774,106,832,127,830,132,773,111,675,86"/>
-<area shape="rect" id="Node000004" href="$structOct__SpriteFrame__t.html" title="A frame of a sprite&#39;s animation." alt="" coords="267,55,410,80"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="424,65,534,65,534,70,424,70"/>
-<area shape="rect" id="Node000005" href="$structOct__AudioData__t.html" title="Data for audio." alt="" coords="535,104,666,129"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="680,122,797,133,797,138,679,127"/>
-<area shape="rect" id="Node000006" href="$structOct__FontData__t.html" title="Info for fonts." alt="" coords="539,153,662,179"/>
-<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="675,164,773,158,809,152,809,157,774,163,676,169"/>
-<area shape="rect" id="Node000007" href="$structOct__BitmapFontData__t.html" title="Data for bitmap fonts, may contain number of bitmap fonts and unicode ranges." alt="" coords="516,203,685,228"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="698,201,773,183,808,169,839,152,842,157,810,174,774,189,700,206"/>
-<area shape="rect" id="Node000008" href="$structOct__FontAtlasData__t.html" title="An individual bitmap atlas." alt="" coords="261,203,416,228"/>
-<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="430,213,516,213,516,218,430,218"/>
-<area shape="rect" id="Node000009" href="$structOct__FontGlyphData__t.html" title="An individual glyph in a bitmap atlas." alt="" coords="5,203,165,228"/>
-<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="179,213,261,213,261,218,179,218"/>
-<area shape="rect" id="Node000010" href="$structOct__ShaderData__t.html" title=" " alt="" coords="531,252,670,277"/>
-<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="683,250,728,238,772,220,817,187,849,153,853,157,820,191,775,224,730,243,684,255"/>
+<area shape="rect" id="Node000001" title="An asset for the engine." alt="" coords="804,145,934,173"/>
+<area shape="rect" id="Node000002" href="$structOct__TextureData__t.html" title="Data for textures." alt="" coords="534,5,676,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="691,28,738,41,782,61,807,80,829,102,861,145,856,144,825,106,804,84,779,65,736,46,691,33"/>
+<area shape="rect" id="Node000003" href="$structOct__SpriteData__t.html" title="Data needed to draw and manage a sprite." alt="" coords="540,61,671,89"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="686,85,734,95,781,110,816,126,848,145,842,145,814,130,779,115,733,101,686,90"/>
+<area shape="rect" id="Node000004" href="$structOct__SpriteFrame__t.html" title="A frame of a sprite&#39;s animation." alt="" coords="270,61,412,89"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="427,73,542,74,537,76,428,78"/>
+<area shape="rect" id="Node000005" href="$structOct__AudioData__t.html" title="Data for audio." alt="" coords="540,117,670,145"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="686,137,806,152,801,153,686,142"/>
+<area shape="rect" id="Node000006" href="$structOct__FontData__t.html" title="Info for fonts." alt="" coords="544,173,666,201"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="681,185,780,178,812,174,817,173,781,183,682,190"/>
+<area shape="rect" id="Node000007" href="$structOct__BitmapFontData__t.html" title="Data for bitmap fonts, may contain number of bitmap fonts and unicode ranges." alt="" coords="521,229,689,257"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="704,233,742,225,779,214,818,194,848,174,853,172,821,198,781,219,744,230,705,238"/>
+<area shape="rect" id="Node000008" href="$structOct__FontAtlasData__t.html" title="An individual bitmap atlas." alt="" coords="264,229,418,257"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="434,241,523,243,518,243,434,246"/>
+<area shape="rect" id="Node000009" href="$structOct__FontGlyphData__t.html" title="An individual glyph in a bitmap atlas." alt="" coords="5,229,165,257"/>
+<area shape="poly" id="edge8_Node000008_Node000009" title=" " alt="" coords="180,241,266,242,260,244,181,246"/>
+<area shape="rect" id="Node000010" href="$structOct__ShaderData__t.html" title=" " alt="" coords="536,285,674,313"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="689,291,735,281,779,262,805,242,827,217,858,175,862,172,832,221,809,246,782,266,737,286,690,297"/>
 </map>

@@ -62,5 +62,6 @@ var NAVTREEINDEX =
 "structOct__WindowEvent__t.html#a014d3d3f846e9573158cf29b9ccedfe8"
 ];
 
-var SYNCONMSG = 'click to disable panel synchronisation';
-var SYNCOFFMSG = 'click to enable panel synchronisation';
+var SYNCONMSG = 'click to disable panel synchronization';
+var SYNCOFFMSG = 'click to enable panel synchronization';
+var LISTOFALLMEMBERS = 'List of all members';
