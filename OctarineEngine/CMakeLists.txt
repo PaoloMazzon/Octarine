@@ -21,4 +21,4 @@ include_directories(Vulkan2D/ physfs/src/ SDL_ttf/include Vulkan2D/VulkanMemoryA
 add_library(${PROJECT_NAME} STATIC ${VMA_FILES} ${OCT_C_FILES} ${C_FILES} ${H_FILES} ${SDL_SOUND_C})
 
 # Linking
-target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc-static Vulkan2D physfs SDL3_ttf::SDL3_ttf)
+target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc Vulkan2D physfs SDL3_ttf::SDL3_ttf)

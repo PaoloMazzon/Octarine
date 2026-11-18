@@ -3,6 +3,9 @@
 #include <stdarg.h>
 #include <VK2D/VK2D.h>
 #include "oct/Validation.h"
+
+#include <stdlib.h>
+
 #include "oct/Constants.h"
 
 #define ANSI_COLOUR_RED     "\x1b[31m"

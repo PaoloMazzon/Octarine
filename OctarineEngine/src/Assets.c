@@ -190,7 +190,7 @@ void _oct_AssetCreateAudio(Oct_LoadCommand *load) {
     const uint16_t MP3_SIG = 0xFFFB;
     if (memcmp(fileBuffer, "OggS", 4) == 0) {
         int channels, sampleRate;
-        int samples = stb_vorbis_decode_memory(fileBuffer, fileBufferSize, &channels, &sampleRate, &data);
+        int samples = stb_vorbis_decode_memory(fileBuffer, fileBufferSize, &channels, &sampleRate, (void*)&data);
         if (samples < 0) {
             _oct_FailLoad(load->_assetID);
             oct_Raise(OCT_STATUS_FAILED_ASSET, false, "Failed to load audio sample %s with vorbis", _oct_FileHandleName(&load->Audio.fileHandle), SDL_GetError());

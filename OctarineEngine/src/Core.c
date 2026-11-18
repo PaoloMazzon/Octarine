@@ -1,6 +1,8 @@
 #include <VK2D/VK2D.h>
 #include <mimalloc.h>
 #include <physfs.h>
+#include <stdio.h>
+
 #include "oct/Octarine.h"
 #include "oct/LogicThread.h"
 #include "oct/Opaque.h"
@@ -9,6 +11,7 @@
 // This is from StackOverflow user Larry Gritz, https://stackoverflow.com/users/3832/larry-gritz
 #ifdef __linux__
 # include <sys/sysinfo.h>
+#include <unistd.h>
 #endif
 
 #ifdef __APPLE__
@@ -17,9 +20,6 @@
 #endif
 
 #ifdef __WIN32
-#include <windows.h>
-#include <psapi.h>
-#else
 #include <windows.h>
 #include <psapi.h>
 #endif
@@ -318,4 +318,3 @@ OCTARINE_API double oct_GetLogicHz() {
     int i = SDL_GetAtomicInt(&ctx->logicHzActual);
     return OCT_INT_TO_FLOAT(i);
 }
-
